@@ -1,0 +1,92 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  STAFF
+}
+
+enum SourceType {
+  COMMISSARY_SUPPLIED
+  BRANCH_SOURCED
+  FINISHED_PRODUCT
+}
+
+enum TransactionType {
+  ADJUSTMENT
+  STOCK_RECEIPT
+  SALE
+  PRODUCTION
+}
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String
+  role      Role     @default(STAFF)
+  branchId  String?
+  branch    Branch?  @relation(fields: [branchId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  stockTransactions StockTransaction[]
+}
+
+model Branch {
+  id        String   @id @default(uuid())
+  name      String
+  location  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users             User[]
+  stocks            BranchStock[]
+  stockTransactions StockTransaction[]
+}
+
+model Item {
+  id           String     @id @default(uuid())
+  name         String
+  sourceType   SourceType
+  unit         String
+  minThreshold Float      @default(0)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  stocks            BranchStock[]
+  stockTransactions StockTransaction[]
+}
+
+model BranchStock {
+  id        String   @id @default(uuid())
+  branchId  String
+  itemId    String
+  quantity  Float    @default(0)
+  updatedAt DateTime @updatedAt
+
+  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  item   Item   @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@unique([branchId, itemId])
+}
+
+model StockTransaction {
+  id            String          @id @default(uuid())
+  type          TransactionType
+  quantityDelta Float
+  branchId      String
+  itemId        String
+  userId        String
+  createdAt     DateTime        @default(now())
+
+  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  item   Item   @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
