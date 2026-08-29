@@ -51,7 +51,13 @@ async function main() {
         password: "cashier123",
         role: Role.CASHIER,
         branchId: branch1.id,
-      },
+      } ,
+      {
+        username: "user",
+        password: "user33",
+        role: Role.CASHIER,
+        branchId: branch1.id,
+      }
     ],
   });
 
