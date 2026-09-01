@@ -37,7 +37,7 @@ export default function DashboardPage() {
 
   return (
     <div className="p-8 max-w-6xl mx-auto space-y-6">
-      <div className="flex justify-between items-center border-b pb-4">
+      <div className="flex justify-between items-center border-b p1-4">
         <div>
           <h1 className="text-3xl font-bold text-purple-900">Owner Dashboard</h1>
           <p className="text-gray-500">Manage stock alerts and branch inventory</p>
