@@ -8,85 +8,111 @@ generator client {
 }
 
 enum Role {
-  ADMIN
-  MANAGER
-  STAFF
+  OWNER
+  BRANCH_MANAGER
+  CASHIER
 }
 
-enum SourceType {
+enum ItemSourceType {
   COMMISSARY_SUPPLIED
   BRANCH_SOURCED
   FINISHED_PRODUCT
 }
 
 enum TransactionType {
-  ADJUSTMENT
-  STOCK_RECEIPT
   SALE
   PRODUCTION
+  STOCK_RECEIPT
+  ADJUSTMENT
+}
+
+enum AlertStatus {
+  PENDING
+  RESOLVED
 }
 
 model User {
-  id        String   @id @default(uuid())
-  username  String   @unique
-  password  String
-  role      Role     @default(STAFF)
-  branchId  String?
-  branch    Branch?  @relation(fields: [branchId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  id                String             @id @default(uuid())
+  username          String             @unique
+  password          String
+  role              Role               @default(CASHIER)
+  branchId          String?
+  branch            Branch?            @relation(fields: [branchId], references: [id])
   stockTransactions StockTransaction[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
 }
 
 model Branch {
-  id        String   @id @default(uuid())
-  name      String
-  location  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  id                String             @id @default(uuid())
+  name              String
+  location          String
   users             User[]
-  stocks            BranchStock[]
+  branchStocks      BranchStock[]
   stockTransactions StockTransaction[]
+  reorderAlerts     ReorderAlert[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
 }
 
 model Item {
-  id           String     @id @default(uuid())
-  name         String
-  sourceType   SourceType
-  unit         String
-  minThreshold Float      @default(0)
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-
-  stocks            BranchStock[]
-  stockTransactions StockTransaction[]
+  id                 String             @id @default(uuid())
+  name               String
+  sourceType         ItemSourceType
+  unit               String
+  minThreshold       Float              @default(10.0)
+  branchStocks       BranchStock[]
+  recipeAsFinished   ProductionRecipe[] @relation("FinishedProduct")
+  recipeAsIngredient ProductionRecipe[] @relation("IngredientProduct")
+  stockTransactions  StockTransaction[]
+  reorderAlerts      ReorderAlert[]
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
 }
 
 model BranchStock {
   id        String   @id @default(uuid())
   branchId  String
   itemId    String
-  quantity  Float    @default(0)
+  quantity  Float    @default(0.0)
+  branch    Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  item      Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
   updatedAt DateTime @updatedAt
-
-  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  item   Item   @relation(fields: [itemId], references: [id], onDelete: Cascade)
 
   @@unique([branchId, itemId])
 }
 
-model StockTransaction {
-  id            String          @id @default(uuid())
-  type          TransactionType
-  quantityDelta Float
-  branchId      String
-  itemId        String
-  userId        String
-  createdAt     DateTime        @default(now())
+model ProductionRecipe {
+  id                String   @id @default(uuid())
+  finishedItemId    String
+  finishedItem      Item     @relation("FinishedProduct", fields: [finishedItemId], references: [id], onDelete: Cascade)
+  ingredientItemId  String
+  ingredientItem    Item     @relation("IngredientProduct", fields: [ingredientItemId], references: [id], onDelete: Cascade)
+  requiredQuantity  Float
 
-  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  item   Item   @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([finishedItemId, ingredientItemId])
+}
+
+model StockTransaction {
+  id              String          @id @default(uuid())
+  type            TransactionType
+  branchId        String
+  itemId          String
+  quantityDelta   Float
+  userId          String
+  branch          Branch          @relation(fields: [branchId], references: [id])
+  item            Item            @relation(fields: [itemId], references: [id])
+  user            User            @relation(fields: [userId], references: [id])
+  createdAt       DateTime        @default(now())
+}
+
+model ReorderAlert {
+  id        String      @id @default(uuid())
+  branchId  String
+  itemId    String
+  status    AlertStatus @default(PENDING)
+  branch    Branch      @relation(fields: [branchId], references: [id])
+  item      Item        @relation(fields: [itemId], references: [id])
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
 }
