@@ -14,8 +14,11 @@ export async function logProductionRun({
   producedQuantity: number;
   userId?: string;
 }) {
-  if (!Number.isFinite(producedQuantity) || producedQuantity <= 0) {
-    throw new Error("Produced quantity must be greater than zero.");
+ if (
+  !Number.isInteger(producedQuantity) ||
+  producedQuantity <= 0
+) {
+    throw new Error("Produced quantity must be a whole number greater than zero.");
   }
 
   // Use the supplied user, or fall back to the first user.
@@ -66,6 +69,17 @@ export async function logProductionRun({
         "The selected item is not a finished product."
       );
     }
+
+    const normalizedUnit = finishedItem.unit.trim().toLowerCase();
+
+  if (
+    (normalizedUnit === "pcs" || normalizedUnit === "cans") &&
+    !Number.isInteger(producedQuantity)
+  ) {
+    throw new Error(
+      `Production quantity must be a whole number for products measured in ${finishedItem.unit}.`
+    );
+  }
 
     // 4. Get the approved production recipe
     const recipe = await tx.productionRecipe.findMany({

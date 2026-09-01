@@ -43,6 +43,16 @@ export default function ProductionModal({
     (item) => item.id === selectedFinishedItem
   );
 
+  const selectedUnit = selectedProduct?.unit?.toLowerCase() || "";
+
+  const requiresWholeNumber =
+    selectedUnit === "pcs" || selectedUnit === "cans";
+
+  const isValidProductionQuantity =
+    Number.isFinite(producedQuantity) &&
+    producedQuantity > 0 &&
+    (!requiresWholeNumber || Number.isInteger(producedQuantity));
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
@@ -56,11 +66,14 @@ export default function ProductionModal({
       return;
     }
 
-    if (
-      !Number.isFinite(producedQuantity) ||
-      producedQuantity <= 0
-    ) {
-      alert("Production quantity must be greater than zero.");
+    if (!isValidProductionQuantity) {
+      if (requiresWholeNumber) {
+        alert(
+          `Production quantity must be a whole number for products measured in ${selectedProduct?.unit}.`
+      );
+    } else {
+        alert("Production quantity must be greater than zero.");
+    }
       return;
     }
 
@@ -213,19 +226,22 @@ export default function ProductionModal({
 
                   <div className="relative mt-2">
                     <input
-                      type="number"
-                      step="any"
-                      min="0.1"
+                       type="number"
+                       step="1"
+                       min="1"
                       value={producedQuantity}
                       onChange={(e) =>
-                        setProducedQuantity(
-                          Number(e.target.value)
-                        )
+                        setProducedQuantity(Number(e.target.value))
                       }
                       required
                       disabled={loading}
                       className="w-full rounded-lg border border-gray-300 px-3 py-2.5 pr-16 text-sm text-gray-800 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 disabled:bg-gray-100"
                     />
+                    {requiresWholeNumber && (
+                     <p className="mt-2 text-xs text-gray-500">
+                       This product is measured in {selectedProduct?.unit}, so production quantity must be a whole number.
+                     </p>
+                    )}
 
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-gray-500">
                       {selectedProduct?.unit || "units"}
@@ -321,9 +337,9 @@ export default function ProductionModal({
                     loading ||
                     !selectedBranch ||
                     !selectedFinishedItem ||
-                    !Number.isFinite(producedQuantity) ||
-                    producedQuantity <= 0
+                    !isValidProductionQuantity
                   }
+
                   className="flex-1 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {loading
