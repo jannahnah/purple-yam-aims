@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import StockActionsModal from "./StockActionsModal";
 import ProductionModal from "./ProductionModal";
+import SalesModal from "./SalesModal";
 
 export const revalidate = 0;
 
@@ -28,8 +29,18 @@ export default async function InventoryPage() {
             <h1 className="text-2xl font-bold text-gray-900">Inventory Management</h1>
             <p className="text-sm text-gray-500">Multi-branch stock levels and thresholds</p>
           </div>
+          
           <div className="flex items-center gap-3">
-            <ProductionModal branches={branches} items={items} />
+          <ProductionModal branches={branches} items={items} />
+          <SalesModal
+              branches={branches}
+              items={items}
+              branchStocks={stockRecords.map((stock) => ({
+                branchId: stock.branchId,
+                itemId: stock.itemId,
+                quantity: stock.quantity,
+              }))}
+            />
             <StockActionsModal
               branches={branches}
               items={items}
