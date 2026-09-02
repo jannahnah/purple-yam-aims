@@ -85,8 +85,10 @@ export default function TransactionHistory({
   }
 
   function formatQuantity(quantity: number) {
-    if (quantity > 0) return `+${quantity}`;
-    return `${quantity}`;
+  const formatted = Number(quantity.toFixed(2));
+
+  if (formatted > 0) return `+${formatted}`;
+  return `${formatted}`;
   }
 
   function resetFilters() {
