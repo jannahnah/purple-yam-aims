@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { recordSale } from "@/app/actions/sales";
 
 interface Branch {
@@ -58,6 +58,18 @@ export default function SalesModal({
     (item) => item.id === selectedFinishedItem
   );
 
+  const remainingStock = useMemo(() => {
+    return availableStock - soldQuantity;
+  }, [availableStock, soldQuantity]);
+
+  const hasInsufficientStock =
+    soldQuantity > availableStock && soldQuantity > 0;
+
+  const isValidQuantity =
+    Number.isInteger(soldQuantity) &&
+    soldQuantity > 0 &&
+    soldQuantity <= availableStock;
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
@@ -78,7 +90,9 @@ export default function SalesModal({
 
     if (soldQuantity > availableStock) {
       alert(
-        `Insufficient stock. Available: ${availableStock} ${selectedProduct?.unit || "units"}.`
+        `Insufficient stock. Available: ${availableStock} ${
+          selectedProduct?.unit || "units"
+        }.`
       );
       return;
     }
@@ -114,9 +128,18 @@ export default function SalesModal({
     }
   }
 
+  function handleBranchChange(branchId: string) {
+    setSelectedBranch(branchId);
+    setSoldQuantity(1);
+  }
+
+  function handleProductChange(itemId: string) {
+    setSelectedFinishedItem(itemId);
+    setSoldQuantity(1);
+  }
+
   return (
     <>
-      {/* Open Button */}
       <button
         type="button"
         onClick={() => setIsOpen(true)}
@@ -134,8 +157,8 @@ export default function SalesModal({
             }
           }}
         >
-            <div
-                className="flex w-full max-w-lg max-h-[90vh] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+          <div
+            className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
             onMouseDown={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -145,7 +168,6 @@ export default function SalesModal({
                   <h2 className="text-xl font-bold text-gray-900">
                     Record Sale
                   </h2>
-
                   <p className="mt-1 text-sm text-gray-500">
                     Record a completed sale and update finished-product
                     inventory.
@@ -157,14 +179,13 @@ export default function SalesModal({
                   onClick={closeModal}
                   disabled={loading}
                   aria-label="Close sales modal"
-                  className="rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-lg p-1.5 text-xl leading-none text-gray-400 transition hover:bg-gray-100 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   ×
                 </button>
               </div>
             </div>
 
-            {/* Form */}
             <form onSubmit={handleSubmit}>
               <div className="max-h-[60vh] space-y-5 overflow-y-auto px-6 py-5">
                 {/* Branch */}
@@ -179,7 +200,7 @@ export default function SalesModal({
 
                   <select
                     value={selectedBranch}
-                    onChange={(e) => setSelectedBranch(e.target.value)}
+                    onChange={(e) => handleBranchChange(e.target.value)}
                     required
                     disabled={loading}
                     className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-gray-100"
@@ -205,7 +226,7 @@ export default function SalesModal({
                   <select
                     value={selectedFinishedItem}
                     onChange={(e) =>
-                      setSelectedFinishedItem(e.target.value)
+                      handleProductChange(e.target.value)
                     }
                     required
                     disabled={loading}
@@ -221,18 +242,25 @@ export default function SalesModal({
 
                 {/* Available Stock */}
                 <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-600">
-                      Available Stock
-                    </span>
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <span className="text-sm font-medium text-gray-600">
+                        Available Stock
+                      </span>
+
+                      <p className="mt-0.5 text-xs text-gray-400">
+                        Current finished-product inventory
+                      </p>
+                    </div>
 
                     <span className="text-lg font-bold text-gray-900">
-                      {availableStock} {selectedProduct?.unit || "units"}
+                      {availableStock}{" "}
+                      {selectedProduct?.unit || "units"}
                     </span>
                   </div>
                 </div>
 
-                {/* Quantity */}
+                {/* Quantity Sold */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-800">
                     Quantity Sold
@@ -254,16 +282,107 @@ export default function SalesModal({
                       }
                       required
                       disabled={loading}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2.5 pr-16 text-sm text-gray-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-gray-100"
+                      className={`w-full rounded-lg border px-3 py-2.5 pr-16 text-sm text-gray-800 outline-none transition focus:ring-2 disabled:bg-gray-100 ${
+                        hasInsufficientStock
+                          ? "border-red-300 focus:border-red-500 focus:ring-red-100"
+                          : "border-gray-300 focus:border-blue-500 focus:ring-blue-100"
+                      }`}
                     />
 
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-gray-500">
                       {selectedProduct?.unit || "units"}
                     </span>
                   </div>
+
+                  {hasInsufficientStock && (
+                    <p className="mt-2 text-xs font-medium text-red-600">
+                      Insufficient stock. You can sell up to{" "}
+                      {availableStock}{" "}
+                      {selectedProduct?.unit || "units"}.
+                    </p>
+                  )}
                 </div>
 
-                {/* Protection Information */}
+                {/* Sale Summary */}
+                <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+                  <div className="border-b border-gray-100 px-4 py-3">
+                    <h3 className="text-sm font-semibold text-gray-900">
+                      Sale Summary
+                    </h3>
+
+                    <p className="mt-0.5 text-xs text-gray-500">
+                      Review the inventory change before recording.
+                    </p>
+                  </div>
+
+                  <div className="space-y-3 px-4 py-4">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-500">
+                        Current stock
+                      </span>
+
+                      <span className="font-medium text-gray-900">
+                        {availableStock}{" "}
+                        {selectedProduct?.unit || "units"}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-500">
+                        Quantity sold
+                      </span>
+
+                      <span className="font-medium text-red-600">
+                        -{soldQuantity || 0}{" "}
+                        {selectedProduct?.unit || "units"}
+                      </span>
+                    </div>
+
+                    <div className="border-t border-gray-100 pt-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-semibold text-gray-700">
+                          Remaining stock
+                        </span>
+
+                        <span
+                          className={`text-lg font-bold ${
+                            hasInsufficientStock
+                              ? "text-red-600"
+                              : "text-gray-900"
+                          }`}
+                        >
+                          {remainingStock < 0 ? 0 : remainingStock}{" "}
+                          {selectedProduct?.unit || "units"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Validation / Ready State */}
+                {isValidQuantity && (
+                  <div className="rounded-xl border border-green-200 bg-green-50 p-4">
+                    <div className="flex items-start gap-3">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-100 text-sm font-semibold text-green-700">
+                        ✓
+                      </span>
+
+                      <div>
+                        <h3 className="text-sm font-semibold text-green-900">
+                          Ready to record
+                        </h3>
+
+                        <p className="mt-1 text-xs leading-relaxed text-green-800">
+                          This sale can be recorded. Finished-product
+                          inventory will decrease by {soldQuantity}{" "}
+                          {selectedProduct?.unit || "units"}.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Before Recording */}
                 <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
                   <h3 className="text-sm font-semibold text-blue-900">
                     Before recording
@@ -274,6 +393,7 @@ export default function SalesModal({
                       <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 font-semibold text-blue-700">
                         ✓
                       </span>
+
                       Finished-product stock will be checked.
                     </div>
 
@@ -281,6 +401,7 @@ export default function SalesModal({
                       <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 font-semibold text-blue-700">
                         ✓
                       </span>
+
                       Stock will not go below zero.
                     </div>
 
@@ -288,12 +409,13 @@ export default function SalesModal({
                       <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 font-semibold text-blue-700">
                         ✓
                       </span>
+
                       A SALE transaction will be recorded.
                     </div>
                   </div>
                 </div>
 
-                {/* Warning */}
+                {/* Note */}
                 <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
                   <p className="text-xs leading-relaxed text-amber-800">
                     <span className="font-semibold">Note:</span>{" "}
@@ -320,9 +442,7 @@ export default function SalesModal({
                     loading ||
                     !selectedBranch ||
                     !selectedFinishedItem ||
-                    !Number.isInteger(soldQuantity) ||
-                    soldQuantity <= 0 ||
-                    soldQuantity > availableStock
+                    !isValidQuantity
                   }
                   className="flex-1 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
