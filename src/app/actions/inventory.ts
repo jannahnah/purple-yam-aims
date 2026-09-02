@@ -42,7 +42,7 @@ export async function adjustStock({
 
     await tx.stockTransaction.create({
       data: {
-        type,
+        type: "STOCK_RECEIPT",
         quantityDelta: quantity,
         branch: { connect: { id: branchId } },
         item: { connect: { id: itemId } },
