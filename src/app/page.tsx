@@ -6,16 +6,40 @@ export default function Home() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = (e: FormEvent<HTMLFormElement>) => {
+  const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (username === "owner" && password === "owner123") {
-      window.location.href = "/dashboard";
-      return;
-    }
+    setError("");
+    setIsLoading(true);
 
-    setError("Invalid username or password.");
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username,
+          password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || "Invalid username or password.");
+        return;
+      }
+
+      window.location.href = "/dashboard";
+    } catch (error) {
+      console.error("Login request failed:", error);
+      setError("Unable to connect to the server. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -36,7 +60,7 @@ export default function Home() {
           </p>
 
           <span className="mt-3 inline-block rounded-md bg-purple-900/60 px-3 py-1 text-xs font-medium text-purple-200">
-            PROTOTYPE • MOCK DATA
+            SECURE SYSTEM ACCESS
           </span>
         </div>
 
@@ -52,26 +76,25 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Demo Credentials */}
+          {/* Development Credentials */}
           <div className="mb-6 rounded-lg border border-purple-200 bg-purple-50 p-4">
             <p className="mb-2 text-xs font-semibold text-purple-700">
-              Demo Credentials (Prototype)
+              Development Credentials
             </p>
 
             <div className="space-y-1 text-xs text-purple-700">
               <p>
-                <span className="font-semibold">owner</span> / owner123 —
-                Owner
+                <span className="font-semibold">owner</span> / owner123 — Owner
               </p>
 
               <p>
-                <span className="font-semibold">mgr.main</span> / mgr123 —
-                Branch Manager
+                <span className="font-semibold">manager_b1</span> / manager123
+                — Branch Manager
               </p>
 
               <p>
-                <span className="font-semibold">cashier1</span> / cash123 —
-                Cashier
+                <span className="font-semibold">cashier_b1</span> / cashier123
+                — Cashier
               </p>
             </div>
           </div>
@@ -92,7 +115,9 @@ export default function Home() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Enter username"
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-purple-500 focus:ring-2 focus:ring-purple-200"
+                autoComplete="username"
+                disabled={isLoading}
+                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-purple-500 focus:ring-2 focus:ring-purple-200 disabled:bg-gray-100"
               />
             </div>
 
@@ -111,7 +136,9 @@ export default function Home() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter password"
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-purple-500 focus:ring-2 focus:ring-purple-200"
+                autoComplete="current-password"
+                disabled={isLoading}
+                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-purple-500 focus:ring-2 focus:ring-purple-200 disabled:bg-gray-100"
               />
             </div>
 
@@ -125,9 +152,10 @@ export default function Home() {
             {/* Submit */}
             <button
               type="submit"
-              className="w-full rounded-lg bg-gradient-to-r from-purple-600 to-purple-800 py-3 font-semibold text-white shadow-md transition hover:from-purple-700 hover:to-purple-900"
+              disabled={isLoading}
+              className="w-full rounded-lg bg-gradient-to-r from-purple-600 to-purple-800 py-3 font-semibold text-white shadow-md transition hover:from-purple-700 hover:to-purple-900 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Sign In
+              {isLoading ? "Signing in..." : "Sign In"}
             </button>
           </form>
         </div>
