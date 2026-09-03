@@ -125,7 +125,7 @@ function getStockStatus(quantity: number, threshold: number) {
     return "LOW STOCK";
   }
 
-  return "NORMAL";
+  return "IN STOCK";
 }
 
 function formatDate(date: Date) {

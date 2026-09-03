@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 export function getStockStatus(quantity: number, minThreshold: number) {
   if (quantity <= 0) {
     return "OUT_OF_STOCK";
-  } else if (quantity < minThreshold) {
+  } else if (quantity <= minThreshold) {
     return "LOW_STOCK";
   } else {
     return "IN_STOCK";

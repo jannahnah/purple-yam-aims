@@ -1,14 +1,52 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth/current-user";
+import { canAccessBranch } from "@/lib/auth/authorization";
 
 export async function GET(req: Request) {
   try {
+    const currentUser = await getCurrentUser();
+
+    if (!currentUser) {
+      return NextResponse.json(
+        { error: "You must be logged in." },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(req.url);
-    const branchId = searchParams.get("branchId");
+    const requestedBranchId = searchParams.get("branchId");
 
     /*
-     * Get all branch stock records together with their item
-     * and branch information.
+     * Owners can view alerts for all branches.
+     * Other users may only view alerts for their assigned branch.
+     */
+    let branchId: string | null = requestedBranchId;
+
+    if (currentUser.role !== "OWNER") {
+      if (!currentUser.branchId) {
+        return NextResponse.json(
+          { error: "You are not assigned to a branch." },
+          { status: 403 }
+        );
+      }
+
+      if (
+        requestedBranchId &&
+        !canAccessBranch(currentUser, requestedBranchId)
+      ) {
+        return NextResponse.json(
+          { error: "You cannot access alerts for this branch." },
+          { status: 403 }
+        );
+      }
+
+      branchId = currentUser.branchId;
+    }
+
+    /*
+     * Get branch stock records that are relevant to the
+     * authenticated user's permitted branch scope.
      */
     const branchStocks = await prisma.branchStock.findMany({
       where: branchId ? { branchId } : undefined,
@@ -19,25 +57,21 @@ export async function GET(req: Request) {
     });
 
     /*
-     * Synchronize reorder notifications with the current
+     * Synchronize reorder notifications with current
      * inventory quantities.
      */
     await prisma.$transaction(async (tx) => {
       for (const stock of branchStocks) {
-        const existingNotification = await tx.reorderAlert.findFirst({
-          where: {
-            branchId: stock.branchId,
-            itemId: stock.itemId,
-            status: "PENDING",
-          },
-        });
+        const existingNotification =
+          await tx.reorderAlert.findFirst({
+            where: {
+              branchId: stock.branchId,
+              itemId: stock.itemId,
+              status: "PENDING",
+            },
+          });
 
         if (stock.quantity <= stock.item.minThreshold) {
-          /*
-           * Stock is low or exactly at the minimum.
-           * Create a notification only if one does not
-           * already exist.
-           */
           if (!existingNotification) {
             await tx.reorderAlert.create({
               data: {
@@ -56,10 +90,6 @@ export async function GET(req: Request) {
             });
           }
         } else if (existingNotification) {
-          /*
-           * Stock is now above the minimum threshold.
-           * Resolve the existing notification.
-           */
           await tx.reorderAlert.update({
             where: {
               id: existingNotification.id,
@@ -73,8 +103,7 @@ export async function GET(req: Request) {
     });
 
     /*
-     * Fetch the current active notifications after
-     * synchronization.
+     * Fetch active notifications after synchronization.
      */
     const alerts = await prisma.reorderAlert.findMany({
       where: {
@@ -103,7 +132,7 @@ export async function GET(req: Request) {
     });
 
     /*
-     * Attach the current stock quantity to each notification.
+     * Attach current stock quantity to each notification.
      */
     const notifications = await Promise.all(
       alerts.map(async (alert) => {
@@ -130,7 +159,10 @@ export async function GET(req: Request) {
       status: 200,
     });
   } catch (error) {
-    console.error("Failed to synchronize stock notifications:", error);
+    console.error(
+      "Failed to synchronize stock notifications:",
+      error
+    );
 
     return NextResponse.json(
       {
