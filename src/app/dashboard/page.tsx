@@ -1,16 +1,12 @@
 import { redirect } from "next/navigation";
-import { getCurrentUser } from "@/lib/auth/current-user";
+import { requireOwner } from "@/lib/auth/authorization";
 import { prisma } from "@/lib/prisma";
 import DashboardClient from "./DashboardClient";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const user = await getCurrentUser();
-
-  if (!user) {
-    redirect("/");
-  }
+const user = await requireOwner();
 
   const [
     totalItems,

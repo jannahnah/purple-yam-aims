@@ -33,7 +33,13 @@ export default function Home() {
         return;
       }
 
+     if (data.user.role === "OWNER") {
       window.location.href = "/dashboard";
+    } else if (data.user.role === "BRANCH_MANAGER") {
+      window.location.href = "/manager-dashboard";
+  } else {
+      window.location.href = "/inventory";
+  }
     } catch (error) {
       console.error("Login request failed:", error);
       setError("Unable to connect to the server. Please try again.");

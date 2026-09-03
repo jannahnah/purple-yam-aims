@@ -2,40 +2,50 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { getCurrentUser } from "@/lib/auth/current-user";
+import { canAccessBranch } from "@/lib/auth/authorization";
 
 export async function recordSale({
   branchId,
   finishedItemId,
   soldQuantity,
-  userId,
 }: {
   branchId: string;
   finishedItemId: string;
   soldQuantity: number;
-  userId?: string;
 }) {
-  // Finished products are sold by whole pieces.
-  if (!Number.isInteger(soldQuantity) || soldQuantity <= 0) {
-    throw new Error("Sale quantity must be a whole number greater than zero.");
+  if (
+    !Number.isInteger(soldQuantity) ||
+    soldQuantity <= 0
+  ) {
+    throw new Error(
+      "Sale quantity must be a whole number greater than zero."
+    );
   }
 
-  // Use supplied user, or fall back to the first user.
-  let activeUserId = userId;
+  const currentUser = await getCurrentUser();
 
-  if (!activeUserId) {
-    const defaultUser = await prisma.user.findFirst();
+  if (!currentUser) {
+    throw new Error("You must be logged in.");
+  }
 
-    if (!defaultUser) {
-      throw new Error(
-        "No user account found to attribute this transaction to."
-      );
-    }
+  if (
+    currentUser.role !== "OWNER" &&
+    currentUser.role !== "BRANCH_MANAGER" &&
+    currentUser.role !== "CASHIER"
+  ) {
+    throw new Error(
+      "You do not have permission to record sales."
+    );
+  }
 
-    activeUserId = defaultUser.id;
+  if (!canAccessBranch(currentUser, branchId)) {
+    throw new Error(
+      "You can only record sales for your assigned branch."
+    );
   }
 
   await prisma.$transaction(async (tx) => {
-    // 1. Validate branch
     const branch = await tx.branch.findUnique({
       where: { id: branchId },
     });
@@ -44,37 +54,34 @@ export async function recordSale({
       throw new Error("Branch not found.");
     }
 
-    // 2. Validate user
-    const user = await tx.user.findUnique({
-      where: { id: activeUserId },
-    });
-
-    if (!user) {
-      throw new Error("User not found.");
-    }
-
-    // 3. Validate finished product
     const finishedItem = await tx.item.findUnique({
       where: { id: finishedItemId },
     });
 
     if (!finishedItem) {
-      throw new Error("Finished-product item not found.");
+      throw new Error(
+        "Finished-product item not found."
+      );
     }
 
-    if (finishedItem.sourceType !== "FINISHED_PRODUCT") {
-      throw new Error("The selected item is not a finished product.");
+    if (
+      finishedItem.sourceType !==
+      "FINISHED_PRODUCT"
+    ) {
+      throw new Error(
+        "The selected item is not a finished product."
+      );
     }
 
-    // 4. Check available finished-product stock
-    const stock = await tx.branchStock.findUnique({
-      where: {
-        branchId_itemId: {
-          branchId,
-          itemId: finishedItemId,
+    const stock =
+      await tx.branchStock.findUnique({
+        where: {
+          branchId_itemId: {
+            branchId,
+            itemId: finishedItemId,
+          },
         },
-      },
-    });
+      });
 
     if (!stock) {
       throw new Error(
@@ -90,42 +97,36 @@ export async function recordSale({
       );
     }
 
-    // 5. Deduct sold quantity
-    await tx.branchStock.update({
-      where: {
-        branchId_itemId: {
-          branchId,
-          itemId: finishedItemId,
+    const updatedStock =
+      await tx.branchStock.update({
+        where: {
+          branchId_itemId: {
+            branchId,
+            itemId: finishedItemId,
+          },
         },
-      },
-      data: {
-        quantity: {
-          decrement: soldQuantity,
+        data: {
+          quantity: {
+            decrement: soldQuantity,
+          },
         },
-      },
-    });
+      });
 
-    // 6. Record sale transaction
-    const transaction = await tx.stockTransaction.create({
+    if (updatedStock.quantity < 0) {
+      throw new Error(
+        "Stock quantity cannot be negative."
+      );
+    }
+
+    await tx.stockTransaction.create({
       data: {
         type: "SALE",
         quantityDelta: -soldQuantity,
         branchId,
         itemId: finishedItemId,
-        userId: activeUserId,
+        userId: currentUser.id,
       },
     });
-
-    return {
-      transactionId: transaction.id,
-      item: {
-        id: finishedItem.id,
-        name: finishedItem.name,
-        quantity: soldQuantity,
-        unit: finishedItem.unit,
-      },
-      remainingStock: stock.quantity - soldQuantity,
-    };
   });
 
   revalidatePath("/inventory");

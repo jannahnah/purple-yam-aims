@@ -2,13 +2,16 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import {
+  getCurrentUser,
+} from "@/lib/auth/current-user";
+import {
+  canAccessBranch,
+} from "@/lib/auth/authorization";
 
 /**
- * Create a pending reorder alert when stock is at/below
- * the item's minimum threshold.
- *
- * If stock is above the threshold, any existing pending
- * alert for that branch/item is resolved.
+ * Create or resolve a pending reorder alert based on
+ * the item's minimum stock threshold.
  */
 async function updateReorderAlert(
   tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0],
@@ -33,7 +36,6 @@ async function updateReorderAlert(
   });
 
   if (quantity <= item.minThreshold) {
-    // Do not create duplicate pending alerts.
     if (!existingAlert) {
       await tx.reorderAlert.create({
         data: {
@@ -44,7 +46,6 @@ async function updateReorderAlert(
       });
     }
   } else if (existingAlert) {
-    // Stock has recovered above the threshold.
     await tx.reorderAlert.update({
       where: { id: existingAlert.id },
       data: {
@@ -59,39 +60,65 @@ export async function adjustStock({
   itemId,
   quantity,
   type = "ADJUSTMENT",
-  userId,
 }: {
   branchId: string;
   itemId: string;
   quantity: number;
-  type?: "ADJUSTMENT" | "STOCK_RECEIPT" | "SALE" | "PRODUCTION";
-  userId?: string;
+  type?: "ADJUSTMENT" | "STOCK_RECEIPT";
 }) {
   if (quantity === 0) {
     throw new Error("Stock adjustment quantity cannot be zero.");
   }
 
-  let activeUserId = userId;
+  const currentUser = await getCurrentUser();
 
-  if (!activeUserId) {
-    const defaultUser = await prisma.user.findFirst();
+  if (!currentUser) {
+    throw new Error("You must be logged in.");
+  }
 
-    if (!defaultUser) {
-      throw new Error(
-        "No user account found to attribute this transaction to."
-      );
-    }
+  if (
+    currentUser.role !== "OWNER" &&
+    currentUser.role !== "BRANCH_MANAGER"
+  ) {
+    throw new Error(
+      "You do not have permission to adjust stock."
+    );
+  }
 
-    activeUserId = defaultUser.id;
+  if (!canAccessBranch(currentUser, branchId)) {
+    throw new Error(
+      "You do not have permission to modify stock for this branch."
+    );
   }
 
   await prisma.$transaction(async (tx) => {
+    const item = await tx.item.findUnique({
+      where: { id: itemId },
+    });
+
+    if (!item) {
+      throw new Error("Item not found.");
+    }
+
+    const branch = await tx.branch.findUnique({
+      where: { id: branchId },
+    });
+
+    if (!branch) {
+      throw new Error("Branch not found.");
+    }
+
     const updatedStock = await tx.branchStock.upsert({
       where: {
-        branchId_itemId: { branchId, itemId },
+        branchId_itemId: {
+          branchId,
+          itemId,
+        },
       },
       update: {
-        quantity: { increment: quantity },
+        quantity: {
+          increment: quantity,
+        },
       },
       create: {
         branchId,
@@ -100,7 +127,6 @@ export async function adjustStock({
       },
     });
 
-    // Protect against negative inventory.
     if (updatedStock.quantity < 0) {
       throw new Error("Stock quantity cannot be negative.");
     }
@@ -109,9 +135,21 @@ export async function adjustStock({
       data: {
         type,
         quantityDelta: quantity,
-        branch: { connect: { id: branchId } },
-        item: { connect: { id: itemId } },
-        user: { connect: { id: activeUserId } },
+        branch: {
+          connect: {
+            id: branchId,
+          },
+        },
+        item: {
+          connect: {
+            id: itemId,
+          },
+        },
+        user: {
+          connect: {
+            id: currentUser.id,
+          },
+        },
       },
     });
 
@@ -133,38 +171,79 @@ export async function transferStock({
   destinationBranchId,
   itemId,
   quantity,
-  userId,
 }: {
   sourceBranchId: string;
   destinationBranchId: string;
   itemId: string;
   quantity: number;
-  userId?: string;
 }) {
   if (quantity <= 0) {
-    throw new Error("Transfer quantity must be greater than zero.");
+    throw new Error(
+      "Transfer quantity must be greater than zero."
+    );
   }
 
   if (sourceBranchId === destinationBranchId) {
-    throw new Error("Source and destination branches must be different.");
+    throw new Error(
+      "Source and destination branches must be different."
+    );
   }
 
-  let activeUserId = userId;
+  const currentUser = await getCurrentUser();
 
-  if (!activeUserId) {
-    const defaultUser = await prisma.user.findFirst();
+  if (!currentUser) {
+    throw new Error("You must be logged in.");
+  }
 
-    if (!defaultUser) {
-      throw new Error(
-        "No user account found to attribute this transaction to."
-      );
-    }
+  if (
+    currentUser.role !== "OWNER" &&
+    currentUser.role !== "BRANCH_MANAGER"
+  ) {
+    throw new Error(
+      "You do not have permission to transfer stock."
+    );
+  }
 
-    activeUserId = defaultUser.id;
+  /*
+   * Owner can transfer between any branches.
+   *
+   * Branch Manager can only transfer FROM their
+   * assigned branch.
+   */
+  if (
+    currentUser.role !== "OWNER" &&
+    currentUser.branchId !== sourceBranchId
+  ) {
+    throw new Error(
+      "You can only transfer stock from your assigned branch."
+    );
   }
 
   await prisma.$transaction(async (tx) => {
-    // 1. Check source stock
+    const sourceBranch = await tx.branch.findUnique({
+      where: { id: sourceBranchId },
+    });
+
+    if (!sourceBranch) {
+      throw new Error("Source branch not found.");
+    }
+
+    const destinationBranch = await tx.branch.findUnique({
+      where: { id: destinationBranchId },
+    });
+
+    if (!destinationBranch) {
+      throw new Error("Destination branch not found.");
+    }
+
+    const item = await tx.item.findUnique({
+      where: { id: itemId },
+    });
+
+    if (!item) {
+      throw new Error("Item not found.");
+    }
+
     const sourceStock = await tx.branchStock.findUnique({
       where: {
         branchId_itemId: {
@@ -175,28 +254,39 @@ export async function transferStock({
     });
 
     if (!sourceStock || sourceStock.quantity < quantity) {
-      throw new Error("Insufficient stock at source branch.");
+      throw new Error(
+        "Insufficient stock at source branch."
+      );
     }
 
-    // 2. Deduct from source branch
-    const updatedSourceStock = await tx.branchStock.update({
-      where: { id: sourceStock.id },
-      data: {
-        quantity: { decrement: quantity },
-      },
-    });
+    const updatedSourceStock =
+      await tx.branchStock.update({
+        where: {
+          id: sourceStock.id,
+        },
+        data: {
+          quantity: {
+            decrement: quantity,
+          },
+        },
+      });
+
+    if (updatedSourceStock.quantity < 0) {
+      throw new Error(
+        "Source stock cannot become negative."
+      );
+    }
 
     await tx.stockTransaction.create({
       data: {
         type: "ADJUSTMENT",
         quantityDelta: -quantity,
-        branch: { connect: { id: sourceBranchId } },
-        item: { connect: { id: itemId } },
-        user: { connect: { id: activeUserId } },
+        branchId: sourceBranchId,
+        itemId,
+        userId: currentUser.id,
       },
     });
 
-    // Check whether source branch now needs replenishment.
     await updateReorderAlert(
       tx,
       sourceBranchId,
@@ -204,35 +294,36 @@ export async function transferStock({
       updatedSourceStock.quantity
     );
 
-    // 3. Add to destination branch
-    const updatedDestinationStock = await tx.branchStock.upsert({
-      where: {
-        branchId_itemId: {
+    const updatedDestinationStock =
+      await tx.branchStock.upsert({
+        where: {
+          branchId_itemId: {
+            branchId: destinationBranchId,
+            itemId,
+          },
+        },
+        update: {
+          quantity: {
+            increment: quantity,
+          },
+        },
+        create: {
           branchId: destinationBranchId,
           itemId,
+          quantity,
         },
-      },
-      update: {
-        quantity: { increment: quantity },
-      },
-      create: {
-        branchId: destinationBranchId,
-        itemId,
-        quantity,
-      },
-    });
+      });
 
     await tx.stockTransaction.create({
       data: {
         type: "STOCK_RECEIPT",
         quantityDelta: quantity,
-        branch: { connect: { id: destinationBranchId } },
-        item: { connect: { id: itemId } },
-        user: { connect: { id: activeUserId } },
+        branchId: destinationBranchId,
+        itemId,
+        userId: currentUser.id,
       },
     });
 
-    // Destination may have recovered from a previous low-stock state.
     await updateReorderAlert(
       tx,
       destinationBranchId,
