@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { canAccessBranch } from "@/lib/auth/authorization";
+import { updateReorderAlert } from "@/lib/reorder-alerts";
 
 export async function logProductionRun({
   branchId,
@@ -163,6 +164,15 @@ export async function logProductionRun({
         );
       }
 
+      // Synchronize the ingredient's reorder alert
+      // using the new stock quantity.
+      await updateReorderAlert(
+        tx,
+        branchId,
+        requirement.itemId,
+        updatedStock.quantity
+      );
+
       await tx.stockTransaction.create({
         data: {
           type: "PRODUCTION",
@@ -176,24 +186,34 @@ export async function logProductionRun({
     }
 
     // Add finished product.
-    await tx.branchStock.upsert({
-      where: {
-        branchId_itemId: {
+    const updatedFinishedStock =
+      await tx.branchStock.upsert({
+        where: {
+          branchId_itemId: {
+            branchId,
+            itemId: finishedItemId,
+          },
+        },
+        update: {
+          quantity: {
+            increment: producedQuantity,
+          },
+        },
+        create: {
           branchId,
           itemId: finishedItemId,
+          quantity: producedQuantity,
         },
-      },
-      update: {
-        quantity: {
-          increment: producedQuantity,
-        },
-      },
-      create: {
-        branchId,
-        itemId: finishedItemId,
-        quantity: producedQuantity,
-      },
-    });
+      });
+
+    // Synchronize the finished product's reorder alert
+    // using the new stock quantity.
+    await updateReorderAlert(
+      tx,
+      branchId,
+      finishedItemId,
+      updatedFinishedStock.quantity
+    );
 
     await tx.stockTransaction.create({
       data: {

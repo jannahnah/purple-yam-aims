@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { canAccessBranch } from "@/lib/auth/authorization";
+import { updateReorderAlert } from "@/lib/reorder-alerts";
 
 export async function recordSale({
   branchId,
@@ -117,6 +118,12 @@ export async function recordSale({
         "Stock quantity cannot be negative."
       );
     }
+      await updateReorderAlert(
+        tx,
+        branchId,
+        finishedItemId,
+        updatedStock.quantity
+      );
 
     await tx.stockTransaction.create({
       data: {
