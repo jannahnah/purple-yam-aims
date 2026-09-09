@@ -1,10 +1,146 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
+model User {
+  id          String     @id @default(uuid())
+  username    String     @unique
+  name        String?
+  email       String     @unique
+  password    String
+  role        Role       @default(CASHIER)
+  status      UserStatus @default(ACTIVE)
+  branchId    String?
+  businessId  String?
+  lastLoginAt DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  stockTransactions StockTransaction[]
+  auditLogs         UserAuditLog[]     @relation("AffectedUser")
+  performedAudits   UserAuditLog[]     @relation("PerformedBy")
+  branch            Branch?            @relation(fields: [branchId], references: [id])
+  business          Business?          @relation(fields: [businessId], references: [id])
+}
+
+model UserAuditLog {
+  id            String   @id @default(uuid())
+  userId        String
+  performedById String
+  action        String
+  field         String?
+  previousValue String?
+  currentValue  String?
+  createdAt     DateTime @default(now())
+
+  user        User @relation("AffectedUser", fields: [userId], references: [id])
+  performedBy User @relation("PerformedBy", fields: [performedById], references: [id])
+
+  @@index([userId])
+  @@index([performedById])
+  @@index([createdAt])
+}
+
+model Branch {
+  id           String   @id @default(uuid())
+  name         String
+  location     String
+  isCommissary Boolean  @default(false)
+  businessId   String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  branchStocks      BranchStock[]
+  reorderAlerts     ReorderAlert[]
+  stockTransactions StockTransaction[]
+  users             User[]
+  business          Business?          @relation(fields: [businessId], references: [id])
+}
+
+model Item {
+  id           String         @id @default(uuid())
+  name         String
+  sourceType   ItemSourceType
+  category     ItemCategory   @default(RAW_MATERIAL)
+  unit         String
+  minThreshold Float          @default(10.0)
+  businessId   String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  branchStocks       BranchStock[]
+  recipeAsFinished   ProductionRecipe[] @relation("FinishedProduct")
+  recipeAsIngredient ProductionRecipe[] @relation("IngredientProduct")
+  reorderAlerts      ReorderAlert[]
+  stockTransactions  StockTransaction[]
+  business           Business?          @relation(fields: [businessId], references: [id])
+}
+
+model BranchStock {
+  id        String   @id @default(uuid())
+  branchId  String
+  itemId    String
+  quantity  Float    @default(0.0)
+  updatedAt DateTime @updatedAt
+
+  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  item   Item   @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@unique([branchId, itemId])
+}
+
+model ProductionRecipe {
+  id               String @id @default(uuid())
+  finishedItemId   String
+  ingredientItemId String
+  requiredQuantity Float
+
+  finishedItem   Item @relation("FinishedProduct", fields: [finishedItemId], references: [id], onDelete: Cascade)
+  ingredientItem Item @relation("IngredientProduct", fields: [ingredientItemId], references: [id], onDelete: Cascade)
+
+  @@unique([finishedItemId, ingredientItemId])
+}
+
+model StockTransaction {
+  id            String          @id @default(uuid())
+  type          TransactionType
+  branchId      String
+  itemId        String
+  quantityDelta Float
+  userId        String
+  createdAt     DateTime        @default(now())
+
+  branch Branch @relation(fields: [branchId], references: [id])
+  item   Item   @relation(fields: [itemId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+model ReorderAlert {
+  id        String      @id @default(uuid())
+  branchId  String
+  itemId    String
+  status    AlertStatus @default(PENDING)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  branch Branch @relation(fields: [branchId], references: [id])
+  item   Item   @relation(fields: [itemId], references: [id])
+}
+
+model Business {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  branches Branch[]
+  items    Item[]
+  users    User[]
 }
 
 enum Role {
@@ -19,6 +155,11 @@ enum ItemSourceType {
   FINISHED_PRODUCT
 }
 
+enum ItemCategory {
+  RAW_MATERIAL
+  PACKAGING
+}
+
 enum TransactionType {
   SALE
   PRODUCTION
@@ -31,88 +172,7 @@ enum AlertStatus {
   RESOLVED
 }
 
-model User {
-  id                String             @id @default(uuid())
-  username          String             @unique
-  password          String
-  role              Role               @default(CASHIER)
-  branchId          String?
-  branch            Branch?            @relation(fields: [branchId], references: [id])
-  stockTransactions StockTransaction[]
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
-}
-
-model Branch {
-  id                String             @id @default(uuid())
-  name              String
-  location          String
-  users             User[]
-  branchStocks      BranchStock[]
-  stockTransactions StockTransaction[]
-  reorderAlerts     ReorderAlert[]
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
-}
-
-model Item {
-  id                 String             @id @default(uuid())
-  name               String
-  sourceType         ItemSourceType
-  unit               String
-  minThreshold       Float              @default(10.0)
-  branchStocks       BranchStock[]
-  recipeAsFinished   ProductionRecipe[] @relation("FinishedProduct")
-  recipeAsIngredient ProductionRecipe[] @relation("IngredientProduct")
-  stockTransactions  StockTransaction[]
-  reorderAlerts      ReorderAlert[]
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
-}
-
-model BranchStock {
-  id        String   @id @default(uuid())
-  branchId  String
-  itemId    String
-  quantity  Float    @default(0.0)
-  branch    Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  item      Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  updatedAt DateTime @updatedAt
-
-  @@unique([branchId, itemId])
-}
-
-model ProductionRecipe {
-  id                String   @id @default(uuid())
-  finishedItemId    String
-  finishedItem      Item     @relation("FinishedProduct", fields: [finishedItemId], references: [id], onDelete: Cascade)
-  ingredientItemId  String
-  ingredientItem    Item     @relation("IngredientProduct", fields: [ingredientItemId], references: [id], onDelete: Cascade)
-  requiredQuantity  Float
-
-  @@unique([finishedItemId, ingredientItemId])
-}
-
-model StockTransaction {
-  id              String          @id @default(uuid())
-  type            TransactionType
-  branchId        String
-  itemId          String
-  quantityDelta   Float
-  userId          String
-  branch          Branch          @relation(fields: [branchId], references: [id])
-  item            Item            @relation(fields: [itemId], references: [id])
-  user            User            @relation(fields: [userId], references: [id])
-  createdAt       DateTime        @default(now())
-}
-
-model ReorderAlert {
-  id        String      @id @default(uuid())
-  branchId  String
-  itemId    String
-  status    AlertStatus @default(PENDING)
-  branch    Branch      @relation(fields: [branchId], references: [id])
-  item      Item        @relation(fields: [itemId], references: [id])
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+enum UserStatus {
+  ACTIVE
+  INACTIVE
 }

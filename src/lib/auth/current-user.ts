@@ -23,8 +23,11 @@ export async function getCurrentUser() {
     select: {
       id: true,
       username: true,
+      name: true,
+      email: true,
       role: true,
       branchId: true,
+      businessId: true,
       branch: {
         select: {
           id: true,

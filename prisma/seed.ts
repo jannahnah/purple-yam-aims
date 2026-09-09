@@ -36,28 +36,32 @@ async function main() {
     data: [
       {
         username: "owner",
+        email: "owner@purpleyam.local",
         password: "owner123",
         role: Role.OWNER,
         branchId: null,
       },
       {
         username: "manager_b1",
+        email: "manager.b1@purpleyam.local",
         password: "manager123",
         role: Role.BRANCH_MANAGER,
         branchId: branch1.id,
       },
       {
         username: "cashier_b1",
+        email: "cashier.b1@purpleyam.local",
         password: "cashier123",
         role: Role.CASHIER,
         branchId: branch1.id,
-      } ,
+      },
       {
         username: "user",
-        password: "user33",
+        email: "user@purpleyam.local",
+        password: "user123",
         role: Role.CASHIER,
         branchId: branch1.id,
-      }
+      },
     ],
   });
 

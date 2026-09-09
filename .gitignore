@@ -52,3 +52,6 @@ next-env.d.ts
 
 # Environment files
 .env*
+# Local database backups and pre-foundation schema
+database-backups/
+prisma/schema.before-db-foundation.prisma

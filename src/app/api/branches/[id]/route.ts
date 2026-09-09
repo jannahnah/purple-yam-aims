@@ -2,49 +2,18 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { NextResponse } from "next/server";
 
-// GET /api/branches
-// Owner: all branches
-// Manager/Cashier: assigned branch only
-export async function GET() {
-  try {
-    const currentUser = await getCurrentUser();
+type RouteContext = {
+  params: Promise<{
+    id: string;
+  }>;
+};
 
-    if (!currentUser) {
-      return NextResponse.json(
-        { error: "Unauthorized." },
-        { status: 401 }
-      );
-    }
-
-    const branches = await prisma.branch.findMany({
-      where:
-        currentUser.role === "OWNER"
-          ? {
-              businessId: currentUser.businessId,
-            }
-          : {
-              businessId: currentUser.businessId,
-              id: currentUser.branchId ?? undefined,
-            },
-      orderBy: {
-        name: "asc",
-      },
-    });
-
-    return NextResponse.json(branches);
-  } catch (error) {
-    console.error("GET /api/branches error:", error);
-
-    return NextResponse.json(
-      { error: "Failed to fetch branches." },
-      { status: 500 }
-    );
-  }
-}
-
-// POST /api/branches
+// PUT /api/branches/{id}
 // Owner only
-export async function POST(request: Request) {
+export async function PUT(
+  request: Request,
+  context: RouteContext
+) {
   try {
     const currentUser = await getCurrentUser();
 
@@ -57,7 +26,7 @@ export async function POST(request: Request) {
 
     if (currentUser.role !== "OWNER") {
       return NextResponse.json(
-        { error: "Only the Owner can create branches." },
+        { error: "Only the Owner can edit branches." },
         { status: 403 }
       );
     }
@@ -69,6 +38,7 @@ export async function POST(request: Request) {
       );
     }
 
+    const { id } = await context.params;
     const body = await request.json();
 
     const name =
@@ -102,27 +72,48 @@ export async function POST(request: Request) {
 
     const existingBranch = await prisma.branch.findFirst({
       where: {
+        id,
+        businessId: currentUser.businessId,
+      },
+    });
+
+    if (!existingBranch) {
+      return NextResponse.json(
+        { error: "Branch not found." },
+        { status: 404 }
+      );
+    }
+
+    const duplicateName = await prisma.branch.findFirst({
+      where: {
         businessId: currentUser.businessId,
         name: {
           equals: name,
           mode: "insensitive",
         },
+        NOT: {
+          id,
+        },
       },
     });
 
-    if (existingBranch) {
+    if (duplicateName) {
       return NextResponse.json(
         { error: "A branch with this name already exists." },
         { status: 409 }
       );
     }
 
-    // Only one branch should be designated as the commissary.
-    if (isCommissary) {
+    // If this branch becomes the commissary,
+    // remove the commissary designation from the previous one.
+    if (isCommissary && !existingBranch.isCommissary) {
       await prisma.branch.updateMany({
         where: {
           businessId: currentUser.businessId,
           isCommissary: true,
+          NOT: {
+            id,
+          },
         },
         data: {
           isCommissary: false,
@@ -130,21 +121,23 @@ export async function POST(request: Request) {
       });
     }
 
-    const newBranch = await prisma.branch.create({
+    const updatedBranch = await prisma.branch.update({
+      where: {
+        id,
+      },
       data: {
         name,
         location,
         isCommissary,
-        businessId: currentUser.businessId,
       },
     });
 
-    return NextResponse.json(newBranch, { status: 201 });
+    return NextResponse.json(updatedBranch);
   } catch (error) {
-    console.error("POST /api/branches error:", error);
+    console.error("PUT /api/branches/[id] error:", error);
 
     return NextResponse.json(
-      { error: "Failed to create branch." },
+      { error: "Failed to update branch." },
       { status: 500 }
     );
   }

@@ -3,7 +3,7 @@
 import { FormEvent, useState } from "react";
 
 export default function Home() {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -21,7 +21,7 @@ export default function Home() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          username,
+          email,
           password,
         }),
       });
@@ -29,17 +29,17 @@ export default function Home() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || "Invalid username or password.");
+        setError(data.error || "Invalid email or password.");
         return;
       }
 
-     if (data.user.role === "OWNER") {
-      window.location.href = "/dashboard";
-    } else if (data.user.role === "BRANCH_MANAGER") {
-      window.location.href = "/manager-dashboard";
-  } else {
-      window.location.href = "/inventory";
-  }
+      if (data.user.role === "OWNER") {
+        window.location.href = "/dashboard";
+      } else if (data.user.role === "BRANCH_MANAGER") {
+        window.location.href = "/manager-dashboard";
+      } else {
+        window.location.href = "/inventory";
+      }
     } catch (error) {
       console.error("Login request failed:", error);
       setError("Unable to connect to the server. Please try again.");
@@ -52,7 +52,7 @@ export default function Home() {
     <main className="min-h-screen bg-gradient-to-br from-[#3b0a78] via-[#4c1494] to-[#5d20a8] flex items-center justify-center px-6 py-10">
       <div className="w-full max-w-md">
         {/* Branding */}
-        <div className="text-center text-white mb-8">
+        <div className="mb-8 text-center text-white">
           <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full border-4 border-white/70 bg-purple-950 text-4xl shadow-lg">
             🍠
           </div>
@@ -90,39 +90,47 @@ export default function Home() {
 
             <div className="space-y-1 text-xs text-purple-700">
               <p>
-                <span className="font-semibold">owner</span> / owner123 — Owner
+                <span className="font-semibold">
+                  owner@purpleyam.local
+                </span>{" "}
+                / owner123 — Owner
               </p>
 
               <p>
-                <span className="font-semibold">manager_b1</span> / manager123
-                — Branch Manager
+                <span className="font-semibold">
+                  manager.b1@purpleyam.local
+                </span>{" "}
+                / manager123 — Branch Manager
               </p>
 
               <p>
-                <span className="font-semibold">cashier_b1</span> / cashier123
-                — Cashier
+                <span className="font-semibold">
+                  cashier.b1@purpleyam.local
+                </span>{" "}
+                / cashier123 — Cashier
               </p>
             </div>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-5">
-            {/* Username */}
+            {/* Email */}
             <div>
               <label
-                htmlFor="username"
+                htmlFor="email"
                 className="mb-2 block text-sm font-medium text-gray-700"
               >
-                Username
+                Email
               </label>
 
               <input
-                id="username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter username"
-                autoComplete="username"
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter email"
+                autoComplete="email"
                 disabled={isLoading}
+                required
                 className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-purple-500 focus:ring-2 focus:ring-purple-200 disabled:bg-gray-100"
               />
             </div>
@@ -144,13 +152,17 @@ export default function Home() {
                 placeholder="Enter password"
                 autoComplete="current-password"
                 disabled={isLoading}
+                required
                 className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-purple-500 focus:ring-2 focus:ring-purple-200 disabled:bg-gray-100"
               />
             </div>
 
             {/* Error */}
             {error && (
-              <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
+              <div
+                role="alert"
+                className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600"
+              >
                 {error}
               </div>
             )}
