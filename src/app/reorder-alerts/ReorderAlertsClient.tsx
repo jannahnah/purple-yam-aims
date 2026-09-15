@@ -132,7 +132,7 @@ export default function ReorderAlertsClient({
   }
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-6">
+    <div className="mx-auto max-w-5xl space-y-6 p-6">
       {/* Page Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">
@@ -262,23 +262,23 @@ export default function ReorderAlertsClient({
                     </th>
                   )}
 
-                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  <th className="whitespace-nowrap px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Current Stock
                   </th>
 
-                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  <th className="whitespace-nowrap px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Threshold
                   </th>
 
-                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  <th className="whitespace-nowrap px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Severity
                   </th>
 
-                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  <th className="whitespace-nowrap px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Created
                   </th>
 
-                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  <th className="whitespace-nowrap px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Status
                   </th>
                 </tr>
@@ -307,7 +307,7 @@ export default function ReorderAlertsClient({
                         </td>
                       )}
 
-                      <td className="px-5 py-4">
+                      <td className="whitespace-nowrap px-5 py-4">
                         <span className="font-mono text-sm font-bold text-red-700">
                           {formatQuantity(
                             alert.currentQuantity
@@ -316,7 +316,7 @@ export default function ReorderAlertsClient({
                         </span>
                       </td>
 
-                      <td className="px-5 py-4">
+                      <td className="whitespace-nowrap px-5 py-4">
                         <span className="font-mono text-sm text-gray-500">
                           {formatThreshold(
                             alert.item.minThreshold
@@ -325,22 +325,22 @@ export default function ReorderAlertsClient({
                         </span>
                       </td>
 
-                      <td className="px-5 py-4">
+                      <td className="whitespace-nowrap px-5 py-4">
                         <span
-                          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${severity.className}`}
+                          className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ${severity.className}`}
                         >
                           {severity.label}
                         </span>
                       </td>
 
-                      <td className="px-5 py-4">
+                      <td className="whitespace-nowrap px-5 py-4">
                         <span className="font-mono text-xs text-gray-500">
                           {formatDate(alert.createdAt)}
                         </span>
                       </td>
 
-                      <td className="px-5 py-4">
-                        <span className="inline-flex rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-medium text-red-700">
+                      <td className="whitespace-nowrap px-5 py-4">
+                        <span className="inline-flex whitespace-nowrap rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-medium text-red-700">
                           Pending
                         </span>
                       </td>
@@ -368,7 +368,7 @@ export default function ReorderAlertsClient({
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[850px] text-left">
+            <table className="w-full min-w-[900px] text-left">
               <thead className="bg-gray-50">
                 <tr className="border-b border-gray-100">
                   <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
@@ -381,23 +381,23 @@ export default function ReorderAlertsClient({
                     </th>
                   )}
 
-                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  <th className="whitespace-nowrap px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Current Stock
                   </th>
 
-                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  <th className="whitespace-nowrap px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Threshold
                   </th>
 
-                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  <th className="whitespace-nowrap px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Severity
                   </th>
 
-                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  <th className="whitespace-nowrap px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Created
                   </th>
 
-                  <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  <th className="whitespace-nowrap px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Status
                   </th>
                 </tr>
@@ -426,7 +426,7 @@ export default function ReorderAlertsClient({
                         </td>
                       )}
 
-                      <td className="px-5 py-4">
+                      <td className="whitespace-nowrap px-5 py-4">
                         <span className="font-mono text-sm text-gray-400">
                           {formatQuantity(
                             alert.currentQuantity
@@ -435,7 +435,7 @@ export default function ReorderAlertsClient({
                         </span>
                       </td>
 
-                      <td className="px-5 py-4">
+                      <td className="whitespace-nowrap px-5 py-4">
                         <span className="font-mono text-sm text-gray-400">
                           {formatThreshold(
                             alert.item.minThreshold
@@ -444,22 +444,22 @@ export default function ReorderAlertsClient({
                         </span>
                       </td>
 
-                      <td className="px-5 py-4">
+                      <td className="whitespace-nowrap px-5 py-4">
                         <span
-                          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium opacity-70 ${severity.className}`}
+                          className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium opacity-70 ${severity.className}`}
                         >
                           {severity.label}
                         </span>
                       </td>
 
-                      <td className="px-5 py-4">
+                      <td className="whitespace-nowrap px-5 py-4">
                         <span className="font-mono text-xs text-gray-400">
                           {formatDate(alert.createdAt)}
                         </span>
                       </td>
 
-                      <td className="px-5 py-4">
-                        <span className="inline-flex rounded-full border border-green-200 bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700">
+                      <td className="whitespace-nowrap px-5 py-4">
+                        <span className="inline-flex whitespace-nowrap rounded-full border border-green-200 bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700">
                           Resolved
                         </span>
                       </td>

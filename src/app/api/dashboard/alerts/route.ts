@@ -17,10 +17,6 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const requestedBranchId = searchParams.get("branchId");
 
-    /*
-     * Owners can view alerts for all branches.
-     * Other users may only view alerts for their assigned branch.
-     */
     let branchId: string | null = requestedBranchId;
 
     if (currentUser.role !== "OWNER") {
@@ -44,10 +40,6 @@ export async function GET(req: Request) {
       branchId = currentUser.branchId;
     }
 
-    /*
-     * Get branch stock records that are relevant to the
-     * authenticated user's permitted branch scope.
-     */
     const branchStocks = await prisma.branchStock.findMany({
       where: branchId ? { branchId } : undefined,
       include: {
@@ -56,10 +48,6 @@ export async function GET(req: Request) {
       },
     });
 
-    /*
-     * Synchronize reorder notifications with current
-     * inventory quantities.
-     */
     await prisma.$transaction(async (tx) => {
       for (const stock of branchStocks) {
         const existingNotification =
@@ -102,9 +90,6 @@ export async function GET(req: Request) {
       }
     });
 
-    /*
-     * Fetch active notifications after synchronization.
-     */
     const alerts = await prisma.reorderAlert.findMany({
       where: {
         status: "PENDING",
@@ -131,9 +116,6 @@ export async function GET(req: Request) {
       },
     });
 
-    /*
-     * Attach current stock quantity to each notification.
-     */
     const notifications = await Promise.all(
       alerts.map(async (alert) => {
         const stock = await prisma.branchStock.findUnique({

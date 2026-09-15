@@ -1,20 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 
-interface DashboardUser {
+type Role = "OWNER" | "BRANCH_MANAGER" | "CASHIER";
+
+type DashboardUser = {
   id: string;
   username: string;
-  role: string;
+  name?: string | null;
+  role: Role;
   branchId: string | null;
-  branch: {
+  branch?: {
     id: string;
     name: string;
-    location: string;
   } | null;
-}
+};
 
-interface StockRecord {
+type StockRecord = {
   id: string;
   branchId: string;
   itemId: string;
@@ -22,18 +25,16 @@ interface StockRecord {
   item: {
     id: string;
     name: string;
-    sourceType: string;
     unit: string;
     minThreshold: number;
   };
   branch: {
     id: string;
     name: string;
-    location: string;
   };
-}
+};
 
-interface RecentTransaction {
+type RecentTransaction = {
   id: string;
   type: string;
   quantityDelta: number;
@@ -48,12 +49,13 @@ interface RecentTransaction {
   user: {
     username: string;
   };
-}
+};
 
-interface AlertItem {
+type AlertItem = {
   id: string;
   status: string;
   currentQuantity: number;
+  createdAt: string | Date;
   item: {
     id: string;
     name: string;
@@ -64,9 +66,9 @@ interface AlertItem {
     id: string;
     name: string;
   };
-}
+};
 
-interface DashboardClientProps {
+type DashboardClientProps = {
   user: DashboardUser;
   totalItems: number;
   activeBranches: number;
@@ -74,7 +76,7 @@ interface DashboardClientProps {
   outOfStock: number;
   stockRecords: StockRecord[];
   recentTransactions: RecentTransaction[];
-}
+};
 
 function formatQuantity(quantity: number) {
   return Number.isInteger(quantity)
@@ -83,56 +85,19 @@ function formatQuantity(quantity: number) {
 }
 
 function formatTransactionType(type: string) {
-  switch (type) {
-    case "SALE":
-      return "SALE";
-    case "PRODUCTION":
-      return "PRODUCTION";
-    case "STOCK_RECEIPT":
-      return "STOCK RECEIPT";
-    case "ADJUSTMENT":
-      return "ADJUSTMENT";
-    default:
-      return type;
-  }
+  return type.replaceAll("_", " ");
 }
 
-function getTransactionBadgeClass(type: string) {
-  switch (type) {
-    case "SALE":
-      return "bg-red-50 text-red-700 border-red-200";
-
-    case "PRODUCTION":
-      return "bg-purple-50 text-purple-700 border-purple-200";
-
-    case "STOCK_RECEIPT":
-      return "bg-green-50 text-green-700 border-green-200";
-
-    case "ADJUSTMENT":
-      return "bg-gray-50 text-gray-700 border-gray-200";
-
-    default:
-      return "bg-gray-50 text-gray-700 border-gray-200";
-  }
+function formatTransactionQuantity(quantity: number) {
+  return quantity > 0
+    ? `+${formatQuantity(quantity)}`
+    : formatQuantity(quantity);
 }
 
-function getStockStatus(quantity: number, threshold: number) {
-  if (quantity === 0) {
-    return "OUT OF STOCK";
-  }
-
-  if (quantity <= threshold) {
-    return "LOW STOCK";
-  }
-
-  return "IN STOCK";
-}
-
-function formatDate(date: Date) {
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
+function formatTime(value: string | Date) {
+  return new Date(value).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
@@ -145,408 +110,503 @@ export default function DashboardClient({
   stockRecords,
   recentTransactions,
 }: DashboardClientProps) {
-  const today = formatDate(new Date());
-
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
   const [loadingAlerts, setLoadingAlerts] = useState(true);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+
+  const notificationRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    async function fetchNotifications() {
-      try {
-        const response = await fetch("/api/dashboard/alerts");
+    let isMounted = true;
 
-        if (response.ok) {
-          const data = await response.json();
+    async function loadAlerts() {
+      try {
+        const response = await fetch("/api/dashboard/alerts", {
+          method: "GET",
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to load alerts");
+        }
+
+        const data: AlertItem[] = await response.json();
+
+        if (isMounted) {
           setAlerts(data);
         }
       } catch (error) {
-        console.error(
-          "Failed to load stock notifications:",
-          error
-        );
+        console.error("Failed to load dashboard alerts:", error);
+
+        if (isMounted) {
+          setAlerts([]);
+        }
       } finally {
-        setLoadingAlerts(false);
+        if (isMounted) {
+          setLoadingAlerts(false);
+        }
       }
     }
 
-    fetchNotifications();
+    loadAlerts();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  const branches = Array.from(
-    new Map(
-      stockRecords.map((stock) => [
-        stock.branch.id,
-        stock.branch,
-      ])
-    ).values()
+  useEffect(() => {
+    function handleOutsideClick(event: MouseEvent) {
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(event.target as Node)
+      ) {
+        setIsNotificationOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleOutsideClick);
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, []);
+
+  const stockByBranch = stockRecords.reduce<
+    Record<string, Record<string, StockRecord>>
+  >((result, stock) => {
+    if (!result[stock.item.name]) {
+      result[stock.item.name] = {};
+    }
+
+    result[stock.item.name][stock.branch.name] = stock;
+
+    return result;
+  }, {});
+
+  const branchNames = Array.from(
+    new Set(stockRecords.map((stock) => stock.branch.name)),
   );
 
-  const inventoryItems = Array.from(
-    new Map(
-      stockRecords.map((stock) => [
-        stock.item.id,
-        stock.item,
-      ])
-    ).values()
+  const itemNames = Array.from(
+    new Set(stockRecords.map((stock) => stock.item.name)),
   );
 
-  const finishedProducts = inventoryItems.filter(
-    (item) => item.sourceType === "FINISHED_PRODUCT"
+  const finishedProductRecords = stockRecords.filter((stock) =>
+    stock.item.name.toLowerCase().includes("finished"),
   );
+
+  const finishedProductNames = Array.from(
+    new Set(
+      finishedProductRecords.map((stock) => stock.item.name),
+    ),
+  );
+
+  const activeAlertCount = alerts.length;
 
   return (
-    <main className="min-h-screen bg-gray-50 p-6">
-      <div className="mx-auto max-w-7xl space-y-6">
-
-        {/* Header */}
-        <div className="flex flex-col gap-4 border-b border-gray-200 pb-5 sm:flex-row sm:items-start sm:justify-between">
+    <div className="min-h-full bg-[#f7f7fa]">
+      <header className="sticky top-0 z-30 border-b border-gray-200 bg-white/95 px-4 py-4 backdrop-blur sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <p className="text-sm text-gray-500">
+              Business-wide inventory overview —{" "}
+              {new Date().toLocaleDateString("en-US", {
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+              })}
+            </p>
+
+            <h1 className="mt-1 text-2xl font-bold text-gray-900">
               Owner Dashboard
             </h1>
 
             <p className="mt-1 text-sm text-gray-500">
-              Business-wide inventory overview — {today}
-            </p>
-
-            <p className="mt-2 text-xs text-gray-500">
               Signed in as{" "}
               <span className="font-semibold text-gray-700">
-                {user.username}
+                {user.name?.trim() || user.username}
               </span>
             </p>
           </div>
 
           <div className="flex items-center gap-3">
-            <a
+            <div className="relative" ref={notificationRef}>
+              <button
+                type="button"
+                onClick={() =>
+                  setIsNotificationOpen((currentValue) => !currentValue)
+                }
+                className="relative flex h-11 w-11 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 transition hover:border-purple-300 hover:bg-purple-50 hover:text-purple-700"
+                aria-label="Open stock notifications"
+                aria-expanded={isNotificationOpen}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="21"
+                  height="21"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                </svg>
+
+                {activeAlertCount > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
+                    {activeAlertCount > 99 ? "99+" : activeAlertCount}
+                  </span>
+                )}
+              </button>
+
+              {isNotificationOpen && (
+                <div className="absolute right-0 mt-3 w-[min(360px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl">
+                  <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+                    <div>
+                      <h2 className="font-semibold text-gray-900">
+                        Stock Alerts
+                      </h2>
+
+                      <p className="text-xs text-gray-500">
+                        {activeAlertCount} active{" "}
+                        {activeAlertCount === 1 ? "alert" : "alerts"}
+                      </p>
+                    </div>
+
+                    <span className="rounded-full bg-amber-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-700">
+                      Reorder review
+                    </span>
+                  </div>
+
+                  <div className="max-h-[420px] overflow-y-auto">
+                    {loadingAlerts ? (
+                      <div className="px-4 py-6 text-center text-sm text-gray-500">
+                        Loading alerts...
+                      </div>
+                    ) : alerts.length === 0 ? (
+                      <div className="px-4 py-6 text-center text-sm text-gray-500">
+                        No active stock alerts.
+                      </div>
+                    ) : (
+                      alerts.map((alert) => {
+                        const isOutOfStock = alert.currentQuantity <= 0;
+
+                        return (
+                          <Link
+                            key={alert.id}
+                            href="/reorder-alerts"
+                            onClick={() => setIsNotificationOpen(false)}
+                            className="block border-b border-gray-100 px-4 py-4 transition hover:bg-purple-50"
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <p className="truncate font-semibold text-gray-900">
+                                  {alert.item.name}
+                                </p>
+
+                                <p className="mt-1 truncate text-xs text-gray-500">
+                                  {alert.branch.name}
+                                </p>
+                              </div>
+
+                              <span
+                                className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-bold uppercase ${
+                                  isOutOfStock
+                                    ? "bg-red-100 text-red-700"
+                                    : "bg-amber-100 text-amber-700"
+                                }`}
+                              >
+                                {isOutOfStock
+                                  ? "Out of stock"
+                                  : "Low stock"}
+                              </span>
+                            </div>
+
+                            <div className="mt-3 flex items-center justify-between text-xs">
+                              <span className="text-gray-500">
+                                Current stock
+                              </span>
+
+                              <span className="font-semibold text-gray-800">
+                                {formatQuantity(alert.currentQuantity)} /{" "}
+                                {formatQuantity(alert.item.minThreshold)}{" "}
+                                {alert.item.unit}
+                              </span>
+                            </div>
+
+                            <p className="mt-3 text-xs font-semibold text-purple-700">
+                              Click to view reorder alerts →
+                            </p>
+                          </Link>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  <Link
+                    href="/reorder-alerts"
+                    onClick={() => setIsNotificationOpen(false)}
+                    className="block bg-gray-50 px-4 py-3 text-center text-sm font-semibold text-purple-700 transition hover:bg-purple-100"
+                  >
+                    View all alerts →
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            <Link
               href="/inventory"
-              className="rounded-lg bg-purple-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-purple-800"
+              className="inline-flex items-center justify-center rounded-xl bg-purple-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-purple-800"
             >
               Manage Inventory
-            </a>
-
-            <button
-              type="button"
-              onClick={async () => {
-                try {
-                  const response = await fetch(
-                    "/api/auth/logout",
-                    {
-                      method: "POST",
-                    }
-                  );
-
-                  if (response.ok) {
-                    window.location.href = "/";
-                  }
-                } catch (error) {
-                  console.error(
-                    "Logout failed:",
-                    error
-                  );
-                }
-              }}
-              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
-            >
-              Sign Out
-            </button>
+            </Link>
           </div>
         </div>
+      </header>
 
-        {/* Statistics */}
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-
-          <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-            <p className="text-sm text-gray-500">
+      <main className="space-y-8 p-4 sm:p-6 lg:p-8">
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+            <p className="text-sm font-medium text-gray-500">
               Inventory Items
             </p>
 
-            <p className="mt-2 text-3xl font-bold text-purple-700">
+            <p className="mt-3 text-3xl font-bold text-gray-900">
               {totalItems}
             </p>
 
-            <p className="mt-1 text-xs text-gray-400">
+            <p className="mt-1 text-xs text-gray-500">
               Across all branches
             </p>
           </div>
 
-          <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-            <p className="text-sm text-gray-500">
+          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+            <p className="text-sm font-medium text-gray-500">
               Active Branches
             </p>
 
-            <p className="mt-2 text-3xl font-bold text-gray-900">
+            <p className="mt-3 text-3xl font-bold text-gray-900">
               {activeBranches}
             </p>
 
-            <p className="mt-1 text-xs text-gray-400">
+            <p className="mt-1 text-xs text-gray-500">
               Commissary and satellite branches
             </p>
           </div>
 
-          <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-            <p className="text-sm text-gray-500">
+          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+            <p className="text-sm font-medium text-gray-500">
               Low Stock
             </p>
 
-            <p className="mt-2 text-3xl font-bold text-amber-600">
+            <p className="mt-3 text-3xl font-bold text-amber-600">
               {lowStock}
             </p>
 
-            <p className="mt-1 text-xs text-gray-400">
+            <p className="mt-1 text-xs text-gray-500">
               At or below minimum threshold
             </p>
           </div>
 
-          <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-            <p className="text-sm text-gray-500">
+          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+            <p className="text-sm font-medium text-gray-500">
               Out of Stock
             </p>
 
-            <p className="mt-2 text-3xl font-bold text-red-600">
+            <p className="mt-3 text-3xl font-bold text-red-600">
               {outOfStock}
             </p>
 
-            <p className="mt-1 text-xs text-gray-400">
+            <p className="mt-1 text-xs text-gray-500">
               Zero-quantity entries
             </p>
           </div>
+        </section>
 
-        </div>
+        <section className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+          <div className="flex flex-col gap-3 border-b border-gray-100 px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">
+                Stock Notifications
+              </h2>
 
-        {/* Notifications + Transactions */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-
-          {/* Stock Notifications */}
-          <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-
-            <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
-              <div>
-                <h2 className="font-semibold text-gray-900">
-                  Stock Notifications
-                </h2>
-
-                <p className="mt-0.5 text-xs text-gray-500">
-                  Items requiring replenishment review
-                </p>
-              </div>
-
-              <span className="rounded border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700">
-                {alerts.length} active
-              </span>
+              <p className="mt-1 text-sm text-gray-500">
+                Items requiring replenishment review
+              </p>
             </div>
 
-            {loadingAlerts ? (
-              <p className="px-5 py-8 text-center text-sm text-gray-400">
-                Loading notifications...
-              </p>
-            ) : alerts.length === 0 ? (
-              <p className="px-5 py-8 text-center text-sm text-gray-400">
+            <Link
+              href="/reorder-alerts"
+              className="text-sm font-semibold text-purple-700 hover:text-purple-900"
+            >
+              {activeAlertCount} active
+            </Link>
+          </div>
+
+          <div className="divide-y divide-gray-100">
+            {alerts.length === 0 ? (
+              <div className="px-5 py-8 text-center text-sm text-gray-500">
                 No active stock notifications.
-              </p>
+              </div>
             ) : (
-              <div className="divide-y divide-gray-100">
-                {alerts.map((alert) => (
-                  <div
+              alerts.map((alert) => {
+                const isOutOfStock = alert.currentQuantity <= 0;
+
+                return (
+                  <Link
                     key={alert.id}
-                    className="flex items-center justify-between gap-4 px-5 py-4"
+                    href="/reorder-alerts"
+                    className="flex flex-col gap-3 px-5 py-4 transition hover:bg-purple-50 sm:flex-row sm:items-center sm:justify-between"
                   >
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-gray-900">
+                    <div>
+                      <p className="font-semibold text-gray-900">
                         {alert.item.name}
                       </p>
 
-                      <p className="text-xs text-gray-500">
+                      <p className="mt-1 text-sm text-gray-500">
                         {alert.branch.name}
                       </p>
                     </div>
 
-                    <div className="shrink-0 text-right">
-                      <p className="font-mono text-sm font-semibold text-red-700">
-                        {formatQuantity(alert.currentQuantity)}{" "}
-                        /{" "}
-                        {formatQuantity(
-                          alert.item.minThreshold
-                        )}{" "}
+                    <div className="flex items-center gap-4">
+                      <p className="text-sm font-semibold text-gray-800">
+                        {formatQuantity(alert.currentQuantity)} /{" "}
+                        {formatQuantity(alert.item.minThreshold)}{" "}
                         {alert.item.unit}
                       </p>
 
-                      <span className="mt-1 inline-block rounded border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
-                        REVIEW NEEDED
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-bold ${
+                          isOutOfStock
+                            ? "bg-red-100 text-red-700"
+                            : "bg-amber-100 text-amber-700"
+                        }`}
+                      >
+                        Review needed
                       </span>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  </Link>
+                );
+              })
             )}
+          </div>
 
-          </section>
+          <div className="border-t border-gray-100 px-5 py-4">
+            <Link
+              href="/reorder-alerts"
+              className="text-sm font-semibold text-purple-700 hover:text-purple-900"
+            >
+              View all alerts →
+            </Link>
+          </div>
+        </section>
 
-          {/* Recent Transactions */}
-          <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <section className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+          <div className="border-b border-gray-100 px-5 py-5">
+            <h2 className="text-lg font-bold text-gray-900">
+              Recent Transactions
+            </h2>
 
-            <div className="border-b border-gray-100 px-5 py-4">
-              <h2 className="font-semibold text-gray-900">
-                Recent Transactions
-              </h2>
+            <p className="mt-1 text-sm text-gray-500">
+              Latest inventory activity
+            </p>
+          </div>
 
-              <p className="mt-0.5 text-xs text-gray-500">
-                Latest inventory activity
-              </p>
-            </div>
-
+          <div className="divide-y divide-gray-100">
             {recentTransactions.length === 0 ? (
-              <p className="px-5 py-8 text-center text-sm text-gray-400">
-                No transactions recorded yet.
-              </p>
+              <div className="px-5 py-8 text-center text-sm text-gray-500">
+                No recent transactions found.
+              </div>
             ) : (
-              <div className="divide-y divide-gray-100">
-                {recentTransactions.map((transaction) => {
-                  const date = new Date(
-                    transaction.createdAt
-                  );
+              recentTransactions.map((transaction) => (
+                <div
+                  key={transaction.id}
+                  className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="flex items-start gap-3">
+                    <span className="rounded-lg bg-gray-100 px-2 py-1 text-[10px] font-bold uppercase text-gray-600">
+                      {formatTransactionType(transaction.type)}
+                    </span>
 
-                  const isPositive =
-                    transaction.quantityDelta > 0;
+                    <div>
+                      <p className="font-semibold text-gray-900">
+                        {transaction.item.name}{" "}
+                        <span className="text-purple-700">
+                          {formatTransactionQuantity(
+                            transaction.quantityDelta,
+                          )}{" "}
+                          {transaction.item.unit}
+                        </span>
+                      </p>
 
-                  return (
-                    <div
-                      key={transaction.id}
-                      className="flex items-start gap-3 px-5 py-3"
-                    >
-                      <span
-                        className={`shrink-0 rounded border px-2 py-1 text-[10px] font-semibold ${getTransactionBadgeClass(
-                          transaction.type
-                        )}`}
-                      >
-                        {formatTransactionType(
-                          transaction.type
-                        )}
-                      </span>
-
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm text-gray-700">
-                          {transaction.item.name}{" "}
-                          <span
-                            className={
-                              isPositive
-                                ? "font-semibold text-green-600"
-                                : "font-semibold text-red-600"
-                            }
-                          >
-                            {isPositive ? "+" : ""}
-                            {formatQuantity(
-                              transaction.quantityDelta
-                            )}{" "}
-                            {transaction.item.unit}
-                          </span>
-                        </p>
-
-                        <p className="text-xs text-gray-400">
-                          {transaction.branch.name} ·{" "}
-                          {transaction.user.username}
-                        </p>
-                      </div>
-
-                      <p className="shrink-0 text-xs text-gray-400">
-                        {date.toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+                      <p className="mt-1 text-xs text-gray-500">
+                        {transaction.branch.name} ·{" "}
+                        {transaction.user.username}
                       </p>
                     </div>
-                  );
-                })}
-              </div>
+                  </div>
+
+                  <p className="text-xs text-gray-500">
+                    {formatTime(transaction.createdAt)}
+                  </p>
+                </div>
+              ))
             )}
+          </div>
+        </section>
 
-          </section>
-
-        </div>
-
-        {/* Inventory by Branch */}
-        <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-
-          <div className="border-b border-gray-100 px-5 py-4">
-            <h2 className="font-semibold text-gray-900">
+        <section className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+          <div className="border-b border-gray-100 px-5 py-5">
+            <h2 className="text-lg font-bold text-gray-900">
               Inventory by Branch — Summary
             </h2>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-100">
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
-                    Item
-                  </th>
+            <table className="min-w-full text-left text-sm">
+              <thead className="bg-gray-50 text-xs uppercase text-gray-500">
+                <tr>
+                  <th className="px-5 py-3 font-semibold">Item</th>
 
-                  {branches.map((branch) => (
+                  {branchNames.map((branchName) => (
                     <th
-                      key={branch.id}
-                      className="whitespace-nowrap px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-500"
+                      key={branchName}
+                      className="whitespace-nowrap px-5 py-3 font-semibold"
                     >
-                      {branch.name}
+                      {branchName}
                     </th>
                   ))}
                 </tr>
               </thead>
 
-              <tbody>
-                {inventoryItems.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50"
-                  >
-                    <td className="px-4 py-3 font-medium text-gray-900">
-                      {item.name}
+              <tbody className="divide-y divide-gray-100">
+                {itemNames.map((itemName) => (
+                  <tr key={itemName}>
+                    <td className="whitespace-nowrap px-5 py-4 font-semibold text-gray-900">
+                      {itemName}
                     </td>
 
-                    {branches.map((branch) => {
-                      const stock = stockRecords.find(
-                        (record) =>
-                          record.itemId === item.id &&
-                          record.branchId === branch.id
-                      );
-
-                      const quantity =
-                        stock?.quantity ?? null;
-
-                      const status =
-                        quantity === null
-                          ? "NORMAL"
-                          : getStockStatus(
-                              quantity,
-                              item.minThreshold
-                            );
+                    {branchNames.map((branchName) => {
+                      const stock = stockByBranch[itemName]?.[branchName];
 
                       return (
                         <td
-                          key={branch.id}
-                          className="px-4 py-3 text-center"
+                          key={`${itemName}-${branchName}`}
+                          className="whitespace-nowrap px-5 py-4 text-gray-700"
                         >
-                          {quantity === null ? (
-                            <span className="text-gray-300">
-                              —
-                            </span>
+                          {stock ? (
+                            <>
+                              {formatQuantity(stock.quantity)}{" "}
+                              <span className="text-xs text-gray-500">
+                                {stock.item.unit}
+                              </span>
+                            </>
                           ) : (
-                            <div>
-                              <span
-                                className={`font-mono text-sm font-semibold ${
-                                  status === "OUT OF STOCK"
-                                    ? "text-red-600"
-                                    : status === "LOW STOCK"
-                                    ? "text-amber-600"
-                                    : "text-gray-700"
-                                }`}
-                              >
-                                {formatQuantity(quantity)}
-                              </span>
-
-                              <span className="ml-1 text-xs text-gray-400">
-                                {item.unit}
-                              </span>
-                            </div>
+                            <span className="text-gray-400">—</span>
                           )}
                         </td>
                       );
@@ -556,95 +616,82 @@ export default function DashboardClient({
               </tbody>
             </table>
           </div>
-
         </section>
 
-        {/* Finished Products */}
-        <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-
-          <div className="border-b border-gray-100 px-5 py-4">
-            <h2 className="font-semibold text-gray-900">
+        <section className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+          <div className="border-b border-gray-100 px-5 py-5">
+            <h2 className="text-lg font-bold text-gray-900">
               Finished Product Stock by Branch
             </h2>
           </div>
 
-          {finishedProducts.length === 0 ? (
-            <p className="px-5 py-8 text-center text-sm text-gray-400">
-              No finished products found.
-            </p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-100">
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
-                      Product
-                    </th>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-left text-sm">
+              <thead className="bg-gray-50 text-xs uppercase text-gray-500">
+                <tr>
+                  <th className="px-5 py-3 font-semibold">Product</th>
 
-                    {branches.map((branch) => (
-                      <th
-                        key={branch.id}
-                        className="whitespace-nowrap px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-500"
-                      >
-                        {branch.name}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {finishedProducts.map((product) => (
-                    <tr
-                      key={product.id}
-                      className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50"
+                  {branchNames.map((branchName) => (
+                    <th
+                      key={branchName}
+                      className="whitespace-nowrap px-5 py-3 font-semibold"
                     >
-                      <td className="px-4 py-3 font-medium text-gray-900">
-                        {product.name}
+                      {branchName}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+
+              <tbody className="divide-y divide-gray-100">
+                {finishedProductNames.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={Math.max(branchNames.length + 1, 1)}
+                      className="px-5 py-8 text-center text-sm text-gray-500"
+                    >
+                      No finished product stock found.
+                    </td>
+                  </tr>
+                ) : (
+                  finishedProductNames.map((productName) => (
+                    <tr key={productName}>
+                      <td className="whitespace-nowrap px-5 py-4 font-semibold text-gray-900">
+                        {productName}
                       </td>
 
-                      {branches.map((branch) => {
-                        const stock =
-                          stockRecords.find(
-                            (record) =>
-                              record.itemId === product.id &&
-                              record.branchId === branch.id
-                          );
+                      {branchNames.map((branchName) => {
+                        const stock = finishedProductRecords.find(
+                          (record) =>
+                            record.item.name === productName &&
+                            record.branch.name === branchName,
+                        );
 
                         return (
                           <td
-                            key={branch.id}
-                            className="px-4 py-3 text-center"
+                            key={`${productName}-${branchName}`}
+                            className="whitespace-nowrap px-5 py-4 text-gray-700"
                           >
                             {stock ? (
                               <>
-                                <span className="font-mono font-semibold text-gray-700">
-                                  {formatQuantity(
-                                    stock.quantity
-                                  )}
-                                </span>
-
-                                <span className="ml-1 text-xs text-gray-400">
-                                  {product.unit}
+                                {formatQuantity(stock.quantity)}{" "}
+                                <span className="text-xs text-gray-500">
+                                  {stock.item.unit}
                                 </span>
                               </>
                             ) : (
-                              <span className="text-gray-300">
-                                —
-                              </span>
+                              <span className="text-gray-400">—</span>
                             )}
                           </td>
                         );
                       })}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </section>
-
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }

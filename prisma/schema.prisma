@@ -49,7 +49,7 @@ model UserAuditLog {
 model Branch {
   id           String   @id @default(uuid())
   name         String
-  location     String
+  location     String?
   isCommissary Boolean  @default(false)
   businessId   String?
   createdAt    DateTime @default(now())

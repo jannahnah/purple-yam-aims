@@ -1,5 +1,6 @@
 import { requireRole } from "@/lib/auth/authorization";
 import { prisma } from "@/lib/prisma";
+import AppShell from "@/components/AppShell";
 import ManagerDashboardClient from "./ManagerDashboardClient";
 
 export const dynamic = "force-dynamic";
@@ -8,7 +9,9 @@ export default async function ManagerDashboardPage() {
   const user = await requireRole("BRANCH_MANAGER");
 
   if (!user.branchId || !user.branch) {
-    throw new Error("Branch Manager is not assigned to a branch.");
+    throw new Error(
+      "Branch Manager is not assigned to a branch.",
+    );
   }
 
   const branchId = user.branchId;
@@ -74,7 +77,10 @@ export default async function ManagerDashboardPage() {
     ]);
 
   const stockMap = new Map(
-    stockRecords.map((stock) => [stock.itemId, stock])
+    stockRecords.map((stock) => [
+      stock.itemId,
+      stock,
+    ]),
   );
 
   const inventory = items.map((item) => {
@@ -93,53 +99,63 @@ export default async function ManagerDashboardPage() {
   const lowStock = inventory.filter(
     (stock) =>
       stock.quantity > 0 &&
-      stock.quantity <= stock.minThreshold
+      stock.quantity <= stock.minThreshold,
   );
 
   const outOfStock = inventory.filter(
-    (stock) => stock.quantity === 0
+    (stock) => stock.quantity === 0,
   );
 
   const finishedProducts = inventory.filter(
-    (item) => item.sourceType === "FINISHED_PRODUCT"
+    (item) => item.sourceType === "FINISHED_PRODUCT",
   );
 
   return (
-    <ManagerDashboardClient
+    <AppShell
       user={{
         username: user.username,
+        name: user.name,
         role: user.role,
-        branch: {
-          id: user.branch.id,
-          name: user.branch.name,
-          location: user.branch.location,
-        },
+        branchName: user.branch.name,
       }}
-      inventory={inventory}
-      finishedProducts={finishedProducts}
-      alerts={alerts.map((alert) => ({
-        id: alert.id,
-        itemName: alert.item.name,
-        threshold: alert.item.minThreshold,
-        currentStock:
-          stockMap.get(alert.itemId)?.quantity ?? 0,
-        unit: alert.item.unit,
-      }))}
-      transactions={transactions.map((transaction) => ({
-        id: transaction.id,
-        type: transaction.type,
-        quantityDelta: transaction.quantityDelta,
-        createdAt: transaction.createdAt.toISOString(),
-        itemName: transaction.item.name,
-        unit: transaction.item.unit,
-        username: transaction.user.username,
-      }))}
-      stats={{
-        totalItems: inventory.length,
-        lowStock: lowStock.length,
-        outOfStock: outOfStock.length,
-        activeAlerts: alerts.length,
-      }}
-    />
+    >
+      <ManagerDashboardClient
+        user={{
+          username: user.username,
+          role: user.role,
+          branch: {
+            id: user.branch.id,
+            name: user.branch.name,
+            location: user.branch.location,
+          },
+        }}
+        inventory={inventory}
+        finishedProducts={finishedProducts}
+        alerts={alerts.map((alert) => ({
+          id: alert.id,
+          itemName: alert.item.name,
+          threshold: alert.item.minThreshold,
+          currentStock:
+            stockMap.get(alert.itemId)?.quantity ?? 0,
+          unit: alert.item.unit,
+        }))}
+        transactions={transactions.map((transaction) => ({
+          id: transaction.id,
+          type: transaction.type,
+          quantityDelta: transaction.quantityDelta,
+          createdAt:
+            transaction.createdAt.toISOString(),
+          itemName: transaction.item.name,
+          unit: transaction.item.unit,
+          username: transaction.user.username,
+        }))}
+        stats={{
+          totalItems: inventory.length,
+          lowStock: lowStock.length,
+          outOfStock: outOfStock.length,
+          activeAlerts: alerts.length,
+        }}
+      />
+    </AppShell>
   );
 }

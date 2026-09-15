@@ -35,7 +35,9 @@ export async function PATCH(
 
     if (!currentUser.businessId) {
       return NextResponse.json(
-        { error: "Your account is not associated with a business." },
+        {
+          error: "Your account is not associated with a business.",
+        },
         { status: 400 }
       );
     }
@@ -51,20 +53,17 @@ export async function PATCH(
     if (!["ACTIVE", "INACTIVE"].includes(status)) {
       return NextResponse.json(
         {
-          error:
-            "Invalid status. Use ACTIVE or INACTIVE.",
+          error: "Invalid status. Use ACTIVE or INACTIVE.",
         },
         { status: 400 }
       );
     }
 
-    // Prevent the Owner from accidentally deactivating
-    // their own account.
+    // Prevent the Owner from deactivating their own account.
     if (id === currentUser.id && status === "INACTIVE") {
       return NextResponse.json(
         {
-          error:
-            "You cannot deactivate your own account.",
+          error: "You cannot deactivate your own account.",
         },
         { status: 400 }
       );

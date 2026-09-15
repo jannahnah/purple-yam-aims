@@ -9,8 +9,6 @@ type RouteContext = {
 };
 
 // GET /api/users/[id]
-// Owner: may view any user in the business
-// Manager/Cashier: may view only their own profile
 export async function GET(
   _request: Request,
   context: RouteContext
@@ -80,8 +78,6 @@ export async function GET(
 }
 
 // PUT /api/users/[id]
-// Owner: may edit name, email, role, and branch
-// User: may edit own name/email only
 export async function PUT(
   request: Request,
   context: RouteContext
@@ -147,14 +143,11 @@ export async function PUT(
       );
     }
 
-    // Check duplicate email.
     if (email !== targetUser.email) {
       const existingEmail = await prisma.user.findFirst({
         where: {
           email,
-          NOT: {
-            id,
-          },
+          NOT: { id },
           businessId: currentUser.businessId,
         },
       });
@@ -167,12 +160,10 @@ export async function PUT(
       }
     }
 
-    // Non-Owners can only change their own name/email.
+    // Non-owner: name/email only
     if (!isOwner) {
       const updatedUser = await prisma.user.update({
-        where: {
-          id,
-        },
+        where: { id },
         data: {
           name,
           email,
@@ -195,7 +186,6 @@ export async function PUT(
       return NextResponse.json(updatedUser);
     }
 
-    // Owner-controlled fields.
     const role =
       typeof body.role === "string"
         ? body.role
@@ -221,18 +211,13 @@ export async function PUT(
       );
     }
 
-    // Owner must have no branch.
     if (role === "OWNER" && branchId !== null) {
       return NextResponse.json(
-        {
-          error:
-            "Owner accounts cannot be assigned to a branch.",
-        },
+        { error: "Owner accounts cannot be assigned to a branch." },
         { status: 400 }
       );
     }
 
-    // Manager/Cashier must have a branch.
     if (role !== "OWNER" && !branchId) {
       return NextResponse.json(
         {
@@ -243,7 +228,6 @@ export async function PUT(
       );
     }
 
-    // Verify branch belongs to the same business.
     if (branchId) {
       const branch = await prisma.branch.findFirst({
         where: {
@@ -267,9 +251,7 @@ export async function PUT(
 
     const updatedUser = await prisma.$transaction(async (tx) => {
       const user = await tx.user.update({
-        where: {
-          id,
-        },
+        where: { id },
         data: {
           name,
           email,

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth/authorization";
+import AppShell from "@/components/AppShell";
 import InventoryClient from "./InventoryClient";
 
 export const dynamic = "force-dynamic";
@@ -63,16 +64,25 @@ export default async function InventoryPage() {
   });
 
   return (
-    <InventoryClient
+    <AppShell
       user={{
-        role: user.role,
         username: user.username,
-        branchId: user.branchId,
+        name: user.name,
+        role: user.role,
         branchName: user.branch?.name ?? null,
       }}
-      stockRecords={stockRecords}
-      branches={branches}
-      items={items}
-    />
+    >
+      <InventoryClient
+        user={{
+          role: user.role,
+          username: user.username,
+          branchId: user.branchId,
+          branchName: user.branch?.name ?? null,
+        }}
+        stockRecords={stockRecords}
+        branches={branches}
+        items={items}
+      />
+    </AppShell>
   );
 }

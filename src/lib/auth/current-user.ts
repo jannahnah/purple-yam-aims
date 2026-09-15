@@ -26,6 +26,7 @@ export async function getCurrentUser() {
       name: true,
       email: true,
       role: true,
+      status: true,
       branchId: true,
       businessId: true,
       branch: {

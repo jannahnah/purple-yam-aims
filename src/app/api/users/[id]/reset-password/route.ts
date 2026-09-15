@@ -91,7 +91,6 @@ export async function POST(
     }
 
     const passwordHash = await hashPassword(newPassword);
-
     await prisma.$transaction(async (tx) => {
       await tx.user.update({
         where: {

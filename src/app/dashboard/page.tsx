@@ -1,12 +1,12 @@
-import { redirect } from "next/navigation";
 import { requireOwner } from "@/lib/auth/authorization";
 import { prisma } from "@/lib/prisma";
+import AppShell from "@/components/AppShell";
 import DashboardClient from "./DashboardClient";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-const user = await requireOwner();
+  const user = await requireOwner();
 
   const [
     totalItems,
@@ -66,14 +66,23 @@ const user = await requireOwner();
   ).length;
 
   return (
-    <DashboardClient
-      user={user}
-      totalItems={totalItems}
-      activeBranches={activeBranches}
-      lowStock={lowStock}
-      outOfStock={outOfStock}
-      stockRecords={stockRecords}
-      recentTransactions={recentTransactions}
-    />
+    <AppShell
+      user={{
+        username: user.username,
+        name: user.name,
+        role: user.role,
+        branchName: user.branch?.name ?? null,
+      }}
+    >
+      <DashboardClient
+        user={user}
+        totalItems={totalItems}
+        activeBranches={activeBranches}
+        lowStock={lowStock}
+        outOfStock={outOfStock}
+        stockRecords={stockRecords}
+        recentTransactions={recentTransactions}
+      />
+    </AppShell>
   );
 }

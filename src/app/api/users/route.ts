@@ -7,22 +7,12 @@ function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
 }
 
-async function generateUsername(email: string) {
-  const base =
-    email
-      .split("@")[0]
-      .replace(/[^a-zA-Z0-9_]/g, "_")
-      .slice(0, 30) || "user";
+function normalizeUsername(username: string) {
+  return username.trim();
+}
 
-  let username = base;
-  let counter = 1;
-
-  while (await prisma.user.findUnique({ where: { username } })) {
-    username = `${base}_${counter}`;
-    counter++;
-  }
-
-  return username;
+function normalizeBranchName(branchName: string) {
+  return branchName.trim().replace(/\s+/g, " ");
 }
 
 // GET /api/users
@@ -49,6 +39,7 @@ export async function GET(request: Request) {
         },
         select: {
           id: true,
+          username: true,
           name: true,
           email: true,
           role: true,
@@ -71,7 +62,9 @@ export async function GET(request: Request) {
 
     if (!currentUser.businessId) {
       return NextResponse.json(
-        { error: "Your account is not associated with a business." },
+        {
+          error: "Your account is not associated with a business.",
+        },
         { status: 400 }
       );
     }
@@ -83,13 +76,23 @@ export async function GET(request: Request) {
     const users = await prisma.user.findMany({
       where: {
         businessId: currentUser.businessId,
-        ...(branchId ? { branchId } : {}),
+
+        ...(branchId
+          ? {
+              branchId,
+            }
+          : {}),
+
         ...(role &&
         ["OWNER", "BRANCH_MANAGER", "CASHIER"].includes(role)
           ? {
-              role: role as "OWNER" | "BRANCH_MANAGER" | "CASHIER",
+              role: role as
+                | "OWNER"
+                | "BRANCH_MANAGER"
+                | "CASHIER",
             }
           : {}),
+
         ...(status &&
         ["ACTIVE", "INACTIVE"].includes(status)
           ? {
@@ -97,13 +100,16 @@ export async function GET(request: Request) {
             }
           : {}),
       },
+
       select: {
         id: true,
+        username: true,
         name: true,
         email: true,
         role: true,
         status: true,
         branchId: true,
+
         branch: {
           select: {
             id: true,
@@ -111,9 +117,11 @@ export async function GET(request: Request) {
             location: true,
           },
         },
+
         createdAt: true,
         lastLoginAt: true,
       },
+
       orderBy: {
         createdAt: "desc",
       },
@@ -124,7 +132,9 @@ export async function GET(request: Request) {
     console.error("GET /api/users error:", error);
 
     return NextResponse.json(
-      { error: "Failed to fetch users." },
+      {
+        error: "Failed to fetch users.",
+      },
       { status: 500 }
     );
   }
@@ -132,6 +142,12 @@ export async function GET(request: Request) {
 
 // POST /api/users
 // Owner only
+//
+// Creates a Branch Manager or Cashier account.
+// The Owner provides a branch name.
+// If the branch already exists for the Owner's business,
+// the existing branch is used.
+// If it does not exist, a new branch is created.
 export async function POST(request: Request) {
   try {
     const currentUser = await getCurrentUser();
@@ -145,14 +161,18 @@ export async function POST(request: Request) {
 
     if (currentUser.role !== "OWNER") {
       return NextResponse.json(
-        { error: "Only the Owner can create users." },
+        {
+          error: "Only the Owner can create users.",
+        },
         { status: 403 }
       );
     }
 
     if (!currentUser.businessId) {
       return NextResponse.json(
-        { error: "Your account is not associated with a business." },
+        {
+          error: "Your account is not associated with a business.",
+        },
         { status: 400 }
       );
     }
@@ -162,6 +182,11 @@ export async function POST(request: Request) {
     const name =
       typeof body.name === "string"
         ? body.name.trim()
+        : "";
+
+    const username =
+      typeof body.username === "string"
+        ? normalizeUsername(body.username)
         : "";
 
     const email =
@@ -174,21 +199,62 @@ export async function POST(request: Request) {
         ? body.role
         : "";
 
-    const branchId =
-      typeof body.branchId === "string"
-        ? body.branchId
-        : null;
+    const branchName =
+      typeof body.branchName === "string"
+        ? normalizeBranchName(body.branchName)
+        : "";
+
+    const temporaryPassword =
+      typeof body.temporaryPassword === "string"
+        ? body.temporaryPassword
+        : "";
+
+    // -----------------------------
+    // Validation
+    // -----------------------------
 
     if (!name) {
       return NextResponse.json(
-        { error: "Full name is required." },
+        {
+          error: "Full name is required.",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (!username) {
+      return NextResponse.json(
+        {
+          error: "Username is required.",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (!/^[a-zA-Z0-9_]{3,30}$/.test(username)) {
+      return NextResponse.json(
+        {
+          error:
+            "Username must be 3-30 characters and may only contain letters, numbers, and underscores.",
+        },
         { status: 400 }
       );
     }
 
     if (!email) {
       return NextResponse.json(
-        { error: "Email is required." },
+        {
+          error: "Email is required.",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return NextResponse.json(
+        {
+          error: "Please enter a valid email address.",
+        },
         { status: 400 }
       );
     }
@@ -201,14 +267,16 @@ export async function POST(request: Request) {
 
     if (!validRoles.includes(role)) {
       return NextResponse.json(
-        { error: "Invalid user role." },
+        {
+          error: "Invalid user role.",
+        },
         { status: 400 }
       );
     }
 
-    // Owner does not require a branch.
-    // Branch Manager and Cashier must have one.
-    if (role !== "OWNER" && !branchId) {
+    // This Create Staff Account screen is intended
+    // for Branch Manager and Cashier accounts.
+    if (role !== "OWNER" && !branchName) {
       return NextResponse.json(
         {
           error:
@@ -218,22 +286,30 @@ export async function POST(request: Request) {
       );
     }
 
-    // If a branch is supplied, make sure it belongs to this business.
-    if (branchId) {
-      const branch = await prisma.branch.findFirst({
-        where: {
-          id: branchId,
-          businessId: currentUser.businessId,
+    // Owner accounts should not be assigned to branches.
+    if (role === "OWNER" && branchName) {
+      return NextResponse.json(
+        {
+          error:
+            "Owner accounts cannot be assigned to a branch.",
         },
-      });
-
-      if (!branch) {
-        return NextResponse.json(
-          { error: "Selected branch was not found." },
-          { status: 404 }
-        );
-      }
+        { status: 400 }
+      );
     }
+
+    if (temporaryPassword.length < 8) {
+      return NextResponse.json(
+        {
+          error:
+            "Temporary password must be at least 8 characters.",
+        },
+        { status: 400 }
+      );
+    }
+
+    // -----------------------------
+    // Duplicate checks
+    // -----------------------------
 
     const existingEmail = await prisma.user.findUnique({
       where: {
@@ -243,64 +319,140 @@ export async function POST(request: Request) {
 
     if (existingEmail) {
       return NextResponse.json(
-        { error: "A user with this email already exists." },
+        {
+          error:
+            "A user with this email already exists.",
+        },
         { status: 409 }
       );
     }
 
-    const username = await generateUsername(email);
-
-    /*
-     * Temporary development password.
-     *
-     * The final PRD calls for an invite/temporary-password
-     * email and first-login password change.
-     *
-     * Email delivery will be implemented separately.
-     */
-    const temporaryPassword =
-      typeof body.temporaryPassword === "string" &&
-      body.temporaryPassword.length >= 8
-        ? body.temporaryPassword
-        : "Temp1234!";
-
-    const password = await hashPassword(temporaryPassword);
-
-    const newUser = await prisma.user.create({
-      data: {
+    const existingUsername = await prisma.user.findUnique({
+      where: {
         username,
-        name,
-        email,
-        password,
-        role: role as "OWNER" | "BRANCH_MANAGER" | "CASHIER",
-        status: "ACTIVE",
-        branchId,
-        businessId: currentUser.businessId,
-      },
-      select: {
-        id: true,
-        username: true,
-        name: true,
-        email: true,
-        role: true,
-        status: true,
-        branchId: true,
-        businessId: true,
-        createdAt: true,
       },
     });
 
-    /*
-     * Do not store the temporary password in the database
-     * or audit log.
-     *
-     * For development testing, return whether a temporary
-     * password was generated.
-     */
+    if (existingUsername) {
+      return NextResponse.json(
+        {
+          error:
+            "A user with this username already exists.",
+        },
+        { status: 409 }
+      );
+    }
+
+    // -----------------------------
+    // Hash password
+    // -----------------------------
+
+    const password = await hashPassword(
+      temporaryPassword
+    );
+
+    // -----------------------------
+    // Create user + branch + audit log
+    // -----------------------------
+
+    const result = await prisma.$transaction(
+      async (tx) => {
+        let resolvedBranchId: string | null = null;
+
+        // Branch Manager and Cashier must belong to a branch.
+        if (role !== "OWNER") {
+          // Look for an existing branch belonging to
+          // the Owner's business.
+          const existingBranch =
+            await tx.branch.findFirst({
+              where: {
+                businessId: currentUser.businessId,
+                name: {
+                  equals: branchName,
+                  mode: "insensitive",
+                },
+              },
+              select: {
+                id: true,
+              },
+            });
+
+          if (existingBranch) {
+            // Use the existing branch.
+            resolvedBranchId = existingBranch.id;
+          } else {
+            // Create the branch if it does not exist.
+            const newBranch =
+              await tx.branch.create({
+                data: {
+                  name: branchName,
+                  location: null,
+                  isCommissary: false,
+                  businessId: currentUser.businessId,
+                },
+                select: {
+                  id: true,
+                },
+              });
+
+            resolvedBranchId = newBranch.id;
+          }
+        }
+
+        const newUser = await tx.user.create({
+          data: {
+            username,
+            name,
+            email,
+            password,
+            role: role as
+              | "OWNER"
+              | "BRANCH_MANAGER"
+              | "CASHIER",
+            status: "ACTIVE",
+            branchId: resolvedBranchId,
+            businessId: currentUser.businessId,
+          },
+
+          select: {
+            id: true,
+            username: true,
+            name: true,
+            email: true,
+            role: true,
+            status: true,
+            branchId: true,
+            businessId: true,
+            createdAt: true,
+
+            branch: {
+              select: {
+                id: true,
+                name: true,
+                location: true,
+              },
+            },
+          },
+        });
+
+        await tx.userAuditLog.create({
+          data: {
+            userId: newUser.id,
+            performedById: currentUser.id,
+            action: "CREATE",
+            field: "user",
+            previousValue: null,
+            currentValue: username,
+          },
+        });
+
+        return newUser;
+      }
+    );
+
     return NextResponse.json(
       {
-        user: newUser,
-        temporaryPassword,
+        user: result,
       },
       { status: 201 }
     );
@@ -308,7 +460,9 @@ export async function POST(request: Request) {
     console.error("POST /api/users error:", error);
 
     return NextResponse.json(
-      { error: "Failed to create user." },
+      {
+        error: "Failed to create user.",
+      },
       { status: 500 }
     );
   }

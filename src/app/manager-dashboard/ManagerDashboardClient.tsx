@@ -1,5 +1,8 @@
 "use client";
 
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
+
 type InventoryItem = {
   itemId: string;
   itemName: string;
@@ -19,7 +22,11 @@ type Alert = {
 
 type Transaction = {
   id: string;
-  type: "SALE" | "PRODUCTION" | "STOCK_RECEIPT" | "ADJUSTMENT";
+  type:
+    | "SALE"
+    | "PRODUCTION"
+    | "STOCK_RECEIPT"
+    | "ADJUSTMENT";
   quantityDelta: number;
   createdAt: string;
   itemName: string;
@@ -34,7 +41,7 @@ type Props = {
     branch: {
       id: string;
       name: string;
-      location: string;
+      location: string | null;
     };
   };
   inventory: InventoryItem[];
@@ -47,6 +54,14 @@ type Props = {
     outOfStock: number;
     activeAlerts: number;
   };
+};
+
+type NotificationAlert = {
+  id: string;
+  itemName: string;
+  threshold: number;
+  currentStock: number;
+  unit: string;
 };
 
 function formatQuantity(quantity: number) {
@@ -142,19 +157,331 @@ export default function ManagerDashboard({
 }: Props) {
   const today = new Date().toISOString().slice(0, 10);
 
+  const [isNotificationsOpen, setIsNotificationsOpen] =
+    useState(false);
+
+  const [notificationAlerts, setNotificationAlerts] =
+    useState<NotificationAlert[]>(alerts);
+
+  const [isLoadingNotifications, setIsLoadingNotifications] =
+    useState(false);
+
+  const notificationRef =
+    useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(
+          event.target as Node
+        )
+      ) {
+        setIsNotificationsOpen(false);
+      }
+    }
+
+    document.addEventListener(
+      "mousedown",
+      handleClickOutside
+    );
+
+    return () => {
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutside
+      );
+    };
+  }, []);
+
+  async function loadNotifications() {
+    try {
+      setIsLoadingNotifications(true);
+
+      const response = await fetch(
+        "/api/dashboard/alerts",
+        {
+          method: "GET",
+          cache: "no-store",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          "Failed to load notifications."
+        );
+      }
+
+      const data = await response.json();
+
+      setNotificationAlerts(
+        (Array.isArray(data) ? data : []).map(
+          (alert: {
+            id: string;
+            item: {
+              name: string;
+              unit: string;
+              minThreshold: number;
+            };
+            currentQuantity: number;
+          }) => ({
+            id: alert.id,
+            itemName: alert.item.name,
+            threshold: alert.item.minThreshold,
+            currentStock: alert.currentQuantity,
+            unit: alert.item.unit,
+          })
+        )
+      );
+    } catch (error) {
+      console.error(
+        "Notification loading error:",
+        error
+      );
+    } finally {
+      setIsLoadingNotifications(false);
+    }
+  }
+
+  async function toggleNotifications() {
+    const nextState = !isNotificationsOpen;
+
+    setIsNotificationsOpen(nextState);
+
+    if (nextState) {
+      await loadNotifications();
+    }
+  }
+
   return (
     <main className="min-h-screen bg-gray-50 p-6">
       <div className="mx-auto max-w-7xl space-y-6">
 
         {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Branch Manager Dashboard
-          </h1>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Branch Manager Dashboard
+            </h1>
 
-          <p className="mt-0.5 text-sm text-gray-500">
-            {user.branch.name} — {today}
-          </p>
+            <p className="mt-0.5 text-sm text-gray-500">
+              {user.branch.name} — {today}
+            </p>
+          </div>
+
+          {/* Notification Bell */}
+          <div
+            ref={notificationRef}
+            className="relative"
+          >
+            <button
+              type="button"
+              onClick={toggleNotifications}
+              aria-label="Open notifications"
+              aria-expanded={isNotificationsOpen}
+              className="relative flex h-11 w-11 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 shadow-sm transition hover:bg-gray-50 hover:text-purple-700"
+            >
+              {/* Bell icon */}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                className="h-5 w-5"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15 17H9m9-5V9a6 6 0 1 0-12 0v3c0 1.5-.5 2.7-1.5 4h15c-1-1.3-1.5-2.5-1.5-4Z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M10 20h4"
+                />
+              </svg>
+
+              {/* Notification count */}
+              {notificationAlerts.length > 0 && (
+                <span className="absolute -right-1 -top-1 flex min-h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white ring-2 ring-gray-50">
+                  {notificationAlerts.length > 99
+                    ? "99+"
+                    : notificationAlerts.length}
+                </span>
+              )}
+            </button>
+
+            {/* Notification Dropdown */}
+            {isNotificationsOpen && (
+              <div className="absolute right-0 z-50 mt-2 w-80 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl">
+
+                {/* Dropdown Header */}
+                <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+                  <div>
+                    <h2 className="text-sm font-semibold text-gray-900">
+                      Notifications
+                    </h2>
+
+                    <p className="mt-0.5 text-xs text-gray-500">
+                      {notificationAlerts.length} active alert
+                      {notificationAlerts.length === 1
+                        ? ""
+                        : "s"}
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={loadNotifications}
+                    disabled={isLoadingNotifications}
+                    className="text-xs font-medium text-purple-700 transition hover:text-purple-900 disabled:opacity-50"
+                  >
+                    {isLoadingNotifications
+                      ? "Refreshing..."
+                      : "Refresh"}
+                  </button>
+                </div>
+
+                {/* Notifications */}
+                {isLoadingNotifications ? (
+                  <div className="px-4 py-8 text-center">
+                    <p className="text-sm text-gray-500">
+                      Loading notifications...
+                    </p>
+                  </div>
+                ) : notificationAlerts.length === 0 ? (
+                  <div className="px-4 py-8 text-center">
+                    <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        className="h-5 w-5"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="m5 12 4 4L19 6"
+                        />
+                      </svg>
+                    </div>
+
+                    <p className="mt-3 text-sm font-medium text-gray-700">
+                      No active alerts
+                    </p>
+
+                    <p className="mt-1 text-xs text-gray-400">
+                      Your branch inventory is within
+                      normal levels.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="max-h-80 overflow-y-auto">
+                    {notificationAlerts.map(
+                      (alert) => {
+                        const status =
+                          alert.currentStock === 0
+                            ? "OUT OF STOCK"
+                            : "LOW STOCK";
+
+                        return (
+                          <Link
+                            key={alert.id}
+                            href="/reorder-alerts"
+                            onClick={() =>
+                              setIsNotificationsOpen(false)
+                            }
+                            className="block border-b border-gray-50 px-4 py-3 transition hover:bg-gray-50 last:border-0"
+                            aria-label={`View reorder alert for ${alert.itemName}`}
+                          >
+                            <div className="flex items-start gap-3">
+
+                              {/* Alert icon */}
+                              <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-50 text-red-600">
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  className="h-4 w-4"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M12 9v4"
+                                  />
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M12 17h.01"
+                                  />
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M10.3 4.6 2.8 17a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7 0 3h15a2 2 0 0 0 1.7-3L13.7 4.6a2 2 0 0 0-3.4 0Z"
+                                  />
+                                </svg>
+                              </div>
+
+                              {/* Alert details */}
+                              <div className="min-w-0 flex-1">
+                                <p className="text-sm font-semibold text-gray-900">
+                                  {alert.itemName}
+                                </p>
+
+                                <p className="mt-0.5 text-xs text-gray-500">
+                                  Current:{" "}
+                                  <span className="font-semibold text-red-600">
+                                    {formatQuantity(
+                                      alert.currentStock
+                                    )}{" "}
+                                    {alert.unit}
+                                  </span>
+                                </p>
+
+                                <p className="text-xs text-gray-400">
+                                  Threshold:{" "}
+                                  {formatQuantity(
+                                    alert.threshold
+                                  )}{" "}
+                                  {alert.unit}
+                                </p>
+
+                                <span
+                                  className={`mt-2 inline-block rounded border px-2 py-0.5 text-[10px] font-semibold ${getStatusClass(
+                                    status
+                                  )}`}
+                                >
+                                  {status}
+                                </span>
+                              </div>
+                            </div>
+                          </Link>
+                        );
+                      }
+                    )}
+                  </div>
+                )}
+
+                {/* Footer */}
+                <div className="border-t border-gray-100 bg-gray-50 px-4 py-3">
+                  <Link
+                    href="/reorder-alerts"
+                    onClick={() =>
+                      setIsNotificationsOpen(false)
+                    }
+                    className="block w-full rounded-lg bg-purple-800 px-3 py-2 text-center text-xs font-semibold text-white transition hover:bg-purple-900"
+                  >
+                    View Reorder Alerts
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Stats */}
@@ -253,9 +580,11 @@ export default function ManagerDashboard({
                       : "LOW STOCK";
 
                   return (
-                    <div
+                    <Link
                       key={alert.id}
-                      className="flex items-center justify-between gap-3 px-5 py-3"
+                      href="/reorder-alerts"
+                      className="flex items-center justify-between gap-3 px-5 py-3 transition hover:bg-gray-50"
+                      aria-label={`View reorder alert for ${alert.itemName}`}
                     >
                       <div>
                         <p className="text-sm font-medium text-gray-900">
@@ -264,14 +593,18 @@ export default function ManagerDashboard({
 
                         <p className="text-xs text-gray-400">
                           Threshold:{" "}
-                          {formatQuantity(alert.threshold)}{" "}
+                          {formatQuantity(
+                            alert.threshold
+                          )}{" "}
                           {alert.unit}
                         </p>
                       </div>
 
                       <div className="text-right">
                         <p className="font-mono text-sm font-semibold text-red-700">
-                          {formatQuantity(alert.currentStock)}{" "}
+                          {formatQuantity(
+                            alert.currentStock
+                          )}{" "}
                           {alert.unit}
                         </p>
 
@@ -283,7 +616,7 @@ export default function ManagerDashboard({
                           {status}
                         </span>
                       </div>
-                    </div>
+                    </Link>
                   );
                 })}
               </div>
@@ -316,7 +649,9 @@ export default function ManagerDashboard({
                         transaction.type
                       )}`}
                     >
-                      {formatTransactionType(transaction.type)}
+                      {formatTransactionType(
+                        transaction.type
+                      )}
                     </span>
 
                     <div className="min-w-0 flex-1">
@@ -349,7 +684,9 @@ export default function ManagerDashboard({
                       </p>
 
                       <p className="text-xs text-gray-400">
-                        {formatDate(transaction.createdAt)}
+                        {formatDate(
+                          transaction.createdAt
+                        )}
                       </p>
                     </div>
                   </div>
@@ -412,18 +749,25 @@ export default function ManagerDashboard({
                       </td>
 
                       <td className="px-4 py-3 text-xs text-gray-500">
-                        {item.sourceType.replaceAll("_", " ")}
+                        {item.sourceType.replaceAll(
+                          "_",
+                          " "
+                        )}
                       </td>
 
                       <td className="px-4 py-3 text-right font-mono font-semibold text-gray-800">
-                        {formatQuantity(item.quantity)}{" "}
+                        {formatQuantity(
+                          item.quantity
+                        )}{" "}
                         <span className="text-xs font-normal text-gray-400">
                           {item.unit}
                         </span>
                       </td>
 
                       <td className="px-4 py-3 text-right font-mono text-gray-500">
-                        {formatQuantity(item.minThreshold)}
+                        {formatQuantity(
+                          item.minThreshold
+                        )}
                       </td>
 
                       <td className="px-4 py-3">
@@ -490,7 +834,9 @@ export default function ManagerDashboard({
                               : "text-gray-800"
                           }`}
                         >
-                          {formatQuantity(quantity)}{" "}
+                          {formatQuantity(
+                            quantity
+                          )}{" "}
                           {product.unit}
                         </span>
                       </td>

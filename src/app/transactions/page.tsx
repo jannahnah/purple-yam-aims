@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { redirect } from "next/navigation";
+import AppShell from "@/components/AppShell";
 import TransactionHistory from "./TransactionHistory";
 
 export const revalidate = 0;
@@ -18,7 +19,8 @@ export default async function TransactionsPage() {
         currentUser.role === "OWNER"
           ? undefined
           : {
-              branchId: currentUser.branchId ?? "__NO_BRANCH__",
+              branchId:
+                currentUser.branchId ?? "__NO_BRANCH__",
             },
       include: {
         item: true,
@@ -31,31 +33,46 @@ export default async function TransactionsPage() {
     });
 
   return (
-    <TransactionHistory
-      transactions={transactions.map(
-        (transaction) => ({
-          id: transaction.id,
-          type: transaction.type,
-          quantityDelta:
-            transaction.quantityDelta,
-          createdAt:
-            transaction.createdAt.toISOString(),
-          item: {
-            name: transaction.item.name,
-            unit: transaction.item.unit,
-            sourceType:
-              transaction.item.sourceType,
-          },
-          branch: {
-            name: transaction.branch.name,
-          },
-          user: {
-            username:
-              transaction.user.username,
-            role: transaction.user.role,
-          },
-        })
-      )}
-    />
+    <AppShell
+      user={{
+        username: currentUser.username,
+        name: currentUser.name,
+        role: currentUser.role,
+        branchName:
+          currentUser.branch?.name ?? null,
+      }}
+    >
+      <TransactionHistory
+        transactions={transactions.map(
+          (transaction) => ({
+            id: transaction.id,
+            type: transaction.type,
+            quantityDelta:
+              transaction.quantityDelta,
+            createdAt:
+              transaction.createdAt.toISOString(),
+            item: {
+              name: transaction.item.name,
+              unit: transaction.item.unit,
+              sourceType:
+                transaction.item.sourceType,
+            },
+            branch: {
+              name: transaction.branch.name,
+            },
+            user: {
+              username:
+                transaction.user.username,
+              role: transaction.user.role,
+            },
+          })
+        )}
+        currentUser={{
+          role: currentUser.role,
+          branchName:
+            currentUser.branch?.name ?? null,
+        }}
+      />
+    </AppShell>
   );
 }
