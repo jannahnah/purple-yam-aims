@@ -2,10 +2,9 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import {getCurrentUser,} from "@/lib/auth/current-user";
-import {canAccessBranch,} from "@/lib/auth/authorization";
+import { getCurrentUser } from "@/lib/auth/current-user";
+import { canAccessBranch } from "@/lib/auth/authorization";
 import { updateReorderAlert } from "@/lib/reorder-alerts";
-
 
 export async function adjustStock({
   branchId,
@@ -18,8 +17,14 @@ export async function adjustStock({
   quantity: number;
   type?: "ADJUSTMENT" | "STOCK_RECEIPT";
 }) {
+  // Zero quantities are never valid.
   if (quantity === 0) {
     throw new Error("Stock adjustment quantity cannot be zero.");
+  }
+
+  // Stock receipts must always increase stock.
+  if (type === "STOCK_RECEIPT" && quantity < 0) {
+    throw new Error("Stock receipt quantity must be greater than zero.");
   }
 
   const currentUser = await getCurrentUser();
@@ -32,9 +37,7 @@ export async function adjustStock({
     currentUser.role !== "OWNER" &&
     currentUser.role !== "BRANCH_MANAGER"
   ) {
-    throw new Error(
-      "You do not have permission to adjust stock."
-    );
+    throw new Error("You do not have permission to adjust stock.");
   }
 
   if (!canAccessBranch(currentUser, branchId)) {
@@ -79,6 +82,7 @@ export async function adjustStock({
       },
     });
 
+    // Never allow stock to become negative.
     if (updatedStock.quantity < 0) {
       throw new Error("Stock quantity cannot be negative.");
     }
@@ -129,10 +133,9 @@ export async function transferStock({
   itemId: string;
   quantity: number;
 }) {
+  // Transfer quantities must always be positive.
   if (quantity <= 0) {
-    throw new Error(
-      "Transfer quantity must be greater than zero."
-    );
+    throw new Error("Transfer quantity must be greater than zero.");
   }
 
   if (sourceBranchId === destinationBranchId) {
@@ -151,9 +154,7 @@ export async function transferStock({
     currentUser.role !== "OWNER" &&
     currentUser.role !== "BRANCH_MANAGER"
   ) {
-    throw new Error(
-      "You do not have permission to transfer stock."
-    );
+    throw new Error("You do not have permission to transfer stock.");
   }
 
   /*
@@ -206,27 +207,22 @@ export async function transferStock({
     });
 
     if (!sourceStock || sourceStock.quantity < quantity) {
-      throw new Error(
-        "Insufficient stock at source branch."
-      );
+      throw new Error("Insufficient stock at source branch.");
     }
 
-    const updatedSourceStock =
-      await tx.branchStock.update({
-        where: {
-          id: sourceStock.id,
+    const updatedSourceStock = await tx.branchStock.update({
+      where: {
+        id: sourceStock.id,
+      },
+      data: {
+        quantity: {
+          decrement: quantity,
         },
-        data: {
-          quantity: {
-            decrement: quantity,
-          },
-        },
-      });
+      },
+    });
 
     if (updatedSourceStock.quantity < 0) {
-      throw new Error(
-        "Source stock cannot become negative."
-      );
+      throw new Error("Source stock cannot become negative.");
     }
 
     await tx.stockTransaction.create({
@@ -246,25 +242,24 @@ export async function transferStock({
       updatedSourceStock.quantity
     );
 
-    const updatedDestinationStock =
-      await tx.branchStock.upsert({
-        where: {
-          branchId_itemId: {
-            branchId: destinationBranchId,
-            itemId,
-          },
-        },
-        update: {
-          quantity: {
-            increment: quantity,
-          },
-        },
-        create: {
+    const updatedDestinationStock = await tx.branchStock.upsert({
+      where: {
+        branchId_itemId: {
           branchId: destinationBranchId,
           itemId,
-          quantity,
         },
-      });
+      },
+      update: {
+        quantity: {
+          increment: quantity,
+        },
+      },
+      create: {
+        branchId: destinationBranchId,
+        itemId,
+        quantity,
+      },
+    });
 
     await tx.stockTransaction.create({
       data: {

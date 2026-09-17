@@ -8,7 +8,8 @@ export default async function UsersPage() {
   const user = await requireOwner();
 
   return (
-    <div className="flex min-h-screen bg-[#f7f7fa]">
+    <div className="flex h-screen overflow-hidden bg-[#f7f7fa]">
+      {/* Fixed Sidebar */}
       <AppSidebar
         user={{
           username: user.username,
@@ -18,7 +19,8 @@ export default async function UsersPage() {
         }}
       />
 
-      <main className="min-w-0 flex-1">
+      {/* Scrollable Main Content */}
+      <main className="min-w-0 flex-1 overflow-y-auto">
         <UsersClient
           currentUser={{
             id: user.id,
