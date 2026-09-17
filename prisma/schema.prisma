@@ -15,6 +15,7 @@ model User {
   password    String
   role        Role       @default(CASHIER)
   status      UserStatus @default(ACTIVE)
+  mustChangePassword  Boolean    @default(false)
   branchId    String?
   businessId  String?
   lastLoginAt DateTime?

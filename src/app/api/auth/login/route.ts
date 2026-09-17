@@ -29,6 +29,7 @@ export async function POST(request: Request) {
         role: true,
         status: true,
         branchId: true,
+        mustChangePassword: true,
       },
     });
 
@@ -74,6 +75,7 @@ export async function POST(request: Request) {
         email: user.email,
         role: user.role,
         branchId: user.branchId,
+        mustChangePassword: user.mustChangePassword,
       },
     });
 

@@ -6,11 +6,17 @@ export type UserRole =
   | "BRANCH_MANAGER"
   | "CASHIER";
 
-export async function requireUser() {
+export async function requireUser(options?: {
+  allowPasswordChange?: boolean;
+}) {
   const user = await getCurrentUser();
 
   if (!user) {
     redirect("/");
+  }
+
+  if (user.mustChangePassword && !options?.allowPasswordChange) {
+    redirect("/change-password");
   }
 
   return user;

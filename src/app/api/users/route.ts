@@ -410,6 +410,7 @@ export async function POST(request: Request) {
               | "BRANCH_MANAGER"
               | "CASHIER",
             status: "ACTIVE",
+            mustChangePassword: true,
             branchId: resolvedBranchId,
             businessId: currentUser.businessId,
           },

@@ -98,6 +98,7 @@ export async function POST(
         },
         data: {
           password: passwordHash,
+          mustChangePassword: true,
         },
       });
 

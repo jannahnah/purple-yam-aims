@@ -35,16 +35,40 @@ export async function PUT(request: Request) {
         ? body.confirmPassword
         : "";
 
-    if (!currentPassword || !newPassword || !confirmPassword) {
+    /*
+     * First-login password change:
+     * The user has already authenticated successfully with
+     * the temporary password, so the current password does
+     * not need to be submitted again.
+     *
+     * Normal password changes still require the current password.
+     */
+    const isForcedPasswordChange =
+      currentUser.mustChangePassword === true;
+
+    if (!newPassword || !confirmPassword) {
       return NextResponse.json(
-        { error: "All password fields are required." },
+        {
+          error:
+            "New password and confirmation are required.",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (!isForcedPasswordChange && !currentPassword) {
+      return NextResponse.json(
+        { error: "Current password is required." },
         { status: 400 }
       );
     }
 
     if (newPassword.length < 8) {
       return NextResponse.json(
-        { error: "New password must be at least 8 characters." },
+        {
+          error:
+            "New password must be at least 8 characters.",
+        },
         { status: 400 }
       );
     }
@@ -52,16 +76,6 @@ export async function PUT(request: Request) {
     if (newPassword !== confirmPassword) {
       return NextResponse.json(
         { error: "New passwords do not match." },
-        { status: 400 }
-      );
-    }
-
-    if (currentPassword === newPassword) {
-      return NextResponse.json(
-        {
-          error:
-            "New password must be different from your current password.",
-        },
         { status: 400 }
       );
     }
@@ -76,6 +90,7 @@ export async function PUT(request: Request) {
         id: true,
         password: true,
         status: true,
+        mustChangePassword: true,
       },
     });
 
@@ -93,16 +108,42 @@ export async function PUT(request: Request) {
       );
     }
 
-    const passwordIsValid = await verifyPassword(
-      currentPassword,
-      user.password
-    );
-
-    if (!passwordIsValid) {
-      return NextResponse.json(
-        { error: "Current password is incorrect." },
-        { status: 400 }
+    /*
+     * Use the database value as the source of truth.
+     * Do not trust a client-provided "forced" flag.
+     */
+    if (user.mustChangePassword) {
+      if (await verifyPassword(newPassword, user.password)) {
+        return NextResponse.json(
+          {
+            error:
+              "New password must be different from your temporary password.",
+          },
+          { status: 400 }
+        );
+      }
+    } else {
+      const passwordIsValid = await verifyPassword(
+        currentPassword,
+        user.password
       );
+
+      if (!passwordIsValid) {
+        return NextResponse.json(
+          { error: "Current password is incorrect." },
+          { status: 400 }
+        );
+      }
+
+      if (await verifyPassword(newPassword, user.password)) {
+        return NextResponse.json(
+          {
+            error:
+              "New password must be different from your current password.",
+          },
+          { status: 400 }
+        );
+      }
     }
 
     const newPasswordHash = await hashPassword(newPassword);
@@ -114,6 +155,7 @@ export async function PUT(request: Request) {
         },
         data: {
           password: newPasswordHash,
+          mustChangePassword: false,
         },
       });
 
