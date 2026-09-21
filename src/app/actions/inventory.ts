@@ -63,6 +63,32 @@ export async function adjustStock({
       throw new Error("Branch not found.");
     }
 
+    /*
+     * Get the stock record BEFORE changing it.
+     *
+     * This value is the historical "Previous Quantity"
+     * that will be stored with the transaction.
+     */
+    const existingStock = await tx.branchStock.findUnique({
+      where: {
+        branchId_itemId: {
+          branchId,
+          itemId,
+        },
+      },
+    });
+
+    const previousQuantity = existingStock?.quantity ?? 0;
+    const newQuantity = previousQuantity + quantity;
+
+    // Never allow stock to become negative.
+    if (newQuantity < 0) {
+      throw new Error("Stock quantity cannot be negative.");
+    }
+
+    /*
+     * Update the actual branch inventory.
+     */
     const updatedStock = await tx.branchStock.upsert({
       where: {
         branchId_itemId: {
@@ -71,26 +97,26 @@ export async function adjustStock({
         },
       },
       update: {
-        quantity: {
-          increment: quantity,
-        },
+        quantity: newQuantity,
       },
       create: {
         branchId,
         itemId,
-        quantity,
+        quantity: newQuantity,
       },
     });
 
-    // Never allow stock to become negative.
-    if (updatedStock.quantity < 0) {
-      throw new Error("Stock quantity cannot be negative.");
-    }
-
+    /*
+     * Record the complete inventory history:
+     *
+     * Previous Quantity → Change → New Quantity
+     */
     await tx.stockTransaction.create({
       data: {
         type,
         quantityDelta: quantity,
+        previousQuantity,
+        newQuantity: updatedStock.quantity,
         branch: {
           connect: {
             id: branchId,
@@ -133,7 +159,6 @@ export async function transferStock({
   itemId: string;
   quantity: number;
 }) {
-  // Transfer quantities must always be positive.
   if (quantity <= 0) {
     throw new Error("Transfer quantity must be greater than zero.");
   }
@@ -172,11 +197,6 @@ export async function transferStock({
     );
   }
 
-  /*
-   * Both transaction records use the same transferId.
-   * This allows TRANSFER_OUT and TRANSFER_IN to be
-   * identified as one transfer event in Records.
-   */
   const transferId = crypto.randomUUID();
 
   await prisma.$transaction(async (tx) => {
@@ -204,6 +224,12 @@ export async function transferStock({
       throw new Error("Item not found.");
     }
 
+    /*
+     * Get SOURCE stock before changing it.
+     *
+     * This becomes the Previous Quantity for
+     * the TRANSFER_OUT transaction.
+     */
     const sourceStock = await tx.branchStock.findUnique({
       where: {
         branchId_itemId: {
@@ -217,35 +243,38 @@ export async function transferStock({
       throw new Error("Insufficient stock at source branch.");
     }
 
+    const previousSourceQuantity = sourceStock.quantity;
+    const newSourceQuantity =
+      previousSourceQuantity - quantity;
+
     /*
      * Deduct stock from source branch.
      */
-    const updatedSourceStock = await tx.branchStock.update({
-      where: {
-        id: sourceStock.id,
-      },
-      data: {
-        quantity: {
-          decrement: quantity,
+    const updatedSourceStock =
+      await tx.branchStock.update({
+        where: {
+          id: sourceStock.id,
         },
-      },
-    });
+        data: {
+          quantity: newSourceQuantity,
+        },
+      });
 
-    // Never allow source stock to become negative.
     if (updatedSourceStock.quantity < 0) {
       throw new Error("Source stock cannot become negative.");
     }
 
     /*
-     * Record the source side of the transfer.
+     * Record TRANSFER_OUT history.
      *
-     * This is intentionally TRANSFER_OUT rather than
-     * ADJUSTMENT because this is a stock transfer.
+     * Previous → Change → New
      */
     await tx.stockTransaction.create({
       data: {
         type: "TRANSFER_OUT",
         quantityDelta: -quantity,
+        previousQuantity: previousSourceQuantity,
+        newQuantity: updatedSourceStock.quantity,
         branchId: sourceBranchId,
         itemId,
         userId: currentUser.id,
@@ -262,6 +291,28 @@ export async function transferStock({
     );
 
     /*
+     * Get DESTINATION stock before changing it.
+     *
+     * If no stock record exists yet, its previous
+     * quantity is considered 0.
+     */
+    const destinationStock =
+      await tx.branchStock.findUnique({
+        where: {
+          branchId_itemId: {
+            branchId: destinationBranchId,
+            itemId,
+          },
+        },
+      });
+
+    const previousDestinationQuantity =
+      destinationStock?.quantity ?? 0;
+
+    const newDestinationQuantity =
+      previousDestinationQuantity + quantity;
+
+    /*
      * Add stock to destination branch.
      */
     const updatedDestinationStock =
@@ -273,28 +324,26 @@ export async function transferStock({
           },
         },
         update: {
-          quantity: {
-            increment: quantity,
-          },
+          quantity: newDestinationQuantity,
         },
         create: {
           branchId: destinationBranchId,
           itemId,
-          quantity,
+          quantity: newDestinationQuantity,
         },
       });
 
     /*
-     * Record the destination side of the transfer.
+     * Record TRANSFER_IN history.
      *
-     * This is intentionally TRANSFER_IN rather than
-     * STOCK_RECEIPT because this stock came from another
-     * branch, not from a normal stock receipt.
+     * Previous → Change → New
      */
     await tx.stockTransaction.create({
       data: {
         type: "TRANSFER_IN",
         quantityDelta: quantity,
+        previousQuantity: previousDestinationQuantity,
+        newQuantity: updatedDestinationStock.quantity,
         branchId: destinationBranchId,
         itemId,
         userId: currentUser.id,

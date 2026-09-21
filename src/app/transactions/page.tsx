@@ -89,8 +89,23 @@ export default async function TransactionsPage() {
           (transaction) => ({
             id: transaction.id,
             type: transaction.type,
+
+            /*
+             * Inventory history:
+             * Previous Quantity → Change → New Quantity
+             *
+             * These values are stored at the time the
+             * transaction is created.
+             */
+            previousQuantity:
+              transaction.previousQuantity ?? null,
+
             quantityDelta:
               transaction.quantityDelta,
+
+            newQuantity:
+              transaction.newQuantity ?? null,
+
             createdAt:
               transaction.createdAt.toISOString(),
 
@@ -125,6 +140,7 @@ export default async function TransactionsPage() {
                 : null,
           })
         )}
+
         currentUser={{
           role: currentUser.role,
           branchName:

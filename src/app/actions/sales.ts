@@ -98,6 +98,11 @@ export async function recordSale({
       );
     }
 
+    /*
+     * Capture the stock BEFORE the sale.
+     */
+    const previousQuantity = stock.quantity;
+
     const updatedStock =
       await tx.branchStock.update({
         where: {
@@ -118,17 +123,25 @@ export async function recordSale({
         "Stock quantity cannot be negative."
       );
     }
-      await updateReorderAlert(
-        tx,
-        branchId,
-        finishedItemId,
-        updatedStock.quantity
-      );
 
+    await updateReorderAlert(
+      tx,
+      branchId,
+      finishedItemId,
+      updatedStock.quantity
+    );
+
+    /*
+     * Record complete sale history:
+     *
+     * Previous -> Change -> New
+     */
     await tx.stockTransaction.create({
       data: {
         type: "SALE",
         quantityDelta: -soldQuantity,
+        previousQuantity,
+        newQuantity: updatedStock.quantity,
         branchId,
         itemId: finishedItemId,
         userId: currentUser.id,

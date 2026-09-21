@@ -11,19 +11,31 @@ type Transaction = {
     | "ADJUSTMENT"
     | "TRANSFER_IN"
     | "TRANSFER_OUT";
+
   transferId: string | null;
   transferBranchId: string | null;
   transferBranchName: string | null;
+
+  /*
+   * Inventory history:
+   * Previous Quantity → Change → New Quantity
+   */
+  previousQuantity: number | null;
   quantityDelta: number;
+  newQuantity: number | null;
+
   createdAt: string;
+
   item: {
     name: string;
     unit: string;
     sourceType: string;
   };
+
   branch: {
     name: string;
   };
+
   user: {
     username: string;
     role: string;
@@ -133,6 +145,16 @@ export default function TransactionHistory({
     }
 
     return `${formatted}`;
+  }
+
+  function formatHistoryQuantity(
+    quantity: number | null
+  ) {
+    if (quantity === null) {
+      return "—";
+    }
+
+    return Number(quantity.toFixed(2)).toString();
   }
 
   function resetFilters() {
@@ -313,7 +335,7 @@ export default function TransactionHistory({
         {/* Table */}
         <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1100px] text-left text-sm text-gray-600">
+            <table className="w-full min-w-[1350px] text-left text-sm text-gray-600">
               <thead className="border-b border-gray-200 bg-gray-50 text-xs uppercase text-gray-500">
                 <tr>
                   <th className="px-5 py-3">
@@ -341,7 +363,15 @@ export default function TransactionHistory({
                   </th>
 
                   <th className="px-5 py-3 text-right">
-                    Quantity
+                    Previous
+                  </th>
+
+                  <th className="px-5 py-3 text-right">
+                    Change
+                  </th>
+
+                  <th className="px-5 py-3 text-right">
+                    New
                   </th>
 
                   <th className="px-5 py-3">
@@ -354,7 +384,7 @@ export default function TransactionHistory({
                 {filteredTransactions.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={8}
+                      colSpan={10}
                       className="px-6 py-12 text-center"
                     >
                       <p className="text-sm font-medium text-gray-700">
@@ -379,6 +409,15 @@ export default function TransactionHistory({
                           "TRANSFER_IN" ||
                         transaction.type ===
                           "TRANSFER_OUT";
+
+                      const changeColor =
+                        transaction.quantityDelta >
+                        0
+                          ? "text-emerald-600"
+                          : transaction.quantityDelta <
+                            0
+                          ? "text-red-600"
+                          : "text-gray-600";
 
                       return (
                         <tr
@@ -473,22 +512,34 @@ export default function TransactionHistory({
                             )}
                           </td>
 
-                          {/* Quantity */}
+                          {/* Previous Quantity */}
+                          <td className="px-5 py-4 text-right font-medium text-gray-700">
+                            {formatHistoryQuantity(
+                              transaction.previousQuantity
+                            )}{" "}
+                            {transaction.previousQuantity !==
+                              null &&
+                              transaction.item.unit}
+                          </td>
+
+                          {/* Change */}
                           <td
-                            className={`px-5 py-4 text-right font-bold ${
-                              isIncrease
-                                ? "text-emerald-600"
-                                : "text-red-600"
-                            }`}
+                            className={`px-5 py-4 text-right font-bold ${changeColor}`}
                           >
-                            {isTransfer
-                              ? Math.abs(
-                                  transaction.quantityDelta
-                                ).toFixed(2)
-                              : formatQuantity(
-                                  transaction.quantityDelta
-                                )}{" "}
+                            {formatQuantity(
+                              transaction.quantityDelta
+                            )}{" "}
                             {transaction.item.unit}
+                          </td>
+
+                          {/* New Quantity */}
+                          <td className="px-5 py-4 text-right font-bold text-gray-900">
+                            {formatHistoryQuantity(
+                              transaction.newQuantity
+                            )}{" "}
+                            {transaction.newQuantity !==
+                              null &&
+                              transaction.item.unit}
                           </td>
 
                           {/* User */}

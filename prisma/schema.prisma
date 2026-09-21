@@ -113,6 +113,8 @@ model StockTransaction {
   branchId         String
   itemId           String
   quantityDelta    Float
+  previousQuantity Float?
+  newQuantity      Float?
   userId           String
   transferId       String?
   transferBranchId String?

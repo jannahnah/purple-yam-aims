@@ -54,7 +54,7 @@ export default function StockActionsModal({
     useState<"transfer" | "adjust">("adjust");
 
   // =========================
-  // STOCK ADJUSTMENT STATE
+  // STOCK ADJUSTMENT / RECEIPT STATE
   // =========================
 
   const [branchId, setBranchId] = useState("");
@@ -71,7 +71,8 @@ export default function StockActionsModal({
   const [sourceBranchId, setSourceBranchId] = useState("");
   const [destinationBranchId, setDestinationBranchId] =
     useState("");
-  const [transferItemId, setTransferItemId] = useState("");
+  const [transferItemId, setTransferItemId] =
+    useState("");
   const [transferQuantity, setTransferQuantity] =
     useState("");
 
@@ -172,13 +173,16 @@ export default function StockActionsModal({
       destinationBranchId &&
       destinationBranchId !== sourceBranchId &&
       transferBranches.some(
-        (branch) => branch.id === destinationBranchId
+        (branch) =>
+          branch.id === destinationBranchId
       );
 
     if (!destinationStillValid) {
-      const alternativeBranch = transferBranches.find(
-        (branch) => branch.id !== sourceBranchId
-      );
+      const alternativeBranch =
+        transferBranches.find(
+          (branch) =>
+            branch.id !== sourceBranchId
+        );
 
       setDestinationBranchId(
         alternativeBranch?.id ?? ""
@@ -192,17 +196,22 @@ export default function StockActionsModal({
   ]);
 
   // =========================
-  // STOCK ADJUSTMENT
+  // CURRENT STOCK
   // =========================
 
-  const currentStockRecord = branchStocks.find(
-    (stock) =>
-      stock.branchId === branchId &&
-      stock.itemId === itemId
-  );
+  const currentStockRecord =
+    branchStocks.find(
+      (stock) =>
+        stock.branchId === branchId &&
+        stock.itemId === itemId
+    );
 
   const currentQuantity =
     currentStockRecord?.quantity ?? 0;
+
+  // =========================
+  // STOCK ADJUSTMENT / RECEIPT
+  // =========================
 
   const handleAdjustSubmit = async (
     e: React.FormEvent
@@ -210,12 +219,12 @@ export default function StockActionsModal({
     e.preventDefault();
     setError(null);
 
-    const targetQuantity =
+    const enteredQuantity =
       parseFloat(newTotalQuantity);
 
     if (
-      isNaN(targetQuantity) ||
-      targetQuantity < 0
+      isNaN(enteredQuantity) ||
+      enteredQuantity < 0
     ) {
       setError("Please enter a valid quantity.");
       return;
@@ -228,8 +237,70 @@ export default function StockActionsModal({
       return;
     }
 
-    const delta =
-      targetQuantity - currentQuantity;
+    /*
+     * STOCK ADJUSTMENT
+     *
+     * The entered value represents the actual
+     * physical/countable total stock.
+     *
+     * Example:
+     * Current = 5.01
+     * Physical count = 1
+     *
+     * Change = 1 - 5.01 = -4.01
+     * New stock = 1
+     */
+    let quantityDelta: number;
+
+    if (actionType === "ADJUSTMENT") {
+      quantityDelta =
+        enteredQuantity - currentQuantity;
+    }
+
+    /*
+     * STOCK RECEIPT
+     *
+     * The entered value represents the amount
+     * newly received/replenished.
+     *
+     * Example:
+     * Current = 1
+     * Received = 5
+     *
+     * Change = +5
+     * New stock = 6
+     */
+    else {
+      quantityDelta = enteredQuantity;
+    }
+
+    /*
+     * A zero adjustment does not change inventory.
+     * We can safely reject it instead of creating
+     * a meaningless transaction.
+     */
+    if (
+      actionType === "ADJUSTMENT" &&
+      quantityDelta === 0
+    ) {
+      setError(
+        "The physical quantity is the same as the current stock. No adjustment is needed."
+      );
+      return;
+    }
+
+    /*
+     * A stock receipt must be greater than zero.
+     */
+    if (
+      actionType === "STOCK_RECEIPT" &&
+      quantityDelta <= 0
+    ) {
+      setError(
+        "Received quantity must be greater than zero."
+      );
+      return;
+    }
 
     setLoading(true);
 
@@ -237,7 +308,7 @@ export default function StockActionsModal({
       await adjustStock({
         branchId,
         itemId,
-        quantity: delta,
+        quantity: quantityDelta,
         type: actionType,
       });
 
@@ -249,7 +320,7 @@ export default function StockActionsModal({
       setError(
         err instanceof Error
           ? err.message
-          : "Failed to adjust stock."
+          : "Failed to update stock."
       );
     } finally {
       setLoading(false);
@@ -287,7 +358,10 @@ export default function StockActionsModal({
     const quantity =
       parseFloat(transferQuantity);
 
-    if (!sourceBranchId || !destinationBranchId) {
+    if (
+      !sourceBranchId ||
+      !destinationBranchId
+    ) {
       setError(
         "Please select both source and destination branches."
       );
@@ -350,14 +424,17 @@ export default function StockActionsModal({
 
     setLoading(true);
 
-    console.log("[TRANSFER DEBUG] Sending transfer:", {
-      transferQuantity,
-      parsedQuantity: quantity,
-      sourceQuantity,
-      sourceBranchId,
-      destinationBranchId,
-      transferItemId,
-    });
+    console.log(
+      "[TRANSFER DEBUG] Sending transfer:",
+      {
+        transferQuantity,
+        parsedQuantity: quantity,
+        sourceQuantity,
+        sourceBranchId,
+        destinationBranchId,
+        transferItemId,
+      }
+    );
 
     try {
       await transferStock({
@@ -391,6 +468,7 @@ export default function StockActionsModal({
       setIsOpen(false);
       setError(null);
       setTransferQuantity("");
+      setNewTotalQuantity("");
     }
   };
 
@@ -705,7 +783,7 @@ export default function StockActionsModal({
             )}
 
             {/* =========================
-                STOCK ADJUSTMENT
+                STOCK ADJUSTMENT / RECEIPT
             ========================= */}
             {activeTab === "adjust" && (
               <form
@@ -794,7 +872,9 @@ export default function StockActionsModal({
                 <div>
                   <div className="mb-1 flex items-center justify-between">
                     <label className="block text-xs font-semibold text-gray-700">
-                      New Total Quantity
+                      {actionType === "STOCK_RECEIPT"
+                        ? "Quantity Received"
+                        : "Physical Count"}
                     </label>
 
                     <span className="text-xs text-gray-500">
@@ -817,21 +897,142 @@ export default function StockActionsModal({
                         e.target.value
                       )
                     }
-                    placeholder="Enter new total quantity"
+                    placeholder={
+                      actionType ===
+                      "STOCK_RECEIPT"
+                        ? "Enter quantity received"
+                        : "Enter physical count"
+                    }
                     required
                     disabled={loading}
                     className="w-full rounded-lg border p-2 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100"
                   />
+
+                  <p className="mt-1 text-[11px] text-gray-500">
+                    {actionType ===
+                    "STOCK_RECEIPT"
+                      ? `This quantity will be added to the current stock. Example: ${formatQuantity(
+                          currentQuantity
+                        )} + 5 = ${formatQuantity(
+                          currentQuantity + 5
+                        )}.`
+                      : "Enter the actual physical quantity counted. The system will calculate the adjustment automatically."}
+                  </p>
                 </div>
+
+                {/* Expected Result */}
+                {newTotalQuantity.trim() !== "" &&
+                  !isNaN(
+                    parseFloat(newTotalQuantity)
+                  ) &&
+                  parseFloat(newTotalQuantity) >=
+                    0 && (
+                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-gray-600">
+                          Expected New Stock
+                        </span>
+
+                        <strong className="text-purple-700">
+                          {formatQuantity(
+                            actionType ===
+                              "STOCK_RECEIPT"
+                              ? currentQuantity +
+                                  parseFloat(
+                                    newTotalQuantity
+                                  )
+                              : parseFloat(
+                                  newTotalQuantity
+                                )
+                          )}
+                        </strong>
+                      </div>
+
+                      <div className="mt-1 flex items-center justify-between text-xs">
+                        <span className="text-gray-600">
+                          Change
+                        </span>
+
+                        <strong
+                          className={
+                            (
+                              actionType ===
+                              "STOCK_RECEIPT"
+                                ? parseFloat(
+                                    newTotalQuantity
+                                  )
+                                : parseFloat(
+                                    newTotalQuantity
+                                  ) -
+                                  currentQuantity
+                            ) > 0
+                              ? "text-emerald-600"
+                              : (
+                                    actionType ===
+                                    "STOCK_RECEIPT"
+                                      ? parseFloat(
+                                          newTotalQuantity
+                                        )
+                                      : parseFloat(
+                                          newTotalQuantity
+                                        ) -
+                                        currentQuantity
+                                  ) < 0
+                              ? "text-red-600"
+                              : "text-gray-600"
+                          }
+                        >
+                          {(
+                            actionType ===
+                            "STOCK_RECEIPT"
+                              ? parseFloat(
+                                  newTotalQuantity
+                                )
+                              : parseFloat(
+                                  newTotalQuantity
+                                ) -
+                                currentQuantity
+                          ) > 0
+                            ? "+"
+                            : ""}
+                          {formatQuantity(
+                            actionType ===
+                              "STOCK_RECEIPT"
+                              ? parseFloat(
+                                  newTotalQuantity
+                                )
+                              : parseFloat(
+                                  newTotalQuantity
+                                ) -
+                                  currentQuantity
+                          )}
+                        </strong>
+                      </div>
+                    </div>
+                  )}
 
                 {/* Submit */}
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={
+                    loading ||
+                    !newTotalQuantity ||
+                    parseFloat(
+                      newTotalQuantity
+                    ) < 0 ||
+                    (actionType ===
+                      "STOCK_RECEIPT" &&
+                      parseFloat(
+                        newTotalQuantity
+                      ) <= 0)
+                  }
                   className="mt-2 w-full rounded-lg bg-purple-600 py-2.5 font-medium text-white transition-colors hover:bg-purple-700 disabled:opacity-50"
                 >
                   {loading
                     ? "Saving..."
+                    : actionType ===
+                      "STOCK_RECEIPT"
+                    ? "Receive Stock"
                     : "Save Adjustment"}
                 </button>
               </form>

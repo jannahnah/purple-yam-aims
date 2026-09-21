@@ -64,7 +64,10 @@ export async function logProductionRun({
       );
     }
 
-    if (finishedItem.sourceType !== "FINISHED_PRODUCT") {
+    if (
+      finishedItem.sourceType !==
+      "FINISHED_PRODUCT"
+    ) {
       throw new Error(
         "The selected item is not a finished product."
       );
@@ -142,6 +145,28 @@ export async function logProductionRun({
 
     // Deduct ingredients.
     for (const requirement of requirements) {
+      /*
+       * Capture the stock BEFORE the production deduction.
+       */
+      const existingStock =
+        await tx.branchStock.findUnique({
+          where: {
+            branchId_itemId: {
+              branchId,
+              itemId: requirement.itemId,
+            },
+          },
+        });
+
+      if (!existingStock) {
+        throw new Error(
+          `No stock record exists for ${requirement.itemName}.`
+        );
+      }
+
+      const previousQuantity =
+        existingStock.quantity;
+
       const updatedStock =
         await tx.branchStock.update({
           where: {
@@ -164,8 +189,10 @@ export async function logProductionRun({
         );
       }
 
-      // Synchronize the ingredient's reorder alert
-      // using the new stock quantity.
+      /*
+       * Synchronize the ingredient's reorder alert
+       * using the new stock quantity.
+       */
       await updateReorderAlert(
         tx,
         branchId,
@@ -173,17 +200,44 @@ export async function logProductionRun({
         updatedStock.quantity
       );
 
+      /*
+       * Record complete production history:
+       *
+       * Previous -> Change -> New
+       */
       await tx.stockTransaction.create({
         data: {
           type: "PRODUCTION",
           quantityDelta:
             -requirement.requiredQuantity,
+          previousQuantity,
+          newQuantity: updatedStock.quantity,
           branchId,
           itemId: requirement.itemId,
           userId: currentUser.id,
         },
       });
     }
+
+    /*
+     * Get the existing finished-product stock BEFORE
+     * adding the newly produced quantity.
+     *
+     * If no stock exists yet, the previous quantity
+     * is treated as zero.
+     */
+    const existingFinishedStock =
+      await tx.branchStock.findUnique({
+        where: {
+          branchId_itemId: {
+            branchId,
+            itemId: finishedItemId,
+          },
+        },
+      });
+
+    const previousFinishedQuantity =
+      existingFinishedStock?.quantity ?? 0;
 
     // Add finished product.
     const updatedFinishedStock =
@@ -206,8 +260,10 @@ export async function logProductionRun({
         },
       });
 
-    // Synchronize the finished product's reorder alert
-    // using the new stock quantity.
+    /*
+     * Synchronize the finished product's reorder alert
+     * using the new stock quantity.
+     */
     await updateReorderAlert(
       tx,
       branchId,
@@ -215,10 +271,19 @@ export async function logProductionRun({
       updatedFinishedStock.quantity
     );
 
+    /*
+     * Record complete production history:
+     *
+     * Previous -> Change -> New
+     */
     await tx.stockTransaction.create({
       data: {
         type: "PRODUCTION",
         quantityDelta: producedQuantity,
+        previousQuantity:
+          previousFinishedQuantity,
+        newQuantity:
+          updatedFinishedStock.quantity,
         branchId,
         itemId: finishedItemId,
         userId: currentUser.id,
