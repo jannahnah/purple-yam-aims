@@ -3,6 +3,15 @@
 import { useEffect, useState } from "react";
 import { adjustStock, transferStock } from "@/app/actions/inventory";
 
+type Role = "OWNER" | "BRANCH_MANAGER" | "CASHIER";
+
+interface UserInfo {
+  role: Role;
+  username: string;
+  branchId: string | null;
+  branchName: string | null;
+}
+
 interface Branch {
   id: string;
   name: string;
@@ -22,20 +31,32 @@ interface BranchStock {
 }
 
 interface StockActionsModalProps {
+  user: UserInfo;
   branches: Branch[];
+  transferBranches: Branch[];
   items: Item[];
   branchStocks: BranchStock[];
 }
 
+function formatQuantity(quantity: number) {
+  return Number(quantity.toFixed(2));
+}
+
 export default function StockActionsModal({
+  user,
   branches,
+  transferBranches,
   items,
   branchStocks,
 }: StockActionsModalProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<"transfer" | "adjust">("adjust");
+  const [activeTab, setActiveTab] =
+    useState<"transfer" | "adjust">("adjust");
 
-  // Adjustment state
+  // =========================
+  // STOCK ADJUSTMENT STATE
+  // =========================
+
   const [branchId, setBranchId] = useState("");
   const [itemId, setItemId] = useState("");
   const [newTotalQuantity, setNewTotalQuantity] = useState("");
@@ -43,52 +64,131 @@ export default function StockActionsModal({
   const [actionType, setActionType] =
     useState<"ADJUSTMENT" | "STOCK_RECEIPT">("ADJUSTMENT");
 
-  // Transfer state
+  // =========================
+  // STOCK TRANSFER STATE
+  // =========================
+
   const [sourceBranchId, setSourceBranchId] = useState("");
-  const [destinationBranchId, setDestinationBranchId] = useState("");
+  const [destinationBranchId, setDestinationBranchId] =
+    useState("");
   const [transferItemId, setTransferItemId] = useState("");
-  const [transferQuantity, setTransferQuantity] = useState("");
+  const [transferQuantity, setTransferQuantity] =
+    useState("");
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] =
+    useState<string | null>(null);
+
+  // =========================
+  // SELECTED TRANSFER ITEM
+  // =========================
+
+  const selectedTransferItem = items.find(
+    (item) => item.id === transferItemId
+  );
+
+  /*
+   * Finished products are stored as individual units
+   * such as cakes, so they must use whole numbers.
+   *
+   * The current project data uses "pcs" for finished
+   * products.
+   */
+  const isFinishedProduct =
+    selectedTransferItem?.unit === "pcs";
+
+  // =========================
+  // INITIALIZE MODAL
+  // =========================
 
   useEffect(() => {
-    if (isOpen) {
-      if (branches.length > 0) {
-        if (!branchId) {
-          setBranchId(branches[0].id);
-        }
+    if (!isOpen) {
+      return;
+    }
 
-        if (!sourceBranchId) {
-          setSourceBranchId(branches[0].id);
-        }
+    setError(null);
 
-        if (!destinationBranchId && branches.length > 1) {
-          setDestinationBranchId(branches[1].id);
-        }
-      }
+    /*
+     * Adjustment:
+     *
+     * Owner can work with all branches.
+     * Branch Manager receives only their assigned branch
+     * from InventoryPage.
+     */
+    if (!branchId && branches.length > 0) {
+      setBranchId(
+        user.branchId ?? branches[0].id
+      );
+    }
 
-      if (items.length > 0) {
-        if (!itemId) {
-          setItemId(items[0].id);
-        }
+    /*
+     * Transfer source:
+     *
+     * Always use the signed-in user's assigned branch.
+     *
+     * We intentionally do NOT fall back to branches[0].
+     * If an account has no assigned branch, we do not
+     * silently choose an arbitrary branch.
+     */
+    if (user.branchId) {
+      setSourceBranchId(user.branchId);
+    }
 
-        if (!transferItemId) {
-          setTransferItemId(items[0].id);
-        }
-      }
+    if (!itemId && items.length > 0) {
+      setItemId(items[0].id);
+    }
 
-      setError(null);
+    if (!transferItemId && items.length > 0) {
+      setTransferItemId(items[0].id);
     }
   }, [
     isOpen,
+    user.branchId,
     branches,
     items,
     branchId,
-    sourceBranchId,
-    destinationBranchId,
     itemId,
     transferItemId,
+  ]);
+
+  // =========================
+  // DEFAULT DESTINATION
+  // =========================
+
+  useEffect(() => {
+    if (!isOpen || !sourceBranchId) {
+      return;
+    }
+
+    /*
+     * The destination must come from the complete
+     * transferBranches list, not the branch-scoped
+     * inventory branches list.
+     *
+     * This allows a Branch Manager to transfer from
+     * their assigned branch to another branch.
+     */
+    const destinationStillValid =
+      destinationBranchId &&
+      destinationBranchId !== sourceBranchId &&
+      transferBranches.some(
+        (branch) => branch.id === destinationBranchId
+      );
+
+    if (!destinationStillValid) {
+      const alternativeBranch = transferBranches.find(
+        (branch) => branch.id !== sourceBranchId
+      );
+
+      setDestinationBranchId(
+        alternativeBranch?.id ?? ""
+      );
+    }
+  }, [
+    isOpen,
+    sourceBranchId,
+    destinationBranchId,
+    transferBranches,
   ]);
 
   // =========================
@@ -101,25 +201,35 @@ export default function StockActionsModal({
       stock.itemId === itemId
   );
 
-  const currentQuantity = currentStockRecord?.quantity ?? 0;
+  const currentQuantity =
+    currentStockRecord?.quantity ?? 0;
 
-  const handleAdjustSubmit = async (e: React.FormEvent) => {
+  const handleAdjustSubmit = async (
+    e: React.FormEvent
+  ) => {
     e.preventDefault();
     setError(null);
 
-    const targetQuantity = parseFloat(newTotalQuantity);
+    const targetQuantity =
+      parseFloat(newTotalQuantity);
 
-    if (isNaN(targetQuantity) || targetQuantity < 0) {
+    if (
+      isNaN(targetQuantity) ||
+      targetQuantity < 0
+    ) {
       setError("Please enter a valid quantity.");
       return;
     }
 
     if (!branchId || !itemId) {
-      setError("Please select both a branch and an item.");
+      setError(
+        "Please select both a branch and an item."
+      );
       return;
     }
 
-    const delta = targetQuantity - currentQuantity;
+    const delta =
+      targetQuantity - currentQuantity;
 
     setLoading(true);
 
@@ -150,31 +260,46 @@ export default function StockActionsModal({
   // STOCK TRANSFER
   // =========================
 
-  const sourceStockRecord = branchStocks.find(
-    (stock) =>
-      stock.branchId === sourceBranchId &&
-      stock.itemId === transferItemId
-  );
+  const sourceStockRecord =
+    branchStocks.find(
+      (stock) =>
+        stock.branchId === sourceBranchId &&
+        stock.itemId === transferItemId
+    );
 
-  const sourceQuantity = sourceStockRecord?.quantity ?? 0;
+  const sourceQuantity =
+    sourceStockRecord?.quantity ?? 0;
 
-  const selectedTransferItem = items.find(
-    (item) => item.id === transferItemId
-  );
-
-  const handleTransferSubmit = async (e: React.FormEvent) => {
+  const handleTransferSubmit = async (
+    e: React.FormEvent
+  ) => {
     e.preventDefault();
     setError(null);
 
-    const quantity = parseFloat(transferQuantity);
+    /*
+     * Keep the exact number entered by the user.
+     *
+     * parseFloat("10") => 10
+     * parseFloat("7.5") => 7.5
+     *
+     * No rounding is applied to the transfer quantity.
+     */
+    const quantity =
+      parseFloat(transferQuantity);
 
     if (!sourceBranchId || !destinationBranchId) {
-      setError("Please select both source and destination branches.");
+      setError(
+        "Please select both source and destination branches."
+      );
       return;
     }
 
-    if (sourceBranchId === destinationBranchId) {
-      setError("Source and destination branches must be different.");
+    if (
+      sourceBranchId === destinationBranchId
+    ) {
+      setError(
+        "Source and destination branches must be different."
+      );
       return;
     }
 
@@ -183,14 +308,40 @@ export default function StockActionsModal({
       return;
     }
 
-    if (isNaN(quantity) || quantity <= 0) {
-      setError("Transfer quantity must be greater than zero.");
+    if (
+      transferQuantity.trim() === "" ||
+      isNaN(quantity) ||
+      quantity <= 0
+    ) {
+      setError(
+        "Transfer quantity must be greater than zero."
+      );
       return;
     }
 
+    /*
+     * Finished products must be transferred
+     * using whole numbers.
+     */
+    if (
+      isFinishedProduct &&
+      !Number.isInteger(quantity)
+    ) {
+      setError(
+        "Finished products must be transferred using whole numbers."
+      );
+      return;
+    }
+
+    /*
+     * Never allow more stock to be transferred
+     * than what exists at the source branch.
+     */
     if (quantity > sourceQuantity) {
       setError(
-        `Insufficient stock. Available: ${sourceQuantity} ${
+        `Insufficient stock. Available: ${formatQuantity(
+          sourceQuantity
+        )} ${
           selectedTransferItem?.unit || "units"
         }.`
       );
@@ -198,6 +349,15 @@ export default function StockActionsModal({
     }
 
     setLoading(true);
+
+    console.log("[TRANSFER DEBUG] Sending transfer:", {
+      transferQuantity,
+      parsedQuantity: quantity,
+      sourceQuantity,
+      sourceBranchId,
+      destinationBranchId,
+      transferItemId,
+    });
 
     try {
       await transferStock({
@@ -230,8 +390,13 @@ export default function StockActionsModal({
     if (!loading) {
       setIsOpen(false);
       setError(null);
+      setTransferQuantity("");
     }
   };
+
+  // =========================
+  // RENDER
+  // =========================
 
   return (
     <>
@@ -256,7 +421,9 @@ export default function StockActionsModal({
         >
           <div
             className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl bg-white p-6 shadow-xl"
-            onMouseDown={(e) => e.stopPropagation()}
+            onMouseDown={(e) =>
+              e.stopPropagation()
+            }
           >
             {/* Close Button */}
             <button
@@ -322,9 +489,11 @@ export default function StockActionsModal({
               >
                 <div className="rounded-lg border border-purple-100 bg-purple-50 p-3">
                   <p className="text-xs text-purple-800">
-                    Transfer existing stock from one branch to another.
-                    The source stock will decrease and the destination
-                    stock will increase automatically.
+                    Transfer existing stock from your
+                    assigned branch to another branch.
+                    The source stock will decrease and
+                    the destination stock will increase
+                    automatically.
                   </p>
                 </div>
 
@@ -336,18 +505,34 @@ export default function StockActionsModal({
 
                   <select
                     value={sourceBranchId}
-                    onChange={(e) =>
-                      setSourceBranchId(e.target.value)
-                    }
-                    disabled={loading}
-                    className="w-full rounded-lg border p-2 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100"
+                    disabled
+                    className="w-full rounded-lg border border-gray-300 bg-gray-100 p-2 text-sm text-gray-600 outline-none disabled:cursor-not-allowed"
                   >
-                    {branches.map((branch) => (
-                      <option key={branch.id} value={branch.id}>
-                        {branch.name}
+                    {transferBranches
+                      .filter(
+                        (branch) =>
+                          branch.id ===
+                          sourceBranchId
+                      )
+                      .map((branch) => (
+                        <option
+                          key={branch.id}
+                          value={branch.id}
+                        >
+                          {branch.name}
+                        </option>
+                      ))}
+
+                    {!sourceBranchId && (
+                      <option value="">
+                        No assigned branch
                       </option>
-                    ))}
+                    )}
                   </select>
+
+                  <p className="mt-1 text-[11px] text-gray-500">
+                    Locked to your assigned branch.
+                  </p>
                 </div>
 
                 {/* Destination Branch */}
@@ -359,16 +544,31 @@ export default function StockActionsModal({
                   <select
                     value={destinationBranchId}
                     onChange={(e) =>
-                      setDestinationBranchId(e.target.value)
+                      setDestinationBranchId(
+                        e.target.value
+                      )
                     }
                     disabled={loading}
                     className="w-full rounded-lg border p-2 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100"
                   >
-                    {branches.map((branch) => (
-                      <option key={branch.id} value={branch.id}>
-                        {branch.name}
-                      </option>
-                    ))}
+                    <option value="">
+                      Select destination branch
+                    </option>
+
+                    {transferBranches
+                      .filter(
+                        (branch) =>
+                          branch.id !==
+                          sourceBranchId
+                      )
+                      .map((branch) => (
+                        <option
+                          key={branch.id}
+                          value={branch.id}
+                        >
+                          {branch.name}
+                        </option>
+                      ))}
                   </select>
                 </div>
 
@@ -380,14 +580,20 @@ export default function StockActionsModal({
 
                   <select
                     value={transferItemId}
-                    onChange={(e) =>
-                      setTransferItemId(e.target.value)
-                    }
+                    onChange={(e) => {
+                      setTransferItemId(
+                        e.target.value
+                      );
+                      setTransferQuantity("");
+                    }}
                     disabled={loading}
                     className="w-full rounded-lg border p-2 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100"
                   >
                     {items.map((item) => (
-                      <option key={item.id} value={item.id}>
+                      <option
+                        key={item.id}
+                        value={item.id}
+                      >
                         {item.name} ({item.unit})
                       </option>
                     ))}
@@ -402,8 +608,11 @@ export default function StockActionsModal({
                     </span>
 
                     <span className="font-semibold text-purple-700">
-                      {sourceQuantity}{" "}
-                      {selectedTransferItem?.unit || "units"}
+                      {formatQuantity(
+                        sourceQuantity
+                      )}{" "}
+                      {selectedTransferItem?.unit ||
+                        "units"}
                     </span>
                   </div>
                 </div>
@@ -416,26 +625,49 @@ export default function StockActionsModal({
 
                   <input
                     type="number"
-                    min="0.01"
-                    step="any"
+                    min={
+                      isFinishedProduct
+                        ? "1"
+                        : "0.01"
+                    }
+                    step={
+                      isFinishedProduct
+                        ? "1"
+                        : "any"
+                    }
                     max={sourceQuantity}
                     value={transferQuantity}
                     onChange={(e) =>
-                      setTransferQuantity(e.target.value)
+                      setTransferQuantity(
+                        e.target.value
+                      )
                     }
-                    placeholder="Enter transfer quantity"
+                    placeholder={
+                      isFinishedProduct
+                        ? "Enter whole number"
+                        : "Enter transfer quantity"
+                    }
                     required
                     disabled={loading}
                     className="w-full rounded-lg border p-2 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100"
                   />
+
+                  <p className="mt-1 text-[11px] text-gray-500">
+                    {isFinishedProduct
+                      ? "Finished products must be transferred as whole units."
+                      : "Decimal quantities are allowed for this item."}
+                  </p>
                 </div>
 
                 {/* Protection */}
                 <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
                   <p className="text-xs leading-relaxed text-amber-800">
-                    <span className="font-semibold">Important:</span>{" "}
-                    The transfer will not proceed if the requested
-                    quantity is greater than the available source stock.
+                    <span className="font-semibold">
+                      Important:
+                    </span>{" "}
+                    The transfer will not proceed if
+                    the requested quantity is greater
+                    than the available source stock.
                   </p>
                 </div>
 
@@ -448,13 +680,26 @@ export default function StockActionsModal({
                     !destinationBranchId ||
                     !transferItemId ||
                     !transferQuantity ||
-                    parseFloat(transferQuantity) <= 0 ||
-                    parseFloat(transferQuantity) > sourceQuantity ||
-                    sourceBranchId === destinationBranchId
+                    parseFloat(
+                      transferQuantity
+                    ) <= 0 ||
+                    parseFloat(
+                      transferQuantity
+                    ) > sourceQuantity ||
+                    (isFinishedProduct &&
+                      !Number.isInteger(
+                        parseFloat(
+                          transferQuantity
+                        )
+                      )) ||
+                    sourceBranchId ===
+                      destinationBranchId
                   }
                   className="w-full rounded-lg bg-purple-600 py-2.5 font-medium text-white transition-colors hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {loading ? "Transferring..." : "Transfer Stock"}
+                  {loading
+                    ? "Transferring..."
+                    : "Transfer Stock"}
                 </button>
               </form>
             )}
@@ -482,7 +727,10 @@ export default function StockActionsModal({
                     className="w-full rounded-lg border p-2 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100"
                   >
                     {branches.map((branch) => (
-                      <option key={branch.id} value={branch.id}>
+                      <option
+                        key={branch.id}
+                        value={branch.id}
+                      >
                         {branch.name}
                       </option>
                     ))}
@@ -504,7 +752,10 @@ export default function StockActionsModal({
                     className="w-full rounded-lg border p-2 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100"
                   >
                     {items.map((item) => (
-                      <option key={item.id} value={item.id}>
+                      <option
+                        key={item.id}
+                        value={item.id}
+                      >
                         {item.name} ({item.unit})
                       </option>
                     ))}
@@ -549,7 +800,9 @@ export default function StockActionsModal({
                     <span className="text-xs text-gray-500">
                       Current Stock:{" "}
                       <strong className="text-purple-700">
-                        {currentQuantity}
+                        {formatQuantity(
+                          currentQuantity
+                        )}
                       </strong>
                     </span>
                   </div>
@@ -560,7 +813,9 @@ export default function StockActionsModal({
                     step="any"
                     value={newTotalQuantity}
                     onChange={(e) =>
-                      setNewTotalQuantity(e.target.value)
+                      setNewTotalQuantity(
+                        e.target.value
+                      )
                     }
                     placeholder="Enter new total quantity"
                     required
@@ -575,7 +830,9 @@ export default function StockActionsModal({
                   disabled={loading}
                   className="mt-2 w-full rounded-lg bg-purple-600 py-2.5 font-medium text-white transition-colors hover:bg-purple-700 disabled:opacity-50"
                 >
-                  {loading ? "Saving..." : "Save Adjustment"}
+                  {loading
+                    ? "Saving..."
+                    : "Save Adjustment"}
                 </button>
               </form>
             )}

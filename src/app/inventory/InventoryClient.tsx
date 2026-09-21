@@ -42,6 +42,7 @@ type Props = {
   user: UserInfo;
   stockRecords: StockRecord[];
   branches: Branch[];
+  transferBranches: Branch[];
   items: Item[];
 };
 
@@ -120,6 +121,7 @@ export default function InventoryClient({
   user,
   stockRecords,
   branches,
+  transferBranches,
   items,
 }: Props) {
   const isOwner = user.role === "OWNER";
@@ -249,7 +251,9 @@ export default function InventoryClient({
             {canManageStock && (
               <>
                 <StockActionsModal
+                  user={user}
                   branches={branches}
+                  transferBranches={transferBranches}
                   items={items}
                   branchStocks={stockRecords.map((stock) => ({
                     id: stock.id,

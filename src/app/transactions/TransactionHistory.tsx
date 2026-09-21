@@ -8,7 +8,12 @@ type Transaction = {
     | "SALE"
     | "PRODUCTION"
     | "STOCK_RECEIPT"
-    | "ADJUSTMENT";
+    | "ADJUSTMENT"
+    | "TRANSFER_IN"
+    | "TRANSFER_OUT";
+  transferId: string | null;
+  transferBranchId: string | null;
+  transferBranchName: string | null;
   quantityDelta: number;
   createdAt: string;
   item: {
@@ -37,22 +42,16 @@ export default function TransactionHistory({
   transactions: Transaction[];
   currentUser: CurrentUser;
 }) {
-  const [branchFilter, setBranchFilter] =
-    useState("ALL");
-
-  const [typeFilter, setTypeFilter] =
-    useState("ALL");
-
-  const [itemFilter, setItemFilter] =
-    useState("ALL");
+  const [branchFilter, setBranchFilter] = useState("ALL");
+  const [typeFilter, setTypeFilter] = useState("ALL");
+  const [itemFilter, setItemFilter] = useState("ALL");
 
   const branches = useMemo(
     () =>
       Array.from(
         new Set(
           transactions.map(
-            (transaction) =>
-              transaction.branch.name
+            (transaction) => transaction.branch.name
           )
         )
       ).sort(),
@@ -64,8 +63,7 @@ export default function TransactionHistory({
       Array.from(
         new Set(
           transactions.map(
-            (transaction) =>
-              transaction.item.name
+            (transaction) => transaction.item.name
           )
         )
       ).sort(),
@@ -121,9 +119,7 @@ export default function TransactionHistory({
     );
   }
 
-  function formatType(
-    type: Transaction["type"]
-  ) {
+  function formatType(type: Transaction["type"]) {
     return type.replace("_", " ");
   }
 
@@ -150,8 +146,7 @@ export default function TransactionHistory({
     typeFilter !== "ALL" ||
     itemFilter !== "ALL";
 
-  const isOwner =
-    currentUser.role === "OWNER";
+  const isOwner = currentUser.role === "OWNER";
 
   return (
     <main className="min-h-screen bg-gray-50 p-8">
@@ -165,8 +160,8 @@ export default function TransactionHistory({
               </h1>
 
               <p className="mt-1 text-sm text-gray-500">
-                Review inventory movements and
-                production transactions.
+                Review sales, production, stock,
+                adjustments, and transfer transactions.
               </p>
             </div>
 
@@ -274,6 +269,14 @@ export default function TransactionHistory({
                 <option value="ADJUSTMENT">
                   Adjustment
                 </option>
+
+                <option value="TRANSFER_IN">
+                  Transfer In
+                </option>
+
+                <option value="TRANSFER_OUT">
+                  Transfer Out
+                </option>
               </select>
             </div>
 
@@ -310,7 +313,7 @@ export default function TransactionHistory({
         {/* Table */}
         <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1000px] text-left text-sm text-gray-600">
+            <table className="w-full min-w-[1100px] text-left text-sm text-gray-600">
               <thead className="border-b border-gray-200 bg-gray-50 text-xs uppercase text-gray-500">
                 <tr>
                   <th className="px-5 py-3">
@@ -333,6 +336,10 @@ export default function TransactionHistory({
                     Branch
                   </th>
 
+                  <th className="px-5 py-3">
+                    Transfer
+                  </th>
+
                   <th className="px-5 py-3 text-right">
                     Quantity
                   </th>
@@ -347,7 +354,7 @@ export default function TransactionHistory({
                 {filteredTransactions.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={8}
                       className="px-6 py-12 text-center"
                     >
                       <p className="text-sm font-medium text-gray-700">
@@ -366,6 +373,12 @@ export default function TransactionHistory({
                       const isIncrease =
                         transaction.quantityDelta >
                         0;
+
+                      const isTransfer =
+                        transaction.type ===
+                          "TRANSFER_IN" ||
+                        transaction.type ===
+                          "TRANSFER_OUT";
 
                       return (
                         <tr
@@ -400,6 +413,12 @@ export default function TransactionHistory({
                                   : transaction.type ===
                                     "STOCK_RECEIPT"
                                   ? "border-green-200 bg-green-50 text-green-700"
+                                  : transaction.type ===
+                                    "TRANSFER_IN"
+                                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                  : transaction.type ===
+                                    "TRANSFER_OUT"
+                                  ? "border-orange-200 bg-orange-50 text-orange-700"
                                   : "border-gray-200 bg-gray-50 text-gray-700"
                               }`}
                             >
@@ -429,6 +448,31 @@ export default function TransactionHistory({
                             {transaction.branch.name}
                           </td>
 
+                          {/* Transfer */}
+                          <td className="px-5 py-4">
+                            {isTransfer &&
+                            transaction.transferBranchName ? (
+                              <div className="text-xs">
+                                <span className="font-medium text-gray-900">
+                                  {transaction.type ===
+                                  "TRANSFER_OUT"
+                                    ? "To"
+                                    : "From"}
+                                </span>
+
+                                <span className="ml-1 text-gray-600">
+                                  {
+                                    transaction.transferBranchName
+                                  }
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-xs text-gray-400">
+                                —
+                              </span>
+                            )}
+                          </td>
+
                           {/* Quantity */}
                           <td
                             className={`px-5 py-4 text-right font-bold ${
@@ -437,9 +481,13 @@ export default function TransactionHistory({
                                 : "text-red-600"
                             }`}
                           >
-                            {formatQuantity(
-                              transaction.quantityDelta
-                            )}{" "}
+                            {isTransfer
+                              ? Math.abs(
+                                  transaction.quantityDelta
+                                ).toFixed(2)
+                              : formatQuantity(
+                                  transaction.quantityDelta
+                                )}{" "}
                             {transaction.item.unit}
                           </td>
 

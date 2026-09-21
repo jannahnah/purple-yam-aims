@@ -26,7 +26,9 @@ type Transaction = {
     | "SALE"
     | "PRODUCTION"
     | "STOCK_RECEIPT"
-    | "ADJUSTMENT";
+    | "ADJUSTMENT"
+    | "TRANSFER_IN"
+    | "TRANSFER_OUT";
   quantityDelta: number;
   createdAt: string;
   itemName: string;
@@ -113,6 +115,12 @@ function formatTransactionType(
     case "SALE":
       return "SALE";
 
+    case "TRANSFER_IN":
+      return "TRANSFER IN";
+
+    case "TRANSFER_OUT":
+      return "TRANSFER OUT";
+
     default:
       return type;
   }
@@ -133,6 +141,12 @@ function getTransactionClass(
 
     case "ADJUSTMENT":
       return "bg-gray-50 text-gray-700 border-gray-200";
+
+    case "TRANSFER_IN":
+      return "bg-emerald-50 text-emerald-700 border-emerald-200";
+
+    case "TRANSFER_OUT":
+      return "bg-orange-50 text-orange-700 border-orange-200";
 
     default:
       return "bg-gray-50 text-gray-700 border-gray-200";

@@ -8,19 +8,19 @@ datasource db {
 }
 
 model User {
-  id          String     @id @default(uuid())
-  username    String     @unique
-  name        String?
-  email       String     @unique
-  password    String
-  role        Role       @default(CASHIER)
-  status      UserStatus @default(ACTIVE)
-  mustChangePassword  Boolean    @default(false)
-  branchId    String?
-  businessId  String?
-  lastLoginAt DateTime?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  id                 String     @id @default(uuid())
+  username           String     @unique
+  name               String?
+  email              String     @unique
+  password           String
+  role               Role       @default(CASHIER)
+  status             UserStatus @default(ACTIVE)
+  mustChangePassword Boolean    @default(false)
+  branchId           String?
+  businessId         String?
+  lastLoginAt        DateTime?
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
 
   stockTransactions StockTransaction[]
   auditLogs         UserAuditLog[]     @relation("AffectedUser")
@@ -108,17 +108,21 @@ model ProductionRecipe {
 }
 
 model StockTransaction {
-  id            String          @id @default(uuid())
-  type          TransactionType
-  branchId      String
-  itemId        String
-  quantityDelta Float
-  userId        String
-  createdAt     DateTime        @default(now())
+  id               String          @id @default(uuid())
+  type             TransactionType
+  branchId         String
+  itemId           String
+  quantityDelta    Float
+  userId           String
+  transferId       String?
+  transferBranchId String?
+  createdAt        DateTime        @default(now())
 
   branch Branch @relation(fields: [branchId], references: [id])
   item   Item   @relation(fields: [itemId], references: [id])
   user   User   @relation(fields: [userId], references: [id])
+
+  @@index([transferId])
 }
 
 model ReorderAlert {
@@ -166,6 +170,8 @@ enum TransactionType {
   PRODUCTION
   STOCK_RECEIPT
   ADJUSTMENT
+  TRANSFER_IN
+  TRANSFER_OUT
 }
 
 enum AlertStatus {

@@ -32,6 +32,48 @@ export default async function TransactionsPage() {
       },
     });
 
+  /*
+   * Transfer transactions store the opposite branch ID in
+   * transferBranchId rather than using a second Prisma relation.
+   *
+   * Fetch only the branch records needed by the transactions
+   * so the Records page can display:
+   *   TRANSFER OUT → To: [branch]
+   *   TRANSFER IN  → From: [branch]
+   */
+  const transferBranchIds = Array.from(
+    new Set(
+      transactions
+        .map((transaction) => transaction.transferBranchId)
+        .filter(
+          (branchId): branchId is string =>
+            Boolean(branchId)
+        )
+    )
+  );
+
+  const transferBranches =
+    transferBranchIds.length > 0
+      ? await prisma.branch.findMany({
+          where: {
+            id: {
+              in: transferBranchIds,
+            },
+          },
+          select: {
+            id: true,
+            name: true,
+          },
+        })
+      : [];
+
+  const transferBranchMap = new Map(
+    transferBranches.map((branch) => [
+      branch.id,
+      branch.name,
+    ])
+  );
+
   return (
     <AppShell
       user={{
@@ -51,20 +93,36 @@ export default async function TransactionsPage() {
               transaction.quantityDelta,
             createdAt:
               transaction.createdAt.toISOString(),
+
             item: {
               name: transaction.item.name,
               unit: transaction.item.unit,
               sourceType:
                 transaction.item.sourceType,
             },
+
             branch: {
               name: transaction.branch.name,
             },
+
             user: {
               username:
                 transaction.user.username,
               role: transaction.user.role,
             },
+
+            transferId:
+              transaction.transferId ?? null,
+
+            transferBranchId:
+              transaction.transferBranchId ?? null,
+
+            transferBranchName:
+              transaction.transferBranchId
+                ? transferBranchMap.get(
+                    transaction.transferBranchId
+                  ) ?? null
+                : null,
           })
         )}
         currentUser={{

@@ -67,7 +67,7 @@ export default function Home() {
         <div className="mb-5 text-center">
           <div className="mx-auto mb-3 flex h-[68px] w-[68px] items-center justify-center rounded-full border border-purple-300/50 bg-purple-950/80 shadow-[0_0_30px_rgba(168,85,247,0.25)]">
             <div className="flex h-[56px] w-[56px] items-center justify-center rounded-full border-2 border-purple-400/70 bg-[#26103f] text-[28px]">
-              üç
+              
             </div>
           </div>
 
@@ -322,7 +322,7 @@ export default function Home() {
           <div className="mt-5 border-t border-purple-300/10 pt-4">
             <div className="flex items-center justify-center gap-2">
               <div className="flex h-6 w-6 items-center justify-center rounded-full border border-purple-300/20 bg-purple-900/50 text-[11px]">
-                üç
+                
               </div>
 
               <p className="text-[10px] font-medium text-purple-300/60">

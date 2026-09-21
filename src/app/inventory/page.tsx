@@ -11,11 +11,13 @@ export default async function InventoryPage() {
   const isOwner = user.role === "OWNER";
 
   /*
-   * OWNER:
-   *   sees all branches.
+   * Inventory / adjustment branches:
    *
-   * BRANCH_MANAGER / CASHIER:
-   *   sees only their assigned branch.
+   * Owner:
+   *   Can see all branches.
+   *
+   * Branch Manager / Cashier:
+   *   Only their assigned branch is exposed here.
    */
   const branchFilter = isOwner
     ? {}
@@ -36,11 +38,9 @@ export default async function InventoryPage() {
   });
 
   /*
-   * OWNER:
-   *   receives all branches for filtering/actions.
+   * Branches used by Inventory / Stock Adjustment.
    *
-   * MANAGER / CASHIER:
-   *   receive only their assigned branch.
+   * Keep these restricted for non-owners.
    */
   const branches = await prisma.branch.findMany({
     where: isOwner
@@ -54,9 +54,23 @@ export default async function InventoryPage() {
   });
 
   /*
-   * Items are global definitions.
-   * Inventory visibility is controlled through BranchStock.
+   * ALL branches available as transfer destinations.
+   *
+   * This is intentionally separate from `branches`.
+   *
+   * Example:
+   *   Cabadbaran Manager
+   *     Source = Cabadbaran
+   *     Destination = Butuan / Main, Libertad, San Francisco
+   *
+   * The source branch is still locked by StockActionsModal.
    */
+  const transferBranches = await prisma.branch.findMany({
+    orderBy: {
+      name: "asc",
+    },
+  });
+
   const items = await prisma.item.findMany({
     orderBy: {
       name: "asc",
@@ -81,6 +95,7 @@ export default async function InventoryPage() {
         }}
         stockRecords={stockRecords}
         branches={branches}
+        transferBranches={transferBranches}
         items={items}
       />
     </AppShell>

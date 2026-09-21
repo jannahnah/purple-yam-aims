@@ -172,6 +172,13 @@ export async function transferStock({
     );
   }
 
+  /*
+   * Both transaction records use the same transferId.
+   * This allows TRANSFER_OUT and TRANSFER_IN to be
+   * identified as one transfer event in Records.
+   */
+  const transferId = crypto.randomUUID();
+
   await prisma.$transaction(async (tx) => {
     const sourceBranch = await tx.branch.findUnique({
       where: { id: sourceBranchId },
@@ -210,6 +217,9 @@ export async function transferStock({
       throw new Error("Insufficient stock at source branch.");
     }
 
+    /*
+     * Deduct stock from source branch.
+     */
     const updatedSourceStock = await tx.branchStock.update({
       where: {
         id: sourceStock.id,
@@ -221,17 +231,26 @@ export async function transferStock({
       },
     });
 
+    // Never allow source stock to become negative.
     if (updatedSourceStock.quantity < 0) {
       throw new Error("Source stock cannot become negative.");
     }
 
+    /*
+     * Record the source side of the transfer.
+     *
+     * This is intentionally TRANSFER_OUT rather than
+     * ADJUSTMENT because this is a stock transfer.
+     */
     await tx.stockTransaction.create({
       data: {
-        type: "ADJUSTMENT",
+        type: "TRANSFER_OUT",
         quantityDelta: -quantity,
         branchId: sourceBranchId,
         itemId,
         userId: currentUser.id,
+        transferId,
+        transferBranchId: destinationBranchId,
       },
     });
 
@@ -242,32 +261,45 @@ export async function transferStock({
       updatedSourceStock.quantity
     );
 
-    const updatedDestinationStock = await tx.branchStock.upsert({
-      where: {
-        branchId_itemId: {
+    /*
+     * Add stock to destination branch.
+     */
+    const updatedDestinationStock =
+      await tx.branchStock.upsert({
+        where: {
+          branchId_itemId: {
+            branchId: destinationBranchId,
+            itemId,
+          },
+        },
+        update: {
+          quantity: {
+            increment: quantity,
+          },
+        },
+        create: {
           branchId: destinationBranchId,
           itemId,
+          quantity,
         },
-      },
-      update: {
-        quantity: {
-          increment: quantity,
-        },
-      },
-      create: {
-        branchId: destinationBranchId,
-        itemId,
-        quantity,
-      },
-    });
+      });
 
+    /*
+     * Record the destination side of the transfer.
+     *
+     * This is intentionally TRANSFER_IN rather than
+     * STOCK_RECEIPT because this stock came from another
+     * branch, not from a normal stock receipt.
+     */
     await tx.stockTransaction.create({
       data: {
-        type: "STOCK_RECEIPT",
+        type: "TRANSFER_IN",
         quantityDelta: quantity,
         branchId: destinationBranchId,
         itemId,
         userId: currentUser.id,
+        transferId,
+        transferBranchId: sourceBranchId,
       },
     });
 
