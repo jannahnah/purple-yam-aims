@@ -73,8 +73,12 @@ interface TransactionRow {
     | "SALE"
     | "PRODUCTION"
     | "STOCK_RECEIPT"
-    | "ADJUSTMENT";
+    | "ADJUSTMENT"
+    | "TRANSFER_IN"
+    | "TRANSFER_OUT";
+  previousQuantity: number | null;
   quantityDelta: number;
+  newQuantity: number | null;
   createdAt: string;
   branch: {
     id: string;
@@ -155,6 +159,9 @@ export default function ReportsClient({
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [exportOpen, setExportOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -257,6 +264,44 @@ export default function ReportsClient({
     REPORT_OPTIONS.find((option) => option.id === report)
       ?.label ?? "Reports";
 
+  async function exportReports(format: "xlsx" | "csv") {
+    try {
+      setExporting(true);
+      setExportError("");
+      setExportOpen(false);
+      const response = await fetch("/api/reports/export?format=" + format, {
+        method: "GET",
+        cache: "no-store",
+      });
+      if (!response.ok) {
+        let message = "Failed to export reports.";
+        try {
+          const result = await response.json();
+          message = result?.error || message;
+        } catch {}
+        throw new Error(message);
+      }
+      const blob = await response.blob();
+      const disposition = response.headers.get("Content-Disposition");
+      const filenameMatch = disposition?.match(/filename="([^"]+)"/);
+      const filename =
+        filenameMatch?.[1] ||
+        ("purple-yam-reports-" + new Date().toISOString().slice(0, 10) + "." + format);
+      const url = window.URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = filename;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      setExportError(err instanceof Error ? err.message : "Failed to export reports.");
+    } finally {
+      setExporting(false);
+    }
+  }
+
   function formatQuantity(quantity: number) {
     return new Intl.NumberFormat("en-US", {
       maximumFractionDigits: 2,
@@ -332,7 +377,11 @@ export default function ReportsClient({
           ? "border-purple-200 bg-purple-50 text-purple-700"
           : type === "STOCK_RECEIPT"
             ? "border-green-200 bg-green-50 text-green-700"
-            : "border-gray-200 bg-gray-50 text-gray-700";
+            : type === "TRANSFER_IN"
+              ? "border-cyan-200 bg-cyan-50 text-cyan-700"
+              : type === "TRANSFER_OUT"
+                ? "border-orange-200 bg-orange-50 text-orange-700"
+                : "border-gray-200 bg-gray-50 text-gray-700";
 
     return (
       <span
@@ -347,16 +396,50 @@ export default function ReportsClient({
     <main className="min-h-screen bg-gray-50 p-6">
       <div className="mx-auto max-w-7xl space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Reports
-          </h1>
-
-          <p className="mt-1 text-sm text-gray-500">
-            Inventory and operations reports based on live
-            system data.
-          </p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Reports</h1>
+            <p className="mt-1 text-sm text-gray-500">
+              Inventory and operations reports based on live system data.
+            </p>
+          </div>
+          <div className="relative">
+            <button
+              type="button"
+              disabled={exporting}
+              onClick={() => setExportOpen((open) => !open)}
+              className="inline-flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-60"
+              aria-haspopup="menu"
+              aria-expanded={exportOpen}
+            >
+              {exporting ? "Exporting..." : "Export Report"}
+              {!exporting && <span aria-hidden="true">{exportOpen ? "▴" : "▾"}</span>}
+            </button>
+            {exportOpen && !exporting && (
+              <div role="menu" className="absolute right-0 z-20 mt-2 w-64 overflow-hidden rounded-xl border border-gray-200 bg-white p-1.5 shadow-lg">
+                <div className="px-3 py-2">
+                  <p className="text-xs font-semibold text-gray-900">Export all reports</p>
+                  <p className="mt-0.5 text-xs text-gray-500">
+                    {currentUser.role === "OWNER" ? "Includes all branches." : "Includes your assigned branch only."}
+                  </p>
+                </div>
+                <button type="button" role="menuitem" onClick={() => exportReports("xlsx")} className="flex w-full items-center rounded-lg px-3 py-2.5 text-left text-sm font-medium text-gray-700 hover:bg-purple-50 hover:text-purple-700">
+                  Export Excel (.xlsx)
+                </button>
+                <button type="button" role="menuitem" onClick={() => exportReports("csv")} className="flex w-full items-center rounded-lg px-3 py-2.5 text-left text-sm font-medium text-gray-700 hover:bg-purple-50 hover:text-purple-700">
+                  Export CSV (.csv)
+                </button>
+              </div>
+            )}
+          </div>
         </div>
+
+        {exportError && (
+          <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+            <p className="text-sm font-semibold text-red-800">Export failed</p>
+            <p className="mt-1 text-xs text-red-600">{exportError}</p>
+          </div>
+        )}
 
         {/* Report Selector */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
@@ -467,7 +550,7 @@ export default function ReportsClient({
 
                     <tbody className="divide-y divide-gray-100">
                       {inventoryWithStatus.length === 0 ? (
-                        <EmptyRow colSpan={7} />
+                        <EmptyRow colSpan={9} />
                       ) : (
                         inventoryWithStatus.map((row) => (
                           <tr
@@ -785,9 +868,9 @@ export default function ReportsClient({
                         <th className="px-5 py-3">
                           Branch
                         </th>
-                        <th className="px-5 py-3 text-right">
-                          Quantity
-                        </th>
+                        <th className="px-5 py-3 text-right">Previous</th>
+                        <th className="px-5 py-3 text-right">Change</th>
+                        <th className="px-5 py-3 text-right">New</th>
                         <th className="px-5 py-3">
                           User
                         </th>
