@@ -100,7 +100,11 @@ export async function GET(request: Request) {
       }),
     ]);
 
+    const reportGeneratedAt = new Date();
+    const reportDateTime = formatDateTime(reportGeneratedAt);
+
     const inventoryRows = inventory.map((stock) => ({
+      "Report Date & Time": reportDateTime,
       Branch: stock.branch.name,
       Item: stock.item.name,
       "Source Type": formatSourceType(stock.item.sourceType),
@@ -117,6 +121,7 @@ export async function GET(request: Request) {
           stock.quantity <= stock.item.minThreshold
       )
       .map((stock) => ({
+        "Report Date & Time": reportDateTime,
         Branch: stock.branch.name,
         Item: stock.item.name,
         "Source Type": formatSourceType(stock.item.sourceType),
@@ -129,6 +134,7 @@ export async function GET(request: Request) {
     const outOfStockRows = inventory
       .filter((stock) => stock.quantity <= 0)
       .map((stock) => ({
+        "Report Date & Time": reportDateTime,
         Branch: stock.branch.name,
         Item: stock.item.name,
         "Source Type": formatSourceType(stock.item.sourceType),
@@ -141,6 +147,7 @@ export async function GET(request: Request) {
     const salesRows = transactions
       .filter((transaction) => transaction.type === "SALE")
       .map((transaction) => ({
+        "Report Date & Time": reportDateTime,
         "Date & Time": formatDateTime(transaction.createdAt),
         Branch: transaction.branch.name,
         Product: transaction.item.name,
@@ -157,6 +164,7 @@ export async function GET(request: Request) {
           transaction.quantityDelta > 0
       )
       .map((transaction) => ({
+        "Report Date & Time": reportDateTime,
         "Date & Time": formatDateTime(transaction.createdAt),
         Branch: transaction.branch.name,
         Product: transaction.item.name,
@@ -166,6 +174,7 @@ export async function GET(request: Request) {
       }));
 
     const transactionRows = transactions.map((transaction) => ({
+      "Report Date & Time": reportDateTime,
       "Date & Time": formatDateTime(transaction.createdAt),
       Transaction: formatTransactionType(transaction.type),
       Branch: transaction.branch.name,
@@ -186,7 +195,19 @@ export async function GET(request: Request) {
       { name: "Sales Summary", rows: salesRows },
       { name: "Production Summary", rows: productionRows },
       { name: "Transaction History", rows: transactionRows },
-    ];
+    ].map((sheet) => {
+      if (sheet.rows.length > 0) return sheet;
+
+      return {
+        ...sheet,
+        rows: [
+          {
+            "Report Date & Time": reportDateTime,
+            Status: "No records found",
+          },
+        ],
+      };
+    });
 
     const filenameDate = formatDate(new Date());
 
@@ -198,9 +219,17 @@ export async function GET(request: Request) {
 
         worksheet["!cols"] = Object.keys(sheet.rows[0] ?? {}).map(
           (key) => ({
-            wch: Math.min(Math.max(key.length + 2, 12), 28),
+            wch: Math.min(Math.max(key.length + 2, 16), 32),
           })
         );
+
+        // Make the generated timestamp easy to verify when comparing
+        // exported reports against the live system.
+        if (worksheet["A1"]) {
+          worksheet["A1"].s = {
+            font: { bold: true },
+          };
+        }
 
         XLSX.utils.book_append_sheet(
           workbook,
