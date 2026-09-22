@@ -152,7 +152,9 @@ export async function GET() {
         transactions: transactions.map((transaction) => ({
           id: transaction.id,
           type: transaction.type,
+          previousQuantity: transaction.previousQuantity,
           quantityDelta: transaction.quantityDelta,
+          newQuantity: transaction.newQuantity,
           createdAt: transaction.createdAt.toISOString(),
           branch: {
             id: transaction.branch.id,
