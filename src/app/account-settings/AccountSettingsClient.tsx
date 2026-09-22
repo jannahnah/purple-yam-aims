@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import InventoryImportSection from "./InventoryImportSection";
 
 type UserProfile = {
   id: string;
@@ -282,8 +283,8 @@ async function handleSaveName(
       : user.branch?.name ?? "Not assigned";
 
   return (
-    <main className="min-h-screen bg-gray-50 p-6">
-      <div className="mx-auto max-w-2xl space-y-4">
+    <main className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-4xl space-y-4">
 
         {/* Page Header */}
         <div className="mb-6">
@@ -595,6 +596,9 @@ async function handleSaveName(
             </div>
           )}
         </section>
+
+        {/* Import Inventory */}
+        <InventoryImportSection role={user.role} />
 
         {/* Information Note */}
         <p className="pt-2 text-center text-xs text-gray-400">

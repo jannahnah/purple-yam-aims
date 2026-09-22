@@ -60,10 +60,10 @@ export default function AppSidebar({
 
   function getNavClass(href: string) {
     if (isActive(href)) {
-      return "flex items-center rounded-lg bg-purple-800 px-4 py-3 text-sm font-semibold text-white shadow-sm";
+      return "flex items-center rounded-xl bg-white/15 px-4 py-3 text-sm font-semibold text-white shadow-sm ring-1 ring-white/10";
     }
 
-    return "flex items-center rounded-lg px-4 py-3 text-sm font-medium text-purple-100 transition hover:bg-purple-800";
+    return "flex items-center rounded-xl px-4 py-3 text-sm font-medium text-purple-100 transition hover:bg-white/10 hover:text-white";
   }
 
   async function handleLogout() {
@@ -79,11 +79,11 @@ export default function AppSidebar({
   }
 
   return (
-    <aside className="hidden h-screen w-64 shrink-0 overflow-y-auto bg-purple-950 text-white lg:flex lg:flex-col">
+    <aside className="sticky top-0 hidden h-dvh w-72 shrink-0 overflow-hidden bg-gradient-to-b from-purple-950 via-purple-950 to-indigo-950 text-white shadow-xl lg:flex lg:flex-col">
       {/* Brand */}
-      <div className="border-b border-purple-800 px-5 py-5">
+      <div className="border-b border-white/10 px-5 py-5">
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-purple-700 text-sm font-bold shadow-sm">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-fuchsia-500 to-purple-700 text-sm font-bold shadow-lg shadow-purple-950/30">
             PY
           </div>
 
@@ -93,7 +93,7 @@ export default function AppSidebar({
             </h1>
 
             <p className="text-xs text-purple-200">
-              AIMS Prototype
+              Inventory Management
             </p>
           </div>
         </div>
@@ -114,6 +114,9 @@ export default function AppSidebar({
 
       {/* Main Navigation */}
       <nav className="flex-1 px-3 py-4">
+        <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-purple-300">
+          Workspace
+        </p>
         <div className="space-y-1">
           {/* Dashboard */}
           <Link
@@ -182,7 +185,10 @@ export default function AppSidebar({
       </nav>
 
       {/* Bottom Navigation */}
-      <div className="border-t border-purple-800 px-3 py-4">
+      <div className="border-t border-white/10 px-3 py-4">
+        <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-purple-300">
+          Account
+        </p>
         <Link
           href="/account-settings"
           className={getNavClass("/account-settings")}
@@ -193,7 +199,7 @@ export default function AppSidebar({
         <button
           type="button"
           onClick={handleLogout}
-          className="mt-1 flex w-full items-center rounded-lg px-4 py-3 text-left text-sm font-medium text-purple-100 transition hover:bg-purple-800"
+          className="mt-1 flex w-full items-center rounded-xl px-4 py-3 text-left text-sm font-medium text-purple-100 transition hover:bg-white/10 hover:text-white"
         >
           Logout
         </button>
