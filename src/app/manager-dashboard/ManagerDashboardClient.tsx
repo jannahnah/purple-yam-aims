@@ -269,7 +269,7 @@ export default function ManagerDashboard({
 
   return (
     <main className="min-h-screen bg-gray-50 p-6">
-      <div className="mx-auto max-w-7xl space-y-6">
+      <div className="mx-auto w-full max-w-7xl space-y-6">
 
         {/* Header */}
         <div className="flex items-start justify-between gap-4">
@@ -568,7 +568,7 @@ export default function ManagerDashboard({
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
 
           {/* Reorder Alerts */}
-          <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+          <section className="aims-card overflow-hidden">
 
             <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
               <h2 className="text-sm font-semibold text-gray-900">
@@ -638,7 +638,7 @@ export default function ManagerDashboard({
           </section>
 
           {/* Recent Transactions */}
-          <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+          <section className="aims-card overflow-hidden">
 
             <div className="border-b border-gray-100 px-5 py-4">
               <h2 className="text-sm font-semibold text-gray-900">
@@ -711,7 +711,7 @@ export default function ManagerDashboard({
         </div>
 
         {/* Current Inventory */}
-        <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <section className="aims-card overflow-hidden">
 
           <div className="border-b border-gray-100 px-5 py-4">
             <h2 className="text-sm font-semibold text-gray-900">
@@ -720,7 +720,7 @@ export default function ManagerDashboard({
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="aims-table text-sm">
 
               <thead>
                 <tr className="border-b border-gray-100">
@@ -802,7 +802,7 @@ export default function ManagerDashboard({
         </section>
 
         {/* Finished Products */}
-        <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <section className="aims-card overflow-hidden">
 
           <div className="border-b border-gray-100 px-5 py-4">
             <h2 className="text-sm font-semibold text-gray-900">
@@ -811,7 +811,7 @@ export default function ManagerDashboard({
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="aims-table text-sm">
 
               <thead>
                 <tr className="border-b border-gray-100">
