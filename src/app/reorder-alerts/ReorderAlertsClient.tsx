@@ -202,7 +202,7 @@ export default function ReorderAlertsClient({
       )}
 
       {/* Active Alerts */}
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+      <div className="aims-card overflow-hidden">
         <div className="flex items-center gap-2 border-b border-gray-100 px-5 py-4">
           <h2 className="text-sm font-semibold text-gray-900">
             Active Alerts
@@ -249,7 +249,7 @@ export default function ReorderAlertsClient({
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[900px] text-left">
+            <table className="aims-table min-w-[900px] text-left">
               <thead className="bg-gray-50">
                 <tr className="border-b border-gray-100">
                   <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
@@ -355,7 +355,7 @@ export default function ReorderAlertsClient({
 
       {/* Resolved Alerts */}
       {!loading && resolvedAlerts.length > 0 && (
-        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div className="aims-card overflow-hidden">
           <div className="border-b border-gray-100 px-5 py-4">
             <h2 className="text-sm font-semibold text-gray-500">
               Resolved Alerts
@@ -368,7 +368,7 @@ export default function ReorderAlertsClient({
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[900px] text-left">
+            <table className="aims-table min-w-[900px] text-left">
               <thead className="bg-gray-50">
                 <tr className="border-b border-gray-100">
                   <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
