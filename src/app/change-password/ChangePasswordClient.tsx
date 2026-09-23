@@ -71,7 +71,7 @@ export default function ChangePasswordClient({
        * Refreshing the route lets the server determine
        * the correct dashboard based on the user's role.
        */
-      router.push("/change-password");
+      router.refresh();
     } catch (error) {
       console.error(
         "First-login password change error:",
