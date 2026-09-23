@@ -16,14 +16,8 @@ export default async function ManagerDashboardPage() {
 
   const branchId = user.branchId;
 
-  const [items, stockRecords, alerts, transactions] =
+  const [stockRecords, alerts, transactions] =
     await Promise.all([
-      prisma.item.findMany({
-        orderBy: {
-          name: "asc",
-        },
-      }),
-
       prisma.branchStock.findMany({
         where: {
           branchId,
