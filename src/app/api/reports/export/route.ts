@@ -111,6 +111,112 @@ export async function GET(request: Request) {
       }),
     ]);
 
+    const transferBranchIds = Array.from(
+      new Set(
+        transactions
+          .map((transaction) => transaction.transferBranchId)
+          .filter(
+            (branchId): branchId is string => Boolean(branchId)
+          )
+      )
+    );
+
+    const transferBranches =
+      transferBranchIds.length > 0
+        ? await prisma.branch.findMany({
+            where: {
+              id: {
+                in: transferBranchIds,
+              },
+            },
+            select: {
+              id: true,
+              name: true,
+            },
+          })
+        : [];
+
+    const transferBranchMap = new Map(
+      transferBranches.map((branch) => [branch.id, branch.name])
+    );
+
+    const transferGroups = new Map<string, typeof transactions>();
+
+    for (const transaction of transactions) {
+      if (
+        transaction.type !== "TRANSFER_IN" &&
+        transaction.type !== "TRANSFER_OUT"
+      ) {
+        continue;
+      }
+
+      const key = transaction.transferId ?? transaction.id;
+      transferGroups.set(key, [
+        ...(transferGroups.get(key) ?? []),
+        transaction,
+      ]);
+    }
+
+    const transferDeliveries = [...transferGroups.entries()]
+      .map(([id, group]) => {
+        const outgoing = group.find(
+          (transaction) => transaction.type === "TRANSFER_OUT"
+        );
+        const incoming = group.find(
+          (transaction) => transaction.type === "TRANSFER_IN"
+        );
+        const primary = outgoing ?? incoming ?? group[0];
+
+        if (!primary) return null;
+
+        const from =
+          outgoing?.branch.name ??
+          (primary.type === "TRANSFER_IN" && primary.transferBranchId
+            ? transferBranchMap.get(primary.transferBranchId) ?? null
+            : null) ??
+          "Unknown";
+
+        const to =
+          incoming?.branch.name ??
+          (outgoing?.transferBranchId
+            ? transferBranchMap.get(outgoing.transferBranchId) ?? null
+            : null) ??
+          "Unknown";
+
+        return {
+          id,
+          transferId: primary.transferId ?? "",
+          createdAt: group.reduce(
+            (latest, transaction) =>
+              transaction.createdAt > latest
+                ? transaction.createdAt
+                : latest,
+            primary.createdAt
+          ),
+          item: primary.item.name,
+          sourceType: formatSourceType(primary.item.sourceType),
+          unit: primary.item.unit,
+          quantity: Math.abs(primary.quantityDelta),
+          from,
+          to,
+          status: primary.transferId ? "COMPLETED" : "RECORDED",
+          "Recorded By":
+            outgoing?.user.username ??
+            incoming?.user.username ??
+            primary.user.username,
+          "Source Previous Quantity": outgoing?.previousQuantity ?? "",
+          "Source New Quantity": outgoing?.newQuantity ?? "",
+          "Destination Previous Quantity": incoming?.previousQuantity ?? "",
+          "Destination New Quantity": incoming?.newQuantity ?? "",
+        };
+      })
+      .filter(Boolean)
+      .sort(
+        (a, b) =>
+          new Date(b!.createdAt).getTime() -
+          new Date(a!.createdAt).getTime()
+      );
+
     const reportGeneratedAt = new Date();
     const reportDateTime = formatDateTime(reportGeneratedAt);
 
@@ -184,6 +290,26 @@ export async function GET(request: Request) {
         "Recorded By": transaction.user.username,
       }));
 
+    const transferDeliveryRows = transferDeliveries.map((transfer) => ({
+      "Report Date & Time": reportDateTime,
+      "Date & Time": formatDateTime(transfer!.createdAt),
+      "Transfer ID": transfer!.transferId,
+      Item: transfer!.item,
+      "Source Type": transfer!.sourceType,
+      Unit: transfer!.unit,
+      Quantity: transfer!.quantity,
+      From: transfer!.from,
+      To: transfer!.to,
+      Status: transfer!.status,
+      "Recorded By": transfer!["Recorded By"],
+      "Source Previous Quantity": transfer!["Source Previous Quantity"],
+      "Source New Quantity": transfer!["Source New Quantity"],
+      "Destination Previous Quantity":
+        transfer!["Destination Previous Quantity"],
+      "Destination New Quantity":
+        transfer!["Destination New Quantity"],
+    }));
+
     const transactionRows = transactions.map((transaction) => ({
       "Report Date & Time": reportDateTime,
       "Date & Time": formatDateTime(transaction.createdAt),
@@ -205,6 +331,10 @@ export async function GET(request: Request) {
       { name: "Out of Stock", rows: outOfStockRows },
       { name: "Sales Summary", rows: salesRows },
       { name: "Production Summary", rows: productionRows },
+      {
+        name: "Transfer & Delivery",
+        rows: transferDeliveryRows,
+      },
       { name: "Transaction History", rows: transactionRows },
     ].map((sheet) => {
       if (sheet.rows.length > 0) return sheet;
