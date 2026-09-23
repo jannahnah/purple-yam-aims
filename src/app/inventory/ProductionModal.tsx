@@ -260,14 +260,16 @@ export default function ProductionModal({
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+        className="aims-primary shadow-sm"
       >
         + Log Production Run
       </button>
 
       {isOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-[2px]"
           onMouseDown={(e) => {
             if (e.target === e.currentTarget) {
               closeModal();
@@ -275,7 +277,7 @@ export default function ProductionModal({
           }}
         >
           <div
-            className="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl"
+            className="w-full max-h-[92vh] max-w-2xl overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl"
             onMouseDown={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -594,7 +596,7 @@ export default function ProductionModal({
                   type="button"
                   onClick={closeModal}
                   disabled={loading}
-                  className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex-1 rounded-[10px] border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Cancel
                 </button>
