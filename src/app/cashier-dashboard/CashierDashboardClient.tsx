@@ -151,7 +151,7 @@ export default function CashierDashboardClient({
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="rounded-2xl border border-purple-200 bg-purple-50 p-6 shadow-sm">
             <p className="text-sm font-medium uppercase tracking-wide text-gray-500">
-              Today's Sales
+              Today&apos;s Sales
             </p>
 
             <p className="mt-2 text-4xl font-bold text-purple-700">
