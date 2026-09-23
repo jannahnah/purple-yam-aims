@@ -21,14 +21,7 @@ export default async function UsersPage() {
 
       {/* Scrollable Main Content */}
       <main className="min-w-0 flex-1 overflow-y-auto">
-        <UsersClient
-          currentUser={{
-            id: user.id,
-            username: user.username,
-            role: user.role,
-            branchId: user.branchId,
-          }}
-        />
+        <UsersClient />
       </main>
     </div>
   );
