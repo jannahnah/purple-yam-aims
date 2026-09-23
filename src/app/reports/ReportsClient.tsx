@@ -911,7 +911,7 @@ export default function ReportsClient({
                             </td>
                             <td className="px-5 py-4">
                               <p className="font-medium text-gray-900">{transfer.item.name}</p>
-                              <p className="mt-1 text-xs text-gray-500">
+                              <p className="aims-empty-help">
                                 {formatSourceType(transfer.item.sourceType)}
                               </p>
                             </td>
@@ -1073,9 +1073,9 @@ function EmptyRow({
     <tr>
       <td
         colSpan={colSpan}
-        className="px-6 py-12 text-center"
+        className="aims-empty"
       >
-        <p className="text-sm font-medium text-gray-700">
+        <p className="aims-empty-title">
           No data found
         </p>
 
