@@ -492,8 +492,8 @@ export default function UsersClient({
   }
 
   return (
-    <div className="min-h-screen p-6 lg:p-8">
-      <div className="mx-auto max-w-7xl space-y-6">
+    <div className="aims-page p-4 sm:p-6 lg:p-8">
+      <div className="mx-auto w-full max-w-7xl space-y-6">
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
@@ -538,9 +538,9 @@ export default function UsersClient({
           )}
 
         {/* User Table */}
-        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div className="aims-card overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
+            <table className="aims-table min-w-full">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
