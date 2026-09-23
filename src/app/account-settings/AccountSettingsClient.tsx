@@ -255,10 +255,10 @@ async function handleSaveName(
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-gray-50 p-6">
+      <main className="aims-page p-4 sm:p-6">
         <div className="mx-auto max-w-2xl">
           <p className="text-sm text-gray-500">
-            Loading account settings...
+            Loading your account settings…
           </p>
         </div>
       </main>
@@ -267,7 +267,7 @@ async function handleSaveName(
 
   if (!user) {
     return (
-      <main className="min-h-screen bg-gray-50 p-6">
+      <main className="aims-page p-4 sm:p-6">
         <div className="mx-auto max-w-2xl rounded-xl border border-red-100 bg-white p-6">
           <p className="text-sm text-red-600">
             Unable to load your account information.
@@ -283,12 +283,12 @@ async function handleSaveName(
       : user.branch?.name ?? "Not assigned";
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 lg:px-8">
+    <main className="aims-page px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-4xl space-y-4">
 
         {/* Page Header */}
         <div className="mb-6">
-          <h1 className="text-xl font-bold text-gray-900">
+          <h1 className="aims-title">
             Account Settings
           </h1>
 
@@ -298,7 +298,7 @@ async function handleSaveName(
         </div>
 
         {/* Account Information */}
-        <section className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+        <section className="aims-card p-6">
           <h2 className="mb-5 text-sm font-semibold text-gray-900">
             Account Information
           </h2>
@@ -373,7 +373,7 @@ async function handleSaveName(
         </section>
 
         {/* Display Name Accordion */}
-        <section className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
+        <section className="aims-card overflow-hidden">
           <button
             type="button"
             onClick={() => toggleSection("name")}
@@ -424,7 +424,7 @@ async function handleSaveName(
                     }
                     disabled={nameLoading}
                     required
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none transition focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 disabled:bg-gray-100"
+                    className="aims-control w-full px-3 text-sm outline-none disabled:bg-gray-100"
                   />
                 </div>
 
@@ -438,7 +438,7 @@ async function handleSaveName(
                   <button
                     type="submit"
                     disabled={nameLoading}
-                    className="rounded-lg bg-purple-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-purple-800 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="aims-primary px-4 disabled:cursor-not-allowed"
                   >
                     {nameLoading
                       ? "Saving..."
@@ -457,7 +457,7 @@ async function handleSaveName(
         </section>
 
         {/* Change Password Accordion */}
-        <section className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
+        <section className="aims-card overflow-hidden">
           <button
             type="button"
             onClick={() =>
@@ -516,7 +516,7 @@ async function handleSaveName(
                     autoComplete="current-password"
                     disabled={passwordLoading}
                     required
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none transition focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 disabled:bg-gray-100"
+                    className="aims-control w-full px-3 text-sm outline-none disabled:bg-gray-100"
                   />
                 </div>
 
@@ -542,7 +542,7 @@ async function handleSaveName(
                     placeholder="At least 8 characters"
                     disabled={passwordLoading}
                     required
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none transition focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 disabled:bg-gray-100"
+                    className="aims-control w-full px-3 text-sm outline-none disabled:bg-gray-100"
                   />
                 </div>
 
@@ -567,7 +567,7 @@ async function handleSaveName(
                     autoComplete="new-password"
                     disabled={passwordLoading}
                     required
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none transition focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 disabled:bg-gray-100"
+                    className="aims-control w-full px-3 text-sm outline-none disabled:bg-gray-100"
                   />
                 </div>
 
@@ -586,7 +586,7 @@ async function handleSaveName(
                 <button
                   type="submit"
                   disabled={passwordLoading}
-                  className="rounded-lg bg-purple-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-purple-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="aims-primary px-4 disabled:cursor-not-allowed"
                 >
                   {passwordLoading
                     ? "Updating..."
