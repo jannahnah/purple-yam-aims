@@ -426,7 +426,7 @@ export default function ReportsClient({
 
   return (
     <main className="min-h-screen bg-gray-50 p-6">
-      <div className="mx-auto max-w-7xl space-y-6">
+      <div className="mx-auto w-full max-w-7xl space-y-6">
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
@@ -529,7 +529,7 @@ export default function ReportsClient({
         )}
 
         {/* Report Output */}
-        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div className="aims-card overflow-hidden">
           <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
             <h2 className="text-sm font-semibold text-gray-900">
               {activeReportLabel}
@@ -553,7 +553,7 @@ export default function ReportsClient({
               {/* Inventory by Branch */}
               {report === "inventory-by-branch" && (
                 <div className="overflow-x-auto">
-                  <table className="w-full min-w-[900px] text-left text-sm">
+                  <table className="aims-table min-w-[900px] text-left text-sm">
                     <thead className="border-b border-gray-100 bg-gray-50 text-xs uppercase text-gray-500">
                       <tr>
                         <th className="px-5 py-3">
@@ -633,7 +633,7 @@ export default function ReportsClient({
               {/* Low Stock */}
               {report === "low-stock" && (
                 <div className="overflow-x-auto">
-                  <table className="w-full min-w-[750px] text-left text-sm">
+                  <table className="aims-table min-w-[750px] text-left text-sm">
                     <thead className="border-b border-gray-100 bg-gray-50 text-xs uppercase text-gray-500">
                       <tr>
                         <th className="px-5 py-3">
@@ -704,7 +704,7 @@ export default function ReportsClient({
               {/* Out of Stock */}
               {report === "out-of-stock" && (
                 <div className="overflow-x-auto">
-                  <table className="w-full min-w-[650px] text-left text-sm">
+                  <table className="aims-table min-w-[650px] text-left text-sm">
                     <thead className="border-b border-gray-100 bg-gray-50 text-xs uppercase text-gray-500">
                       <tr>
                         <th className="px-5 py-3">
@@ -752,7 +752,7 @@ export default function ReportsClient({
               {/* Sales Summary */}
               {report === "sales-summary" && (
                 <div className="overflow-x-auto">
-                  <table className="w-full min-w-[850px] text-left text-sm">
+                  <table className="aims-table min-w-[850px] text-left text-sm">
                     <thead className="border-b border-gray-100 bg-gray-50 text-xs uppercase text-gray-500">
                       <tr>
                         <th className="px-5 py-3">
@@ -817,7 +817,7 @@ export default function ReportsClient({
               {/* Production Summary */}
               {report === "production-summary" && (
                 <div className="overflow-x-auto">
-                  <table className="w-full min-w-[850px] text-left text-sm">
+                  <table className="aims-table min-w-[850px] text-left text-sm">
                     <thead className="border-b border-gray-100 bg-gray-50 text-xs uppercase text-gray-500">
                       <tr>
                         <th className="px-5 py-3">
@@ -882,7 +882,7 @@ export default function ReportsClient({
               {/* Transfer & Delivery History */}
               {report === "transfer-delivery-history" && (
                 <div className="overflow-x-auto">
-                  <table className="w-full min-w-[1150px] text-left text-sm">
+                  <table className="aims-table min-w-[1150px] text-left text-sm">
                     <thead className="border-b border-gray-100 bg-gray-50 text-xs uppercase text-gray-500">
                       <tr>
                         <th className="px-5 py-3">Date & Time</th>
@@ -941,7 +941,7 @@ export default function ReportsClient({
               {/* Transaction History */}
               {report === "transaction-history" && (
                 <div className="overflow-x-auto">
-                  <table className="w-full min-w-[1050px] text-left text-sm">
+                  <table className="aims-table min-w-[1050px] text-left text-sm">
                     <thead className="border-b border-gray-100 bg-gray-50 text-xs uppercase text-gray-500">
                       <tr>
                         <th className="px-5 py-3">
