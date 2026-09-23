@@ -83,18 +83,16 @@ export default async function ManagerDashboardPage() {
     ]),
   );
 
-  const inventory = items.map((item) => {
-    const stock = stockMap.get(item.id);
-
-    return {
-      itemId: item.id,
-      itemName: item.name,
-      sourceType: item.sourceType,
-      unit: item.unit,
-      quantity: stock?.quantity ?? 0,
-      minThreshold: item.minThreshold,
-    };
-  });
+  // Dashboard inventory must be scoped to actual BranchStock records.
+  // An Item without a BranchStock row is not automatically out of stock.
+  const inventory = stockRecords.map((stock) => ({
+    itemId: stock.itemId,
+    itemName: stock.item.name,
+    sourceType: stock.item.sourceType,
+    unit: stock.item.unit,
+    quantity: stock.quantity,
+    minThreshold: stock.item.minThreshold,
+  }));
 
   const lowStock = inventory.filter(
     (stock) =>
