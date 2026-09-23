@@ -214,10 +214,10 @@ export default function InventoryClient({
     (isOwner && selectedBranch !== "ALL");
 
   return (
-    <div className="min-h-full bg-[#f7f7fa]">
-      <div className="mx-auto max-w-[1500px] px-5 py-6 sm:px-8">
+    <div className="aims-page">
+      <div className="aims-container">
         {/* Header */}
-        <div className="mb-7 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+        <div className="aims-page-header">
           <div>
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-purple-600">
@@ -225,11 +225,11 @@ export default function InventoryClient({
               </span>
             </div>
 
-            <h1 className="mt-1 text-3xl font-bold tracking-tight text-gray-900">
+            <h1 className="aims-title">
               Inventory
             </h1>
 
-            <p className="mt-1 max-w-2xl text-sm text-gray-500">
+            <p className="aims-subtitle">
               {isOwner
                 ? "Monitor raw materials and finished products across all branches."
                 : `Monitor inventory for ${
@@ -346,8 +346,8 @@ export default function InventoryClient({
         </div>
 
         {/* Filters */}
-        <div className="mb-5 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-          <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+        <div className="aims-card mb-5 p-5">
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-sm font-bold text-gray-900">
                 Filter Inventory
@@ -387,7 +387,7 @@ export default function InventoryClient({
                   setSearch(event.target.value)
                 }
                 placeholder="Search item or branch..."
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-800 outline-none transition placeholder:text-gray-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
+                className="aims-control w-full px-3 text-sm outline-none placeholder:text-gray-400"
               />
             </div>
 
@@ -407,7 +407,7 @@ export default function InventoryClient({
                   setSelectedBranch(event.target.value)
                 }
                 disabled={!isOwner}
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-800 outline-none transition focus:border-purple-500 focus:ring-2 focus:ring-purple-100 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500"
+                className="aims-control w-full px-3 text-sm outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500"
               >
                 {isOwner && (
                   <option value="ALL">
@@ -441,7 +441,7 @@ export default function InventoryClient({
                 onChange={(event) =>
                   setSelectedSource(event.target.value)
                 }
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-800 outline-none transition focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
+                className="aims-control w-full px-3 text-sm outline-none"
               >
                 <option value="ALL">
                   All Source Types
@@ -499,7 +499,7 @@ export default function InventoryClient({
         </div>
 
         {/* Inventory table */}
-        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <div className="aims-card overflow-hidden">
           <div className="border-b border-gray-200 px-5 py-4">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
