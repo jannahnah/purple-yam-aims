@@ -272,6 +272,8 @@ export async function GET() {
           recordedBy: transaction.user.username,
         })),
 
+        transferDeliveries,
+
         transactions: transactions.map((transaction) => ({
           id: transaction.id,
           type: transaction.type,
