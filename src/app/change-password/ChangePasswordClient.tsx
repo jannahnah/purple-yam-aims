@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
 
 type Props = {
   userName: string | null;
@@ -17,6 +18,7 @@ export default function ChangePasswordClient({
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   async function handleSubmit(
     event: FormEvent<HTMLFormElement>
@@ -69,7 +71,7 @@ export default function ChangePasswordClient({
        * Refreshing the route lets the server determine
        * the correct dashboard based on the user's role.
        */
-      window.location.href = "/change-password";
+      router.push("/change-password");
     } catch (error) {
       console.error(
         "First-login password change error:",
