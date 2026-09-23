@@ -268,13 +268,13 @@ export default function ManagerDashboard({
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 p-6">
+    <main className="aims-page p-4 sm:p-6 lg:p-8">
       <div className="mx-auto w-full max-w-7xl space-y-6">
 
         {/* Header */}
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="aims-title">
               Branch Manager Dashboard
             </h1>
 
@@ -506,7 +506,7 @@ export default function ManagerDashboard({
               Total Items
             </p>
 
-            <p className="mt-2 text-2xl font-bold text-gray-900">
+            <p className="mt-2 aims-title">
               {stats.totalItems}
             </p>
 
