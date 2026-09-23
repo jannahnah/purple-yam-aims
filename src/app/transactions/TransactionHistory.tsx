@@ -240,7 +240,7 @@ export default function TransactionHistory({
                 onChange={(e) =>
                   setBranchFilter(e.target.value)
                 }
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-800 outline-none transition focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
+                className="aims-control w-full px-3"
               >
                 {isOwner && (
                   <option value="ALL">
@@ -270,7 +270,7 @@ export default function TransactionHistory({
                 onChange={(e) =>
                   setTypeFilter(e.target.value)
                 }
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-800 outline-none transition focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
+                className="aims-control w-full px-3"
               >
                 <option value="ALL">
                   All Types
@@ -313,7 +313,7 @@ export default function TransactionHistory({
                 onChange={(e) =>
                   setItemFilter(e.target.value)
                 }
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-800 outline-none transition focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
+                className="aims-control w-full px-3"
               >
                 <option value="ALL">
                   All Items
