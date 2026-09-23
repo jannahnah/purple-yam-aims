@@ -400,10 +400,6 @@ export default function TransactionHistory({
                 ) : (
                   filteredTransactions.map(
                     (transaction) => {
-                      const isIncrease =
-                        transaction.quantityDelta >
-                        0;
-
                       const isTransfer =
                         transaction.type ===
                           "TRANSFER_IN" ||
