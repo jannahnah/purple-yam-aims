@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const [email, setEmail] = useState("");
@@ -8,6 +9,7 @@ export default function Home() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter();
 
   const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -35,13 +37,13 @@ export default function Home() {
       }
 
       if (data.user.mustChangePassword) {
-        window.location.href = "/change-password";
+        router.push("/change-password");
       } else if (data.user.role === "OWNER") {
-        window.location.href = "/dashboard";
+        router.push("/dashboard");
       } else if (data.user.role === "BRANCH_MANAGER") {
-        window.location.href = "/manager-dashboard";
+        router.push("/manager-dashboard");
       } else if (data.user.role === "CASHIER") {
-        window.location.href = "/cashier-dashboard";
+        router.push("/cashier-dashboard");
       }
 
     } catch (error) {
