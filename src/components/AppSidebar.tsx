@@ -60,10 +60,10 @@ export default function AppSidebar({
 
   function getNavClass(href: string) {
     if (isActive(href)) {
-      return "flex items-center rounded-xl bg-white/15 px-4 py-3 text-sm font-semibold text-white shadow-sm ring-1 ring-white/10";
+      return "flex min-h-10 items-center rounded-lg bg-white/15 px-3 py-2.5 text-sm font-semibold text-white shadow-sm ring-1 ring-white/10";
     }
 
-    return "flex items-center rounded-xl px-4 py-3 text-sm font-medium text-purple-100 transition hover:bg-white/10 hover:text-white";
+    return "flex min-h-10 items-center rounded-lg px-3 py-2.5 text-sm font-medium text-purple-100 transition hover:bg-white/10 hover:text-white";
   }
 
   async function handleLogout() {
@@ -79,11 +79,11 @@ export default function AppSidebar({
   }
 
   return (
-    <aside className="sticky top-0 hidden h-dvh w-72 shrink-0 overflow-hidden bg-gradient-to-b from-purple-950 via-purple-950 to-indigo-950 text-white shadow-xl lg:flex lg:flex-col">
+    <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 overflow-hidden bg-gradient-to-b from-purple-950 via-purple-950 to-indigo-950 text-white shadow-xl lg:flex lg:flex-col">
       {/* Brand */}
-      <div className="border-b border-white/10 px-5 py-5">
+      <div className="border-b border-white/10 px-5 py-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-fuchsia-500 to-purple-700 text-sm font-bold shadow-lg shadow-purple-950/30">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-fuchsia-500 to-purple-700 text-sm font-bold shadow-lg shadow-purple-950/30">
             PY
           </div>
 
@@ -100,7 +100,7 @@ export default function AppSidebar({
       </div>
 
       {/* Current User */}
-      <div className="border-b border-purple-800 px-5 py-4">
+      <div className="border-b border-white/10 bg-white/5 px-4 py-3">
         <p className="text-sm font-semibold">
           {getRoleLabel(user.role)}
         </p>
@@ -199,7 +199,7 @@ export default function AppSidebar({
         <button
           type="button"
           onClick={handleLogout}
-          className="mt-1 flex w-full items-center rounded-xl px-4 py-3 text-left text-sm font-medium text-purple-100 transition hover:bg-white/10 hover:text-white"
+          className="mt-1 flex min-h-10 w-full items-center rounded-lg px-3 py-2.5 text-left text-sm font-medium text-purple-100 transition hover:bg-white/10 hover:text-white"
         >
           Logout
         </button>
