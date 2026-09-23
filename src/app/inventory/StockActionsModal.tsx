@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { adjustStock, transferStock } from "@/app/actions/inventory";
 
 type Role = "OWNER" | "BRANCH_MANAGER" | "CASHIER";
@@ -99,101 +99,36 @@ export default function StockActionsModal({
     selectedTransferItem?.unit === "pcs";
 
   // =========================
-  // INITIALIZE MODAL
+  // MODAL INITIALIZATION
   // =========================
 
-  useEffect(() => {
-    if (!isOpen) {
-      return;
-    }
-
+  const openModal = () => {
     setError(null);
 
-    /*
-     * Adjustment:
-     *
-     * Owner can work with all branches.
-     * Branch Manager receives only their assigned branch
-     * from InventoryPage.
-     */
-    if (!branchId && branches.length > 0) {
-      setBranchId(
-        user.branchId ?? branches[0].id
-      );
-    }
+    const defaultBranchId = user.branchId ?? branches[0]?.id ?? "";
+    const defaultItemId = items[0]?.id ?? "";
+    const defaultDestination = transferBranches.find(
+      (branch) => branch.id !== (user.branchId ?? sourceBranchId)
+    );
 
-    /*
-     * Transfer source:
-     *
-     * Always use the signed-in user's assigned branch.
-     *
-     * We intentionally do NOT fall back to branches[0].
-     * If an account has no assigned branch, we do not
-     * silently choose an arbitrary branch.
-     */
-    if (user.branchId) {
-      setSourceBranchId(user.branchId);
-    }
+    setBranchId((current) => current || defaultBranchId);
+    setSourceBranchId(user.branchId ?? sourceBranchId);
+    setItemId((current) => current || defaultItemId);
+    setTransferItemId((current) => current || defaultItemId);
 
-    if (!itemId && items.length > 0) {
-      setItemId(items[0].id);
-    }
-
-    if (!transferItemId && items.length > 0) {
-      setTransferItemId(items[0].id);
-    }
-  }, [
-    isOpen,
-    user.branchId,
-    branches,
-    items,
-    branchId,
-    itemId,
-    transferItemId,
-  ]);
-
-  // =========================
-  // DEFAULT DESTINATION
-  // =========================
-
-  useEffect(() => {
-    if (!isOpen || !sourceBranchId) {
-      return;
-    }
-
-    /*
-     * The destination must come from the complete
-     * transferBranches list, not the branch-scoped
-     * inventory branches list.
-     *
-     * This allows a Branch Manager to transfer from
-     * their assigned branch to another branch.
-     */
-    const destinationStillValid =
+    const destinationIsValid =
       destinationBranchId &&
-      destinationBranchId !== sourceBranchId &&
+      destinationBranchId !== (user.branchId ?? sourceBranchId) &&
       transferBranches.some(
-        (branch) =>
-          branch.id === destinationBranchId
+        (branch) => branch.id === destinationBranchId
       );
 
-    if (!destinationStillValid) {
-      const alternativeBranch =
-        transferBranches.find(
-          (branch) =>
-            branch.id !== sourceBranchId
-        );
-
-      setDestinationBranchId(
-        alternativeBranch?.id ?? ""
-      );
+    if (!destinationIsValid) {
+      setDestinationBranchId(defaultDestination?.id ?? "");
     }
-  }, [
-    isOpen,
-    sourceBranchId,
-    destinationBranchId,
-    transferBranches,
-  ]);
+
+    setIsOpen(true);
+  };
 
   // =========================
   // CURRENT STOCK
