@@ -490,7 +490,9 @@ export default function StockActionsModal({
       {/* Modal */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-[2px]"
           onMouseDown={(e) => {
             if (e.target === e.currentTarget) {
               closeModal();
@@ -498,7 +500,7 @@ export default function StockActionsModal({
           }}
         >
           <div
-            className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl bg-white p-6 shadow-xl"
+            className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl"
             onMouseDown={(e) =>
               e.stopPropagation()
             }
@@ -584,7 +586,7 @@ export default function StockActionsModal({
                   <select
                     value={sourceBranchId}
                     disabled
-                    className="w-full rounded-lg border border-gray-300 bg-gray-100 p-2 text-sm text-gray-600 outline-none disabled:cursor-not-allowed"
+                    className="aims-control w-full cursor-not-allowed bg-gray-100 px-3 text-sm text-gray-600"
                   >
                     {transferBranches
                       .filter(
@@ -627,7 +629,7 @@ export default function StockActionsModal({
                       )
                     }
                     disabled={loading}
-                    className="w-full rounded-lg border p-2 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100"
+                    className="aims-control w-full px-3 text-sm outline-none disabled:bg-gray-100"
                   >
                     <option value="">
                       Select destination branch
@@ -665,7 +667,7 @@ export default function StockActionsModal({
                       setTransferQuantity("");
                     }}
                     disabled={loading}
-                    className="w-full rounded-lg border p-2 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100"
+                    className="aims-control w-full px-3 text-sm outline-none disabled:bg-gray-100"
                   >
                     {items.map((item) => (
                       <option
@@ -727,7 +729,7 @@ export default function StockActionsModal({
                     }
                     required
                     disabled={loading}
-                    className="w-full rounded-lg border p-2 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100"
+                    className="aims-control w-full px-3 text-sm outline-none disabled:bg-gray-100"
                   />
 
                   <p className="mt-1 text-[11px] text-gray-500">
@@ -773,7 +775,7 @@ export default function StockActionsModal({
                     sourceBranchId ===
                       destinationBranchId
                   }
-                  className="w-full rounded-lg bg-purple-600 py-2.5 font-medium text-white transition-colors hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="aims-primary w-full disabled:cursor-not-allowed"
                 >
                   {loading
                     ? "Transferring..."
@@ -802,7 +804,7 @@ export default function StockActionsModal({
                       setBranchId(e.target.value)
                     }
                     disabled={loading}
-                    className="w-full rounded-lg border p-2 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100"
+                    className="aims-control w-full px-3 text-sm outline-none disabled:bg-gray-100"
                   >
                     {branches.map((branch) => (
                       <option
@@ -827,7 +829,7 @@ export default function StockActionsModal({
                       setItemId(e.target.value)
                     }
                     disabled={loading}
-                    className="w-full rounded-lg border p-2 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100"
+                    className="aims-control w-full px-3 text-sm outline-none disabled:bg-gray-100"
                   >
                     {items.map((item) => (
                       <option
@@ -856,7 +858,7 @@ export default function StockActionsModal({
                       )
                     }
                     disabled={loading}
-                    className="w-full rounded-lg border p-2 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100"
+                    className="aims-control w-full px-3 text-sm outline-none disabled:bg-gray-100"
                   >
                     <option value="ADJUSTMENT">
                       Stock Adjustment (Audit)
@@ -905,7 +907,7 @@ export default function StockActionsModal({
                     }
                     required
                     disabled={loading}
-                    className="w-full rounded-lg border p-2 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100"
+                    className="aims-control w-full px-3 text-sm outline-none disabled:bg-gray-100"
                   />
 
                   <p className="mt-1 text-[11px] text-gray-500">
