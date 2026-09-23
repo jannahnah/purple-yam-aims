@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 type Role = "OWNER" | "BRANCH_MANAGER" | "CASHIER";
 
@@ -36,6 +36,7 @@ export default function AppSidebar({
   user,
 }: AppSidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
 
   const isOwner = user.role === "OWNER";
   const isManager = user.role === "BRANCH_MANAGER";
@@ -74,7 +75,7 @@ export default function AppSidebar({
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
-      window.location.href = "/";
+      router.push("/");
     }
   }
 
