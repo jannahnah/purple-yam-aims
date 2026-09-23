@@ -416,7 +416,7 @@ export default function StockActionsModal({
       {/* Open Modal Button */}
       <button
         type="button"
-        onClick={() => setIsOpen(true)}
+        onClick={openModal}
         className="rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700"
       >
         Stock Actions
