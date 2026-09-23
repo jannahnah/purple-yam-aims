@@ -25,16 +25,7 @@ type User = {
   lastLoginAt: string | null;
 };
 
-type CurrentUser = {
-  id: string;
-  username: string;
-  role: Role;
-  branchId: string | null;
-};
-
-type Props = {
-  currentUser: CurrentUser;
-};
+type Props = Record<string, never>;
 
 const ROLE_LABELS: Record<Role, string> = {
   OWNER: "Owner",
@@ -72,9 +63,7 @@ function statusBadgeClass(status: UserStatus) {
     : "bg-gray-100 text-gray-600";
 }
 
-export default function UsersClient({
-  currentUser,
-}: Props) {
+export default function UsersClient() {
   const [users, setUsers] = useState<User[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
 
@@ -119,52 +108,47 @@ export default function UsersClient({
   const [submitting, setSubmitting] =
     useState(false);
 
+  async function fetchManagementData() {
+    const [usersResponse, branchesResponse] =
+      await Promise.all([
+        fetch("/api/users", {
+          cache: "no-store",
+        }),
+        fetch("/api/branches", {
+          cache: "no-store",
+        }),
+      ]);
+
+    const usersData = await usersResponse.json();
+    const branchesData = await branchesResponse.json();
+
+    if (!usersResponse.ok) {
+      throw new Error(
+        usersData.error || "Failed to load users."
+      );
+    }
+
+    if (!branchesResponse.ok) {
+      throw new Error(
+        branchesData.error || "Failed to load branches."
+      );
+    }
+
+    return {
+      users: Array.isArray(usersData) ? usersData : [],
+      branches: Array.isArray(branchesData) ? branchesData : [],
+    };
+  }
+
   async function loadData() {
     try {
       setLoading(true);
       setError("");
 
-      const [usersResponse, branchesResponse] =
-        await Promise.all([
-          fetch("/api/users", {
-            cache: "no-store",
-          }),
-          fetch("/api/branches", {
-            cache: "no-store",
-          }),
-        ]);
+      const data = await fetchManagementData();
 
-      const usersData =
-        await usersResponse.json();
-
-      const branchesData =
-        await branchesResponse.json();
-
-      if (!usersResponse.ok) {
-        throw new Error(
-          usersData.error ||
-            "Failed to load users."
-        );
-      }
-
-      if (!branchesResponse.ok) {
-        throw new Error(
-          branchesData.error ||
-            "Failed to load branches."
-        );
-      }
-
-      setUsers(
-        Array.isArray(usersData)
-          ? usersData
-          : []
-      );
-
-      setBranches(
-        Array.isArray(branchesData)
-          ? branchesData
-          : []
-      );
+      setUsers(data.users);
+      setBranches(data.branches);
     } catch (err) {
       setError(
         err instanceof Error
@@ -177,7 +161,33 @@ export default function UsersClient({
   }
 
   useEffect(() => {
-    loadData();
+    let active = true;
+
+    fetchManagementData()
+      .then((data) => {
+        if (!active) return;
+
+        setUsers(data.users);
+        setBranches(data.branches);
+      })
+      .catch((err) => {
+        if (!active) return;
+
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Failed to load user management data."
+        );
+      })
+      .finally(() => {
+        if (active) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   function resetCreateForm() {
