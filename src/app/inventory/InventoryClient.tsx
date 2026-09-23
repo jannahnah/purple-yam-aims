@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
 import StockActionsModal from "./StockActionsModal";
 import ProductionModal from "./ProductionModal";
@@ -126,7 +125,6 @@ export default function InventoryClient({
 }: Props) {
   const isOwner = user.role === "OWNER";
   const isManager = user.role === "BRANCH_MANAGER";
-  const isCashier = user.role === "CASHIER";
 
   const [search, setSearch] = useState("");
   const [selectedBranch, setSelectedBranch] = useState(
@@ -134,12 +132,6 @@ export default function InventoryClient({
   );
   const [selectedSource, setSelectedSource] = useState("ALL");
   const [selectedStatus, setSelectedStatus] = useState("ALL");
-
-  const dashboardHref = isOwner
-    ? "/dashboard"
-    : isManager
-      ? "/manager-dashboard"
-      : "/cashier-dashboard";
 
   const canManageStock = isOwner || isManager;
 
