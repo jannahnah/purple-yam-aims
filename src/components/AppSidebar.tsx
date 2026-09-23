@@ -153,13 +153,6 @@ export default function AppSidebar({
                 Transactions
               </Link>
 
-              <Link
-                href="/transfer-deliveries"
-                className={getNavClass("/transfer-deliveries")}
-              >
-                Transfer & Delivery
-              </Link>
-
               {(isOwner || isManager) && (
                 <>
                   <Link
