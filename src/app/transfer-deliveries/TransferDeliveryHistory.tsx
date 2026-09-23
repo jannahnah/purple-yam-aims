@@ -90,7 +90,8 @@ export default function TransferDeliveryHistory({
           quantity: Math.abs(primary.quantityDelta),
           from,
           to,
-          recordedBy: out?.user.username ?? incoming?.user.username ?? primary.user.username,
+          recordedBy:
+            out?.user.username ?? incoming?.user.username ?? primary.user.username,
           status: primary.transferId ? "COMPLETED" : "RECORDED",
           out: out ?? null,
           incoming: incoming ?? null,
@@ -105,8 +106,7 @@ export default function TransferDeliveryHistory({
   }, [transactions]);
 
   const branches = useMemo(
-    () =>
-      [...new Set(records.flatMap((r) => [r!.from, r!.to]))].sort(),
+    () => [...new Set(records.flatMap((r) => [r!.from, r!.to]))].sort(),
     [records]
   );
 
@@ -118,7 +118,10 @@ export default function TransferDeliveryHistory({
   const filtered = records.filter(
     (r) =>
       r &&
-      (branch === "ALL" || r.from === branch || r.to === branch) &&
+      (currentUser.role !== "OWNER" ||
+        branch === "ALL" ||
+        r.from === branch ||
+        r.to === branch) &&
       (item === "ALL" || r.item === item)
   );
 
@@ -149,20 +152,31 @@ export default function TransferDeliveryHistory({
         </div>
 
         <div className="mb-6 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Branch
-              </label>
-              <select
-                value={branch}
-                onChange={(e) => setBranch(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
-              >
-                <option value="ALL">All Branches</option>
-                {branches.map((x) => <option key={x} value={x}>{x}</option>)}
-              </select>
-            </div>
+          <div
+            className={`grid gap-4 ${
+              currentUser.role === "OWNER" ? "md:grid-cols-2" : "md:grid-cols-1"
+            }`}
+          >
+            {currentUser.role === "OWNER" && (
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  Branch
+                </label>
+                <select
+                  value={branch}
+                  onChange={(e) => setBranch(e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
+                >
+                  <option value="ALL">All Branches</option>
+                  {branches.map((x) => (
+                    <option key={x} value={x}>
+                      {x}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">
                 Item
@@ -173,7 +187,11 @@ export default function TransferDeliveryHistory({
                 className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
               >
                 <option value="ALL">All Items</option>
-                {items.map((x) => <option key={x} value={x}>{x}</option>)}
+                {items.map((x) => (
+                  <option key={x} value={x}>
+                    {x}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -183,7 +201,9 @@ export default function TransferDeliveryHistory({
           <div className="border-b border-gray-200 px-5 py-4">
             <h2 className="text-base font-bold text-gray-900">Transfer & Delivery Records</h2>
             <p className="mt-0.5 text-xs text-gray-500">
-              Transfer-out and transfer-in transactions are combined into one operational record.
+              {currentUser.role === "OWNER"
+                ? "All branch-to-branch movements are shown. Use the filters to narrow the list."
+                : `Only movements involving ${currentUser.branchName ?? "your branch"} are shown.`}
             </p>
           </div>
 
@@ -203,67 +223,88 @@ export default function TransferDeliveryHistory({
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {filtered.length === 0 ? (
-                  <tr><td colSpan={8} className="px-6 py-16 text-center">
-                    <p className="font-semibold text-gray-800">No transfer or delivery records found</p>
-                    <p className="mt-1 text-xs text-gray-500">Try changing your filters.</p>
-                  </td></tr>
-                ) : filtered.map((r) => {
-                  if (!r) return null;
-                  const open = expanded === r.key;
-                  return (
-                    <tr key={r.key} className="align-top hover:bg-purple-50/40">
-                      <td className="whitespace-nowrap px-5 py-4 font-medium text-gray-900">{dateTime(r.createdAt)}</td>
-                      <td className="px-5 py-4">
-                        <p className="font-semibold text-gray-900">{r.item}</p>
-                        <p className="mt-1 text-xs text-gray-500">{source(r.sourceType)}</p>
-                      </td>
-                      <td className="px-5 py-4">
-                        <p className="font-bold text-gray-900">{qty(r.quantity)}</p>
-                        <p className="text-xs text-gray-500">{r.unit}</p>
-                      </td>
-                      <td className="px-5 py-4 font-medium text-gray-800">{r.from}</td>
-                      <td className="px-5 py-4 font-medium text-gray-800">{r.to}</td>
-                      <td className="px-5 py-4">
-                        <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold uppercase text-emerald-700">
-                          {r.status}
-                        </span>
-                      </td>
-                      <td className="px-5 py-4 font-medium text-gray-900">{r.recordedBy}</td>
-                      <td className="px-5 py-4">
-                        <button
-                          type="button"
-                          onClick={() => setExpanded(open ? null : r.key)}
-                          className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
-                        >
-                          {open ? "Hide Details" : "View Details"}
-                        </button>
-                        {open && (
-                          <div className="mt-3 w-[350px] rounded-xl border border-purple-100 bg-purple-50 p-4 text-xs text-gray-700">
-                            <p className="font-semibold text-purple-900">Transfer Details</p>
-                            <div className="mt-3 space-y-2">
-                              <p><span className="font-semibold">Transfer ID:</span> {r.transferId ?? "—"}</p>
-                              <p><span className="font-semibold">Movement:</span> {r.from} → {r.to}</p>
-                              <p><span className="font-semibold">Quantity:</span> {qty(r.quantity)} {r.unit}</p>
-                              <div className="border-t border-purple-100 pt-2">
-                                <p className="font-semibold text-gray-800">Inventory Effect</p>
-                                {r.out && (
-                                  <p className="mt-1">
-                                    {r.from}: {qty(r.out.previousQuantity)} → {qty(r.out.newQuantity)}
-                                  </p>
-                                )}
-                                {r.incoming && (
-                                  <p className="mt-1">
-                                    {r.to}: {qty(r.incoming.previousQuantity)} → {qty(r.incoming.newQuantity)}
-                                  </p>
-                                )}
+                  <tr>
+                    <td colSpan={8} className="px-6 py-16 text-center">
+                      <p className="font-semibold text-gray-800">
+                        No transfer or delivery records found
+                      </p>
+                      <p className="mt-1 text-xs text-gray-500">
+                        Try changing your item filter.
+                      </p>
+                    </td>
+                  </tr>
+                ) : (
+                  filtered.map((r) => {
+                    if (!r) return null;
+                    const open = expanded === r.key;
+                    return (
+                      <tr key={r.key} className="align-top hover:bg-purple-50/40">
+                        <td className="whitespace-nowrap px-5 py-4 font-medium text-gray-900">
+                          {dateTime(r.createdAt)}
+                        </td>
+                        <td className="px-5 py-4">
+                          <p className="font-semibold text-gray-900">{r.item}</p>
+                          <p className="mt-1 text-xs text-gray-500">{source(r.sourceType)}</p>
+                        </td>
+                        <td className="px-5 py-4">
+                          <p className="font-bold text-gray-900">{qty(r.quantity)}</p>
+                          <p className="text-xs text-gray-500">{r.unit}</p>
+                        </td>
+                        <td className="px-5 py-4 font-medium text-gray-800">{r.from}</td>
+                        <td className="px-5 py-4 font-medium text-gray-800">{r.to}</td>
+                        <td className="px-5 py-4">
+                          <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold uppercase text-emerald-700">
+                            {r.status}
+                          </span>
+                        </td>
+                        <td className="px-5 py-4 font-medium text-gray-900">{r.recordedBy}</td>
+                        <td className="px-5 py-4">
+                          <button
+                            type="button"
+                            onClick={() => setExpanded(open ? null : r.key)}
+                            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                          >
+                            {open ? "Hide Details" : "View Details"}
+                          </button>
+                          {open && (
+                            <div className="mt-3 w-[350px] rounded-xl border border-purple-100 bg-purple-50 p-4 text-xs text-gray-700">
+                              <p className="font-semibold text-purple-900">Transfer Details</p>
+                              <div className="mt-3 space-y-2">
+                                <p>
+                                  <span className="font-semibold">Transfer ID:</span>{" "}
+                                  {r.transferId ?? "—"}
+                                </p>
+                                <p>
+                                  <span className="font-semibold">Movement:</span>{" "}
+                                  {r.from} → {r.to}
+                                </p>
+                                <p>
+                                  <span className="font-semibold">Quantity:</span>{" "}
+                                  {qty(r.quantity)} {r.unit}
+                                </p>
+                                <div className="border-t border-purple-100 pt-2">
+                                  <p className="font-semibold text-gray-800">Inventory Effect</p>
+                                  {r.out && (
+                                    <p className="mt-1">
+                                      {r.from}: {qty(r.out.previousQuantity)} →{" "}
+                                      {qty(r.out.newQuantity)}
+                                    </p>
+                                  )}
+                                  {r.incoming && (
+                                    <p className="mt-1">
+                                      {r.to}: {qty(r.incoming.previousQuantity)} →{" "}
+                                      {qty(r.incoming.newQuantity)}
+                                    </p>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
