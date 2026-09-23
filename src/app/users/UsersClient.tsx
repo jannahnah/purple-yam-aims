@@ -25,8 +25,6 @@ type User = {
   lastLoginAt: string | null;
 };
 
-type Props = Record<string, never>;
-
 const ROLE_LABELS: Record<Role, string> = {
   OWNER: "Owner",
   BRANCH_MANAGER: "Branch Manager",
