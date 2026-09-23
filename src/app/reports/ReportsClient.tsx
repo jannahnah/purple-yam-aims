@@ -8,6 +8,7 @@ type ReportType =
   | "out-of-stock"
   | "sales-summary"
   | "production-summary"
+  | "transfer-delivery-history"
   | "transaction-history";
 
 type UserRole = "OWNER" | "BRANCH_MANAGER" | "CASHIER";
@@ -96,10 +97,32 @@ interface TransactionRow {
   };
 }
 
+interface TransferDeliveryRow {
+  id: string;
+  transferId: string | null;
+  createdAt: string;
+  item: {
+    id: string;
+    name: string;
+    unit: string;
+    sourceType: string;
+  };
+  quantity: number;
+  from: string;
+  to: string;
+  status: string;
+  recordedBy: string;
+  sourcePreviousQuantity: number | null;
+  sourceNewQuantity: number | null;
+  destinationPreviousQuantity: number | null;
+  destinationNewQuantity: number | null;
+}
+
 interface ReportsData {
   inventory: InventoryRow[];
   sales: SalesRow[];
   production: ProductionRow[];
+  transferDeliveries: TransferDeliveryRow[];
   transactions: TransactionRow[];
 }
 
@@ -138,6 +161,11 @@ const REPORT_OPTIONS: {
     desc: "All recorded production output.",
   },
   {
+    id: "transfer-delivery-history",
+    label: "Transfer & Delivery History",
+    desc: "Branch-to-branch stock movements combined into one record.",
+  },
+  {
     id: "transaction-history",
     label: "Transaction History",
     desc: "Complete log of all inventory movements.",
@@ -154,6 +182,7 @@ export default function ReportsClient({
     inventory: [],
     sales: [],
     production: [],
+    transferDeliveries: [],
     transactions: [],
   });
 
@@ -194,6 +223,9 @@ export default function ReportsClient({
               : [],
             production: Array.isArray(result.production)
               ? result.production
+              : [],
+            transferDeliveries: Array.isArray(result.transferDeliveries)
+              ? result.transferDeliveries
               : [],
             transactions: Array.isArray(result.transactions)
               ? result.transactions
@@ -838,6 +870,65 @@ export default function ReportsClient({
 
                             <td className="px-5 py-4 text-gray-500">
                               {production.recordedBy}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* Transfer & Delivery History */}
+              {report === "transfer-delivery-history" && (
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[1150px] text-left text-sm">
+                    <thead className="border-b border-gray-100 bg-gray-50 text-xs uppercase text-gray-500">
+                      <tr>
+                        <th className="px-5 py-3">Date & Time</th>
+                        <th className="px-5 py-3">Item</th>
+                        <th className="px-5 py-3">Quantity</th>
+                        <th className="px-5 py-3">From</th>
+                        <th className="px-5 py-3">To</th>
+                        <th className="px-5 py-3">Status</th>
+                        <th className="px-5 py-3">Recorded By</th>
+                        <th className="px-5 py-3">Inventory Effect</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {data.transferDeliveries.length === 0 ? (
+                        <EmptyRow colSpan={8} />
+                      ) : (
+                        data.transferDeliveries.map((transfer) => (
+                          <tr key={transfer.id} className="transition hover:bg-gray-50">
+                            <td className="whitespace-nowrap px-5 py-4">
+                              <div className="font-medium text-gray-900">
+                                {formatDate(transfer.createdAt)}
+                              </div>
+                              <div className="mt-0.5 text-xs text-gray-500">
+                                {formatTime(transfer.createdAt)}
+                              </div>
+                            </td>
+                            <td className="px-5 py-4">
+                              <p className="font-medium text-gray-900">{transfer.item.name}</p>
+                              <p className="mt-1 text-xs text-gray-500">
+                                {formatSourceType(transfer.item.sourceType)}
+                              </p>
+                            </td>
+                            <td className="px-5 py-4 font-mono font-semibold text-gray-900">
+                              {formatQuantity(transfer.quantity)} {transfer.item.unit}
+                            </td>
+                            <td className="px-5 py-4 font-medium text-gray-700">{transfer.from}</td>
+                            <td className="px-5 py-4 font-medium text-gray-700">{transfer.to}</td>
+                            <td className="px-5 py-4">
+                              <span className="inline-flex rounded-full border border-green-200 bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700">
+                                {transfer.status}
+                              </span>
+                            </td>
+                            <td className="px-5 py-4 text-gray-600">{transfer.recordedBy}</td>
+                            <td className="px-5 py-4 text-xs text-gray-600">
+                              <div>Source: {formatQuantity(transfer.sourcePreviousQuantity ?? 0)} → {formatQuantity(transfer.sourceNewQuantity ?? 0)}</div>
+                              <div className="mt-1">Destination: {formatQuantity(transfer.destinationPreviousQuantity ?? 0)} → {formatQuantity(transfer.destinationNewQuantity ?? 0)}</div>
                             </td>
                           </tr>
                         ))
