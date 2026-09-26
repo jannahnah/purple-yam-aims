@@ -26,7 +26,7 @@ type NormalizedRow = {
 };
 
 const WORKBOOK_BRANCHES: Record<string, string> = {
-  bxuinventory: "Butuan / Main Commissary",
+  bxuinventory: "Butuan / Main Branch",
   lbdinventory: "Libertad",
   cbrinventory: "Cabadbaran",
   sfinventory: "San Francisco",
