@@ -2,6 +2,7 @@ import { requireRole } from "@/lib/auth/authorization";
 import { prisma } from "@/lib/prisma";
 import AppShell from "@/components/AppShell";
 import SalesClient from "./SalesClient";
+import { formatItemLabel } from "@/lib/item-label";
 
 export const dynamic = "force-dynamic";
 
@@ -81,6 +82,7 @@ export default async function SalesPage() {
         products={finishedItems.map((item) => ({
           id: item.id,
           name: item.name,
+          size: item.size,
           unit: item.unit,
         }))}
         stock={branchStock.map((record) => ({
