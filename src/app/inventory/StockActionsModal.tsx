@@ -609,7 +609,7 @@ export default function StockActionsModal({
                         key={item.id}
                         value={item.id}
                       >
-                        {item.name} ({item.unit})
+                        {formatItemLabel(item)} ({item.unit})
                       </option>
                     ))}
                   </select>
@@ -771,7 +771,7 @@ export default function StockActionsModal({
                         key={item.id}
                         value={item.id}
                       >
-                        {item.name} ({item.unit})
+                        {formatItemLabel(item)} ({item.unit})
                       </option>
                     ))}
                   </select>
