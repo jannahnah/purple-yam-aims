@@ -572,7 +572,10 @@ export default function SalesClient({
                         className="border-b border-gray-100 last:border-0"
                       >
                         <td className="px-4 py-4 font-medium text-gray-900">
-                          {sale.productName}
+                          {formatItemLabel({
+                            name: sale.productName,
+                            size: sale.size,
+                          })}
                         </td>
 
                         <td className="px-4 py-4 font-semibold text-red-600">
