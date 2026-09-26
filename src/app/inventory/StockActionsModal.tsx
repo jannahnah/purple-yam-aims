@@ -107,14 +107,20 @@ export default function StockActionsModal({
   const openModal = () => {
     setError(null);
 
-    const defaultBranchId = user.branchId ?? branches[0]?.id ?? "";
+    const defaultBranchId =
+      user.branchId ?? branches[0]?.id ?? "";
     const defaultItemId = items[0]?.id ?? "";
+    const initialSourceBranchId =
+      user.branchId ?? sourceBranchId || branches[0]?.id || "";
+
     const defaultDestination = transferBranches.find(
-      (branch) => branch.id !== (user.branchId ?? sourceBranchId)
+      (branch) => branch.id !== initialSourceBranchId
     );
 
     setBranchId((current) => current || defaultBranchId);
-    setSourceBranchId(user.branchId ?? sourceBranchId);
+    setSourceBranchId(
+      (current) => current || initialSourceBranchId
+    );
     setItemId((current) => current || defaultItemId);
     setTransferItemId((current) => current || defaultItemId);
 
@@ -506,10 +512,10 @@ export default function StockActionsModal({
               >
                 <div className="rounded-lg border border-purple-100 bg-purple-50 p-3">
                   <p className="text-xs text-purple-800">
-                    Transfer existing stock from your
-                    assigned branch to another branch.
-                    The source stock will decrease and
-                    the destination stock will increase
+                    Transfer existing stock from the
+                    selected source branch to another
+                    branch. The source stock will decrease
+                    and the destination stock will increase
                     automatically.
                   </p>
                 </div>
@@ -522,33 +528,52 @@ export default function StockActionsModal({
 
                   <select
                     value={sourceBranchId}
-                    disabled
-                    className="aims-control w-full cursor-not-allowed bg-gray-100 px-3 text-sm text-gray-600"
-                  >
-                    {transferBranches
-                      .filter(
-                        (branch) =>
-                          branch.id ===
-                          sourceBranchId
-                      )
-                      .map((branch) => (
-                        <option
-                          key={branch.id}
-                          value={branch.id}
-                        >
-                          {branch.name}
-                        </option>
-                      ))}
+                    onChange={(e) => {
+                      setSourceBranchId(e.target.value);
 
-                    {!sourceBranchId && (
-                      <option value="">
-                        No assigned branch
+                      if (
+                        destinationBranchId ===
+                        e.target.value
+                      ) {
+                        const fallbackDestination =
+                          transferBranches.find(
+                            (branch) =>
+                              branch.id !==
+                              e.target.value
+                          );
+
+                        setDestinationBranchId(
+                          fallbackDestination?.id ?? ""
+                        );
+                      }
+
+                      setTransferQuantity("");
+                    }}
+                    disabled={loading || user.role !== "OWNER"}
+                    className={
+                      user.role === "OWNER"
+                        ? "aims-control w-full px-3 text-sm"
+                        : "aims-control w-full cursor-not-allowed bg-gray-100 px-3 text-sm text-gray-600"
+                    }
+                  >
+                    <option value="">
+                      Select source branch
+                    </option>
+
+                    {transferBranches.map((branch) => (
+                      <option
+                        key={branch.id}
+                        value={branch.id}
+                      >
+                        {branch.name}
                       </option>
-                    )}
+                    ))}
                   </select>
 
                   <p className="mt-1 text-[11px] text-gray-500">
-                    Locked to your assigned branch.
+                    {user.role === "OWNER"
+                      ? "Owner can select any source branch."
+                      : "Locked to your assigned branch."}
                   </p>
                 </div>
 
