@@ -23,6 +23,7 @@ model User {
   updatedAt          DateTime   @updatedAt
 
   stockTransactions StockTransaction[]
+  performedItemAudits ItemAuditLog[] @relation("ItemAuditPerformedBy")
   auditLogs         UserAuditLog[]     @relation("AffectedUser")
   performedAudits   UserAuditLog[]     @relation("PerformedBy")
   branch            Branch?            @relation(fields: [branchId], references: [id])
@@ -79,6 +80,7 @@ model Item {
   recipeAsIngredient ProductionRecipe[] @relation("IngredientProduct")
   reorderAlerts      ReorderAlert[]
   stockTransactions  StockTransaction[]
+  auditLogs          ItemAuditLog[]
   business           Business?          @relation(fields: [businessId], references: [id])
 }
 
@@ -137,6 +139,24 @@ model ReorderAlert {
 
   branch Branch @relation(fields: [branchId], references: [id])
   item   Item   @relation(fields: [itemId], references: [id])
+}
+
+model ItemAuditLog {
+  id            String   @id @default(uuid())
+  itemId        String
+  performedById String
+  action        String
+  field         String?
+  previousValue String?
+  currentValue  String?
+  createdAt     DateTime @default(now())
+
+  item        Item @relation(fields: [itemId], references: [id])
+  performedBy User @relation("ItemAuditPerformedBy", fields: [performedById], references: [id])
+
+  @@index([itemId])
+  @@index([performedById])
+  @@index([createdAt])
 }
 
 model Business {
