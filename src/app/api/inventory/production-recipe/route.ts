@@ -236,6 +236,7 @@ async function validateRecipe(
     where: {
       id: { in: ingredientIds },
       businessId,
+      isActive: true,
     },
     select: {
       id: true,
@@ -353,6 +354,7 @@ export async function DELETE(request: Request) {
         id: finishedItemId,
         businessId: auth.currentUser.businessId!,
         sourceType: "FINISHED_PRODUCT",
+        isActive: true,
       },
       select: { id: true },
     });
