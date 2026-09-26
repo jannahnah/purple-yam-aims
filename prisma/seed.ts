@@ -9,6 +9,7 @@ async function main() {
   // Clear existing records
   await prisma.reorderAlert.deleteMany();
   await prisma.stockTransaction.deleteMany();
+  await prisma.userAuditLog.deleteMany();
   await prisma.productionRecipe.deleteMany();
   await prisma.branchStock.deleteMany();
   await prisma.user.deleteMany();
