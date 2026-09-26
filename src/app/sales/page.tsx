@@ -20,6 +20,7 @@ export default async function SalesPage() {
       prisma.item.findMany({
         where: {
           sourceType: "FINISHED_PRODUCT",
+          isActive: true,
         },
         orderBy: {
           name: "asc",
@@ -31,6 +32,7 @@ export default async function SalesPage() {
           branchId,
           item: {
             sourceType: "FINISHED_PRODUCT",
+            isActive: true,
           },
         },
         include: {
@@ -53,6 +55,7 @@ export default async function SalesPage() {
           item: {
             select: {
               name: true,
+              size: true,
               unit: true,
             },
           },
@@ -92,6 +95,7 @@ export default async function SalesPage() {
         salesHistory={salesHistory.map((sale) => ({
           id: sale.id,
           productName: sale.item.name,
+          size: sale.item.size,
           unit: sale.item.unit,
           quantity: Math.abs(Number(sale.quantityDelta)),
           createdAt: sale.createdAt.toISOString(),
