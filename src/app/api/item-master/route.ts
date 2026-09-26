@@ -446,6 +446,7 @@ export async function DELETE(request: Request) {
         id: true,
         name: true,
         size: true,
+        sourceType: true,
         isActive: true,
       },
     });
@@ -585,6 +586,7 @@ export async function PATCH(request: Request) {
         id: true,
         name: true,
         size: true,
+        sourceType: true,
         isActive: true,
       },
     });
