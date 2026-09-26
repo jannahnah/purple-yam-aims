@@ -42,7 +42,14 @@ export async function GET(req: Request) {
     }
 
     const branchStocks = await prisma.branchStock.findMany({
-      where: branchId ? { branchId } : undefined,
+      where: branchId
+        ? {
+            branchId,
+            item: { isActive: true },
+          }
+        : {
+            item: { isActive: true },
+          },
       include: {
         item: true,
         branch: true,
