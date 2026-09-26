@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { formatItemLabel } from "@/lib/item-label";
 import { useEffect, useRef, useState } from "react";
 
 type Role = "OWNER" | "BRANCH_MANAGER" | "CASHIER";
@@ -25,8 +26,11 @@ type StockRecord = {
   item: {
     id: string;
     name: string;
+    size?: "SMALL" | "ROUND" | "MEDIUM" | "LARGE" | null;
     unit: string;
     minThreshold: number;
+    sourceType: string;
+    size?: "SMALL" | "ROUND" | "MEDIUM" | "LARGE" | null;
   };
   branch: {
     id: string;
@@ -175,11 +179,13 @@ export default function DashboardClient({
   const stockByBranch = stockRecords.reduce<
     Record<string, Record<string, StockRecord>>
   >((result, stock) => {
-    if (!result[stock.item.name]) {
-      result[stock.item.name] = {};
+    const itemLabel = formatItemLabel(stock.item);
+
+    if (!result[itemLabel]) {
+      result[itemLabel] = {};
     }
 
-    result[stock.item.name][stock.branch.name] = stock;
+    result[itemLabel][stock.branch.name] = stock;
 
     return result;
   }, {});
@@ -189,16 +195,18 @@ export default function DashboardClient({
   );
 
   const itemNames = Array.from(
-    new Set(stockRecords.map((stock) => stock.item.name)),
+    new Set(stockRecords.map((stock) => formatItemLabel(stock.item))),
   );
 
-  const finishedProductRecords = stockRecords.filter((stock) =>
-    stock.item.name.toLowerCase().includes("finished"),
+  const finishedProductRecords = stockRecords.filter(
+    (stock) => stock.item.sourceType === "FINISHED_PRODUCT",
   );
 
   const finishedProductNames = Array.from(
     new Set(
-      finishedProductRecords.map((stock) => stock.item.name),
+      finishedProductRecords.map((stock) =>
+        formatItemLabel(stock.item),
+      ),
     ),
   );
 
@@ -528,7 +536,7 @@ export default function DashboardClient({
 
                     <div>
                       <p className="font-semibold text-gray-900">
-                        {transaction.item.name}{" "}
+                        {formatItemLabel(transaction.item)}{" "}
                         <span className="text-purple-700">
                           {formatTransactionQuantity(
                             transaction.quantityDelta,
@@ -656,7 +664,7 @@ export default function DashboardClient({
                       {branchNames.map((branchName) => {
                         const stock = finishedProductRecords.find(
                           (record) =>
-                            record.item.name === productName &&
+                            formatItemLabel(record.item) === productName &&
                             record.branch.name === branchName,
                         );
 
