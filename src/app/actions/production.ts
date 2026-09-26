@@ -65,6 +65,12 @@ export async function logProductionRun({
     }
 
     if (
+      !finishedItem.isActive
+    ) {
+      throw new Error("The selected finished product is deleted or inactive.");
+    }
+
+    if (
       finishedItem.sourceType !==
       "FINISHED_PRODUCT"
     ) {
@@ -115,6 +121,17 @@ export async function logProductionRun({
 
     // Check every ingredient before changing anything.
     for (const requirement of requirements) {
+      const ingredientItem = await tx.item.findUnique({
+        where: { id: requirement.itemId },
+        select: { isActive: true },
+      });
+
+      if (!ingredientItem?.isActive) {
+        throw new Error(
+          `Production ingredient ${requirement.itemName} is deleted or inactive.`
+        );
+      }
+
       const stock =
         await tx.branchStock.findUnique({
           where: {
