@@ -1,6 +1,7 @@
 import {
   PrismaClient,
   Role,
+  ItemCategory,
   ItemSourceType,
 } from "@prisma/client";
 import { hashPassword } from "../src/lib/auth/password";
@@ -30,6 +31,7 @@ async function ensureUser(data: {
 async function ensureItem(data: {
   name: string;
   sourceType: ItemSourceType;
+  category: ItemCategory;
   unit: string;
   minThreshold: number;
   businessId: string;
@@ -42,6 +44,12 @@ async function ensureItem(data: {
   });
 
   if (existing) {
+    if (existing.category !== data.category) {
+      return prisma.item.update({
+        where: { id: existing.id },
+        data: { category: data.category },
+      });
+    }
     return existing;
   }
 
@@ -208,6 +216,7 @@ async function main() {
   const yamFlour = await ensureItem({
     name: "Purple Yam Premix",
     sourceType: ItemSourceType.COMMISSARY_SUPPLIED,
+    category: ItemCategory.RAW_MATERIAL,
     unit: "kg",
     minThreshold: 10.0,
     businessId: business.id,
@@ -216,6 +225,7 @@ async function main() {
   const condensedMilk = await ensureItem({
     name: "Condensed Milk",
     sourceType: ItemSourceType.BRANCH_SOURCED,
+    category: ItemCategory.RAW_MATERIAL,
     unit: "cans",
     minThreshold: 15.0,
     businessId: business.id,
@@ -224,6 +234,7 @@ async function main() {
   const butter = await ensureItem({
     name: "Butter",
     sourceType: ItemSourceType.BRANCH_SOURCED,
+    category: ItemCategory.RAW_MATERIAL,
     unit: "kg",
     minThreshold: 5.0,
     businessId: business.id,
@@ -232,10 +243,78 @@ async function main() {
   const ubeCake = await ensureItem({
     name: "Purple Yam Cake (Finished)",
     sourceType: ItemSourceType.FINISHED_PRODUCT,
+    category: ItemCategory.RAW_MATERIAL,
     unit: "pcs",
     minThreshold: 3.0,
     businessId: business.id,
   });
+
+  // Actual Purple Yam stock-room item master from the uploaded inventory workbook.
+  // Packaging is separated from ingredients used in production.
+  await ensureItem({
+    name: "Premix Dry (UBE)",
+    sourceType: ItemSourceType.COMMISSARY_SUPPLIED,
+    category: ItemCategory.RAW_MATERIAL,
+    unit: "pack",
+    minThreshold: 0.0,
+    businessId: business.id,
+  });
+
+  await ensureItem({
+    name: "Premix Wet (UBE)",
+    sourceType: ItemSourceType.COMMISSARY_SUPPLIED,
+    category: ItemCategory.RAW_MATERIAL,
+    unit: "pack",
+    minThreshold: 0.0,
+    businessId: business.id,
+  });
+
+  await ensureItem({
+    name: "Choco Premix Dry",
+    sourceType: ItemSourceType.COMMISSARY_SUPPLIED,
+    category: ItemCategory.RAW_MATERIAL,
+    unit: "pack",
+    minThreshold: 0.0,
+    businessId: business.id,
+  });
+
+  await ensureItem({
+    name: "Evaporated Milk",
+    sourceType: ItemSourceType.BRANCH_SOURCED,
+    category: ItemCategory.RAW_MATERIAL,
+    unit: "can",
+    minThreshold: 0.0,
+    businessId: business.id,
+  });
+
+  await ensureItem({
+    name: "Creamcheese Wet",
+    sourceType: ItemSourceType.BRANCH_SOURCED,
+    category: ItemCategory.RAW_MATERIAL,
+    unit: "pack",
+    minThreshold: 0.0,
+    businessId: business.id,
+  });
+
+  for (const item of [
+    { name: "BOX (Large)", sourceType: ItemSourceType.BRANCH_SOURCED, unit: "pcs" },
+    { name: "BOX (Medium)", sourceType: ItemSourceType.BRANCH_SOURCED, unit: "pcs" },
+    { name: "BOX (Small - Round)", sourceType: ItemSourceType.BRANCH_SOURCED, unit: "pcs" },
+    { name: "BASE (Large)", sourceType: ItemSourceType.BRANCH_SOURCED, unit: "pcs" },
+    { name: "BASE (Medium)", sourceType: ItemSourceType.BRANCH_SOURCED, unit: "pcs" },
+    { name: "Base (Small - Round)", sourceType: ItemSourceType.BRANCH_SOURCED, unit: "pcs" },
+    { name: "Box Custard", sourceType: ItemSourceType.BRANCH_SOURCED, unit: "pcs" },
+    { name: "Ube Calamansi Box", sourceType: ItemSourceType.BRANCH_SOURCED, unit: "pcs" },
+  ]) {
+    await ensureItem({
+      name: item.name,
+      sourceType: item.sourceType,
+      category: ItemCategory.PACKAGING,
+      unit: item.unit,
+      minThreshold: 0.0,
+      businessId: business.id,
+    });
+  }
 
   await prisma.productionRecipe.upsert({
     where: {
