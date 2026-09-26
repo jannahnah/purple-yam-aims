@@ -56,33 +56,6 @@ async function ensureItem(data: {
   return prisma.item.create({ data });
 }
 
-async function ensureStock(
-  branchId: string,
-  itemId: string,
-  quantity: number
-) {
-  const existing = await prisma.branchStock.findUnique({
-    where: {
-      branchId_itemId: {
-        branchId,
-        itemId,
-      },
-    },
-  });
-
-  if (existing) {
-    return existing;
-  }
-
-  return prisma.branchStock.create({
-    data: {
-      branchId,
-      itemId,
-      quantity,
-    },
-  });
-}
-
 async function main() {
   console.log(
     "Bootstrapping Purple Yam AIMS defaults without deleting existing operational data..."
@@ -213,42 +186,6 @@ async function main() {
     mustChangePassword: true,
   });
 
-  const yamFlour = await ensureItem({
-    name: "Purple Yam Premix",
-    sourceType: ItemSourceType.COMMISSARY_SUPPLIED,
-    category: ItemCategory.RAW_MATERIAL,
-    unit: "kg",
-    minThreshold: 10.0,
-    businessId: business.id,
-  });
-
-  const condensedMilk = await ensureItem({
-    name: "Condensed Milk",
-    sourceType: ItemSourceType.BRANCH_SOURCED,
-    category: ItemCategory.RAW_MATERIAL,
-    unit: "cans",
-    minThreshold: 15.0,
-    businessId: business.id,
-  });
-
-  const butter = await ensureItem({
-    name: "Butter",
-    sourceType: ItemSourceType.BRANCH_SOURCED,
-    category: ItemCategory.RAW_MATERIAL,
-    unit: "kg",
-    minThreshold: 5.0,
-    businessId: business.id,
-  });
-
-  const ubeCake = await ensureItem({
-    name: "Purple Yam Cake (Finished)",
-    sourceType: ItemSourceType.FINISHED_PRODUCT,
-    category: ItemCategory.RAW_MATERIAL,
-    unit: "pcs",
-    minThreshold: 3.0,
-    businessId: business.id,
-  });
-
   // Actual Purple Yam stock-room item master from the uploaded inventory workbook.
   // Packaging is separated from ingredients used in production.
   await ensureItem({
@@ -316,66 +253,12 @@ async function main() {
     });
   }
 
-  await prisma.productionRecipe.upsert({
-    where: {
-      finishedItemId_ingredientItemId: {
-        finishedItemId: ubeCake.id,
-        ingredientItemId: yamFlour.id,
-      },
-    },
-    update: { requiredQuantity: 0.5 },
-    create: {
-      finishedItemId: ubeCake.id,
-      ingredientItemId: yamFlour.id,
-      requiredQuantity: 0.5,
-    },
-  });
-
-  await prisma.productionRecipe.upsert({
-    where: {
-      finishedItemId_ingredientItemId: {
-        finishedItemId: ubeCake.id,
-        ingredientItemId: condensedMilk.id,
-      },
-    },
-    update: { requiredQuantity: 1.0 },
-    create: {
-      finishedItemId: ubeCake.id,
-      ingredientItemId: condensedMilk.id,
-      requiredQuantity: 1.0,
-    },
-  });
-
-  await prisma.productionRecipe.upsert({
-    where: {
-      finishedItemId_ingredientItemId: {
-        finishedItemId: ubeCake.id,
-        ingredientItemId: butter.id,
-      },
-    },
-    update: { requiredQuantity: 0.2 },
-    create: {
-      finishedItemId: ubeCake.id,
-      ingredientItemId: butter.id,
-      requiredQuantity: 0.2,
-    },
-  });
-
-  // Only create missing stock rows.
-  // Existing quantities are deliberately preserved, so running db seed cannot
-  // reset real inventory after the client baseline is loaded.
-  await ensureStock(commissary.id, yamFlour.id, 100.0);
-  await ensureStock(commissary.id, condensedMilk.id, 30.0);
-  await ensureStock(commissary.id, butter.id, 10.0);
-  await ensureStock(commissary.id, ubeCake.id, 0.0);
-
-  for (const branch of [libertad, cabadbaran, sanFrancisco]) {
-    await ensureStock(branch.id, yamFlour.id, 15.0);
-    await ensureStock(branch.id, condensedMilk.id, 30.0);
-    await ensureStock(branch.id, butter.id, 10.0);
-    await ensureStock(branch.id, ubeCake.id, 5.0);
-  }
-
+  // Production recipes are intentionally not seeded from mock data.
+  // They must be configured from the business's approved recipe/formulation records.
+  
+  // Actual quantities are loaded through the audited Inventory Import workflow.
+  // Seed intentionally creates no inventory quantities.
+  
   console.log(
     "Database bootstrap completed. Existing inventory and transaction history were preserved."
   );
