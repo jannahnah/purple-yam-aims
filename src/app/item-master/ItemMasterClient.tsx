@@ -27,6 +27,7 @@ type Item = {
   sourceType: SourceType;
   category: Category;
   size: "SMALL" | "ROUND" | "MEDIUM" | "LARGE" | null;
+  isActive: boolean;
   unit: string;
   minThreshold: number;
   recipeAsFinished: RecipeIngredient[];
@@ -96,17 +97,53 @@ export default function ItemMasterClient() {
   const [recipeRows, setRecipeRows] = useState<RecipeRow[]>([]);
   const [recipeSaving, setRecipeSaving] = useState(false);
   const [recipeMessage, setRecipeMessage] = useState("");
+  const [toasts, setToasts] = useState<
+    Array<{ id: number; type: "success" | "error"; message: string }>
+  >([]);
+
+  const activeItems = useMemo(
+    () => items.filter((item) => item.isActive),
+    [items]
+  );
+
+  const archivedItems = useMemo(
+    () => items.filter((item) => !item.isActive),
+    [items]
+  );
 
   const finishedProducts = useMemo(
-    () => items.filter((item) => item.sourceType === "FINISHED_PRODUCT"),
-    [items]
+    () =>
+      activeItems.filter(
+        (item) => item.sourceType === "FINISHED_PRODUCT"
+      ),
+    [activeItems]
   );
 
   const recipeIngredients = useMemo(
     () =>
-      items.filter((item) => item.sourceType !== "FINISHED_PRODUCT"),
-    [items]
+      activeItems.filter(
+        (item) => item.sourceType !== "FINISHED_PRODUCT"
+      ),
+    [activeItems]
   );
+
+  function showToast(
+    type: "success" | "error",
+    message: string
+  ) {
+    const id = Date.now() + Math.floor(Math.random() * 1000);
+
+    setToasts((current) => [
+      ...current,
+      { id, type, message },
+    ]);
+
+    window.setTimeout(() => {
+      setToasts((current) =>
+        current.filter((toast) => toast.id !== id)
+      );
+    }, 3500);
+  }
 
   async function loadItems() {
     const response = await fetch("/api/item-master", {
@@ -210,15 +247,95 @@ export default function ItemMasterClient() {
 
       await loadItems();
       setShowItemModal(false);
-      setSuccess(
-        itemForm.id
-          ? "Item updated successfully."
-          : "Item created successfully."
-      );
+
+      const message = itemForm.id
+        ? "Item updated successfully."
+        : itemForm.sourceType === "FINISHED_PRODUCT"
+          ? "Finished product added successfully."
+          : "Item added successfully.";
+
+      setSuccess(message);
+      showToast("success", message);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save item.");
+      const message =
+        err instanceof Error ? err.message : "Failed to save item.";
+      setError(message);
+      showToast("error", message);
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function handleDeleteItem(item: Item) {
+    const label =
+      item.size
+        ? `${item.name} — ${item.size.charAt(0) + item.size.slice(1).toLowerCase()}`
+        : item.name;
+
+    if (
+      !window.confirm(
+        `Delete "${label}" from the active Item Master? Historical records will be preserved.`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `/api/item-master?id=${encodeURIComponent(item.id)}`,
+        { method: "DELETE" }
+      );
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error || "Failed to delete item."
+        );
+      }
+
+      await loadItems();
+      showToast("success", "Item deleted successfully.");
+      setSuccess("Item deleted successfully.");
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Failed to delete item.";
+      showToast("error", message);
+      setError(message);
+    }
+  }
+
+  async function handleRestoreItem(item: Item) {
+    try {
+      const response = await fetch("/api/item-master", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: item.id,
+          action: "restore",
+        }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error || "Failed to restore item."
+        );
+      }
+
+      await loadItems();
+      showToast("success", "Item restored successfully.");
+      setSuccess("Item restored successfully.");
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Failed to restore item.";
+      showToast("error", message);
+      setError(message);
     }
   }
 
@@ -316,10 +433,14 @@ export default function ItemMasterClient() {
       setRecipeRows([]);
       setRecipeMessage("");
       setSuccess("Recipe saved successfully.");
+      showToast("success", "Recipe saved successfully.");
     } catch (err) {
-      setRecipeMessage(
-        err instanceof Error ? err.message : "Failed to save recipe."
-      );
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Failed to save recipe.";
+      setRecipeMessage(message);
+      showToast("error", message);
     } finally {
       setRecipeSaving(false);
     }
@@ -346,10 +467,14 @@ export default function ItemMasterClient() {
 
       await loadItems();
       setRecipeMessage("Recipe cleared.");
+      showToast("success", "Recipe cleared successfully.");
     } catch (err) {
-      setRecipeMessage(
-        err instanceof Error ? err.message : "Failed to clear recipe."
-      );
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Failed to clear recipe.";
+      setRecipeMessage(message);
+      showToast("error", message);
     } finally {
       setRecipeSaving(false);
     }
@@ -399,7 +524,7 @@ export default function ItemMasterClient() {
               Total Items
             </p>
             <p className="mt-2 text-3xl font-bold text-gray-900">
-              {items.length}
+              {activeItems.length}
             </p>
           </div>
           <div className="aims-card p-5">
@@ -451,14 +576,14 @@ export default function ItemMasterClient() {
                       Loading Item Master...
                     </td>
                   </tr>
-                ) : items.length === 0 ? (
+                ) : activeItems.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-5 py-12 text-center text-sm text-gray-500">
+                    <td colSpan={8} className="px-5 py-12 text-center text-sm text-gray-500">
                       No items found.
                     </td>
                   </tr>
                 ) : (
-                  items.map((item) => (
+                  activeItems.map((item) => (
                     <tr key={item.id} className="hover:bg-gray-50">
                       <td className="px-5 py-4">
                         <span className="font-medium text-gray-900">{item.name}</span>
@@ -488,13 +613,50 @@ export default function ItemMasterClient() {
                           : "—"}
                       </td>
                       <td className="px-5 py-4">
-                        <button
-                          type="button"
-                          onClick={() => openEditItem(item)}
-                          className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 transition hover:bg-gray-50"
-                        >
-                          Edit
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => openEditItem(item)}
+                            title="Edit item"
+                            aria-label={`Edit ${item.name}`}
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-500 transition hover:border-purple-200 hover:bg-purple-50 hover:text-purple-700"
+                          >
+                            <svg
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="1.8"
+                              className="h-4 w-4"
+                              aria-hidden="true"
+                            >
+                              <path d="M12 20h9" />
+                              <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z" />
+                            </svg>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteItem(item)}
+                            title="Delete item"
+                            aria-label={`Delete ${item.name}`}
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-100 bg-red-50 text-red-600 transition hover:bg-red-100"
+                          >
+                            <svg
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="1.8"
+                              className="h-4 w-4"
+                              aria-hidden="true"
+                            >
+                              <path d="M3 6h18" />
+                              <path d="M8 6V4h8v2" />
+                              <path d="M19 6l-1 14H6L5 6" />
+                              <path d="M10 11v5" />
+                              <path d="M14 11v5" />
+                            </svg>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -504,9 +666,81 @@ export default function ItemMasterClient() {
           </div>
 
           <div className="border-t border-gray-100 bg-gray-50 px-5 py-4 text-xs text-gray-500">
-            Items with transaction history cannot change unit or source type. This preserves historical data integrity.
+            Delete removes the item from active use while preserving its audit and transaction history.
+            Items with remaining stock or active recipes cannot be deleted.
           </div>
         </section>
+
+        {archivedItems.length > 0 && (
+          <section className="aims-card overflow-hidden">
+            <div className="border-b border-gray-100 px-5 py-4">
+              <h2 className="text-base font-semibold text-gray-700">
+                Deleted Items
+              </h2>
+              <p className="mt-1 text-xs text-gray-500">
+                Deleted items remain stored for audit history and can be restored.
+              </p>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="aims-table min-w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    {["Item", "Size", "Type", "Unit", "Action"].map((heading) => (
+                      <th
+                        key={heading}
+                        className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500"
+                      >
+                        {heading}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {archivedItems.map((item) => (
+                    <tr key={item.id} className="bg-gray-50/70">
+                      <td className="px-5 py-4 font-medium text-gray-700">
+                        {item.name}
+                      </td>
+                      <td className="px-5 py-4 text-sm text-gray-500">
+                        {item.size
+                          ? item.size.charAt(0) +
+                            item.size.slice(1).toLowerCase()
+                          : "—"}
+                      </td>
+                      <td className="px-5 py-4 text-sm text-gray-500">
+                        {SOURCE_LABELS[item.sourceType]}
+                      </td>
+                      <td className="px-5 py-4 text-sm text-gray-500">
+                        {item.unit}
+                      </td>
+                      <td className="px-5 py-4">
+                        <button
+                          type="button"
+                          onClick={() => handleRestoreItem(item)}
+                          title="Restore item"
+                          aria-label={`Restore ${item.name}`}
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-green-100 bg-green-50 text-green-700 transition hover:bg-green-100"
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            className="h-4 w-4"
+                            aria-hidden="true"
+                          >
+                            <path d="M9 14 4 9l5-5" />
+                            <path d="M4 9h9a6 6 0 0 1 6 6v1" />
+                          </svg>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
 
         <section className="aims-card p-5 sm:p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -668,6 +902,33 @@ export default function ItemMasterClient() {
           )}
         </section>
       </div>
+
+      {toasts.length > 0 && (
+        <div className="fixed bottom-5 right-5 z-[200] flex w-[min(92vw,420px)] flex-col gap-2">
+          {toasts.map((toast) => (
+            <div
+              key={toast.id}
+              className={
+                toast.type === "success"
+                  ? "flex items-start gap-3 rounded-xl border border-emerald-200 bg-white px-4 py-3 text-sm text-emerald-800 shadow-xl"
+                  : "flex items-start gap-3 rounded-xl border border-red-200 bg-white px-4 py-3 text-sm text-red-800 shadow-xl"
+              }
+              role="status"
+            >
+              <span
+                className={
+                  toast.type === "success"
+                    ? "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100"
+                    : "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-100"
+                }
+              >
+                {toast.type === "success" ? "✓" : "!"}
+              </span>
+              <p className="leading-relaxed">{toast.message}</p>
+            </div>
+          ))}
+        </div>
+      )}
 
       {showItemModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4">
