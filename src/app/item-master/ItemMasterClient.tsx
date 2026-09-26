@@ -741,6 +741,7 @@ export default function ItemMasterClient() {
               </table>
             </div>
           </section>
+        )}
 
         <section className="aims-card p-5 sm:p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
