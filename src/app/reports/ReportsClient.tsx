@@ -970,7 +970,7 @@ export default function ReportsClient({
 
                     <tbody className="divide-y divide-gray-100">
                       {data.transactions.length === 0 ? (
-                        <EmptyRow colSpan={7} />
+                        <EmptyRow colSpan={9} />
                       ) : (
                         data.transactions.map(
                           (transaction) => {
@@ -1019,6 +1019,15 @@ export default function ReportsClient({
                                   {transaction.branch.name}
                                 </td>
 
+                                <td className="px-5 py-4 text-right font-mono text-gray-700">
+                                  {transaction.previousQuantity === null
+                                    ? "—"
+                                    : formatQuantity(transaction.previousQuantity)}
+                                  {transaction.previousQuantity !== null && (
+                                    <> {transaction.item.unit}</>
+                                  )}
+                                </td>
+
                                 <td
                                   className={`px-5 py-4 text-right font-mono font-bold ${
                                     isIncrease
@@ -1031,6 +1040,15 @@ export default function ReportsClient({
                                     transaction.quantityDelta
                                   )}{" "}
                                   {transaction.item.unit}
+                                </td>
+
+                                <td className="px-5 py-4 text-right font-mono font-semibold text-gray-900">
+                                  {transaction.newQuantity === null
+                                    ? "—"
+                                    : formatQuantity(transaction.newQuantity)}
+                                  {transaction.newQuantity !== null && (
+                                    <> {transaction.item.unit}</>
+                                  )}
                                 </td>
 
                                 <td className="px-5 py-4">
