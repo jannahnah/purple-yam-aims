@@ -26,7 +26,6 @@ export default async function InventoryPage() {
       : { branchId: "__NO_BRANCH__" };
 
   const stockRecords = await prisma.branchStock.findMany({
-    where: branchFilter,
     where: {
       ...branchFilter,
       item: {
