@@ -178,6 +178,9 @@ async function validateRows(
 
     const item = itemId ? itemsById.get(itemId) : itemsByName.get(canonicalItemName(itemName));
     if (!item) throw new Error(`${rowLabel}: Item "${itemName || itemId}" does not exist in AIMS.`);
+    if (!item.isActive) {
+      throw new Error(`${rowLabel}: Item "${item.name}" has been deleted from the active Item Master and cannot be imported.`);
+    }
 
     const requestedBranchId =
       branchId || branchesByName.get(normalizeName(branchName))?.id;
