@@ -38,7 +38,12 @@ export async function GET() {
      * Uses the real BranchStock + Item + Branch records.
      */
     const inventory = await prisma.branchStock.findMany({
-      where: branchWhere,
+      where: {
+        ...branchWhere,
+        item: {
+          isActive: true,
+        },
+      },
       include: {
         item: true,
         branch: true,
