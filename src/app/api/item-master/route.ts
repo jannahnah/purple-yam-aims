@@ -155,19 +155,32 @@ export async function POST(request: Request) {
       );
     }
 
-    const item = await prisma.item.create({
-      data: {
-        name,
-        unit,
-        sourceType: sourceType as (typeof SOURCE_TYPES)[number],
-        // FINISHED_PRODUCT is identified by sourceType in the current schema.
-        category:
-          sourceType === "FINISHED_PRODUCT"
-            ? "RAW_MATERIAL"
-            : category as (typeof CATEGORIES)[number],
-        minThreshold: threshold,
-        businessId: auth.currentUser.businessId!,
-      },
+    const item = await prisma.$transaction(async (tx) => {
+      const created = await tx.item.create({
+        data: {
+          name,
+          unit,
+          sourceType: sourceType as (typeof SOURCE_TYPES)[number],
+          category:
+            sourceType === "FINISHED_PRODUCT"
+              ? "RAW_MATERIAL"
+              : category as (typeof CATEGORIES)[number],
+          minThreshold: threshold,
+          businessId: auth.currentUser.businessId!,
+        },
+      });
+
+      await tx.itemAuditLog.create({
+        data: {
+          itemId: created.id,
+          performedById: auth.currentUser.id,
+          action: "CREATE",
+          field: "item",
+          currentValue: created.name,
+        },
+      });
+
+      return created;
     });
 
     return NextResponse.json(item, { status: 201 });
@@ -268,18 +281,70 @@ export async function PUT(request: Request) {
       );
     }
 
-    const updated = await prisma.item.update({
-      where: { id },
-      data: {
-        name,
-        unit,
-        sourceType: sourceType as (typeof SOURCE_TYPES)[number],
-        category:
-          sourceType === "FINISHED_PRODUCT"
-            ? "RAW_MATERIAL"
-            : category as (typeof CATEGORIES)[number],
-        minThreshold: threshold,
-      },
+    const updated = await prisma.$transaction(async (tx) => {
+      const saved = await tx.item.update({
+        where: { id },
+        data: {
+          name,
+          unit,
+          sourceType: sourceType as (typeof SOURCE_TYPES)[number],
+          category:
+            sourceType === "FINISHED_PRODUCT"
+              ? "RAW_MATERIAL"
+              : category as (typeof CATEGORIES)[number],
+          minThreshold: threshold,
+        },
+      });
+
+      const auditRows: Array<{
+        itemId: string;
+        performedById: string;
+        action: string;
+        field: string;
+        previousValue: string;
+        currentValue: string;
+      }> = [];
+
+      if (item.name !== saved.name) {
+        auditRows.push({
+          itemId: id,
+          performedById: auth.currentUser.id,
+          action: "UPDATE",
+          field: "name",
+          previousValue: item.name,
+          currentValue: saved.name,
+        });
+      }
+
+      if (item.category !== saved.category) {
+        auditRows.push({
+          itemId: id,
+          performedById: auth.currentUser.id,
+          action: "UPDATE",
+          field: "category",
+          previousValue: item.category,
+          currentValue: saved.category,
+        });
+      }
+
+      if (item.minThreshold !== saved.minThreshold) {
+        auditRows.push({
+          itemId: id,
+          performedById: auth.currentUser.id,
+          action: "UPDATE",
+          field: "minThreshold",
+          previousValue: String(item.minThreshold),
+          currentValue: String(saved.minThreshold),
+        });
+      }
+
+      if (auditRows.length) {
+        await tx.itemAuditLog.createMany({
+          data: auditRows,
+        });
+      }
+
+      return saved;
     });
 
     return NextResponse.json(updated);
