@@ -111,7 +111,10 @@ export default function StockActionsModal({
       user.branchId ?? branches[0]?.id ?? "";
     const defaultItemId = items[0]?.id ?? "";
     const initialSourceBranchId =
-      user.branchId ?? sourceBranchId || branches[0]?.id || "";
+      user.branchId ??
+      sourceBranchId ??
+      branches[0]?.id ??
+      "";
 
     const defaultDestination = transferBranches.find(
       (branch) => branch.id !== initialSourceBranchId
