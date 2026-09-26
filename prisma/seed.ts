@@ -188,17 +188,6 @@ async function main() {
 
   // Actual Purple Yam stock-room item master from the uploaded inventory workbook.
   // Packaging is separated from ingredients used in production.
-  // Verified finished product name from the business interview.
-  // No stock or recipe is seeded until the approved product/recipe records are provided.
-  await ensureItem({
-    name: "Ube Cake",
-    sourceType: ItemSourceType.FINISHED_PRODUCT,
-    category: ItemCategory.RAW_MATERIAL,
-    unit: "pcs",
-    minThreshold: 0.0,
-    businessId: business.id,
-  });
-
   await ensureItem({
     name: "Premix Dry (UBE)",
     sourceType: ItemSourceType.COMMISSARY_SUPPLIED,
