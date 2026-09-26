@@ -179,9 +179,24 @@ async function validateRows(
     const item = itemId ? itemsById.get(itemId) : itemsByName.get(canonicalItemName(itemName));
     if (!item) throw new Error(`${rowLabel}: Item "${itemName || itemId}" does not exist in AIMS.`);
 
-    const resolvedBranchId = currentUser.role === "BRANCH_MANAGER"
-      ? currentUser.branchId!
-      : branchId || branchesByName.get(normalizeName(branchName))?.id;
+    const requestedBranchId =
+      branchId || branchesByName.get(normalizeName(branchName))?.id;
+
+    if (
+      currentUser.role === "BRANCH_MANAGER" &&
+      requestedBranchId &&
+      requestedBranchId !== currentUser.branchId
+    ) {
+      const requestedBranch = branchesById.get(requestedBranchId);
+      throw new Error(
+        `${rowLabel}: Branch "${requestedBranch?.name ?? branchName ?? branchId}" is outside your assigned branch.`
+      );
+    }
+
+    const resolvedBranchId =
+      currentUser.role === "BRANCH_MANAGER"
+        ? currentUser.branchId!
+        : requestedBranchId;
     const branch = resolvedBranchId ? branchesById.get(resolvedBranchId) : undefined;
     if (!branch) throw new Error(`${rowLabel}: Branch "${branchName || branchId}" does not exist in AIMS.`);
     if (item.unit.toLowerCase() === "pcs" && !Number.isInteger(importedQuantity)) {
