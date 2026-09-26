@@ -114,16 +114,6 @@ export async function GET(req: Request) {
               },
             });
           }
-        } else if (existingAlert) {
-          await tx.reorderAlert.update({
-            where: {
-              id: existingAlert.id,
-            },
-            data: {
-              status: "RESOLVED",
-            },
-          });
-        }
       }
     });
 
@@ -207,6 +197,84 @@ export async function GET(req: Request) {
       {
         status: 500,
       }
+    );
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const currentUser = await getCurrentUser();
+
+    if (!currentUser) {
+      return NextResponse.json({ error: "You must be logged in." }, { status: 401 });
+    }
+
+    if (
+      currentUser.role !== "OWNER" &&
+      currentUser.role !== "BRANCH_MANAGER"
+    ) {
+      return NextResponse.json(
+        { error: "Only the Owner or Branch Manager can resolve reorder alerts." },
+        { status: 403 }
+      );
+    }
+
+    const body = await request.json();
+    const alertId =
+      typeof body.alertId === "string" ? body.alertId.trim() : "";
+
+    if (!alertId) {
+      return NextResponse.json(
+        { error: "Alert ID is required." },
+        { status: 400 }
+      );
+    }
+
+    const alert = await prisma.reorderAlert.findUnique({
+      where: { id: alertId },
+      select: {
+        id: true,
+        branchId: true,
+        itemId: true,
+        status: true,
+      },
+    });
+
+    if (!alert) {
+      return NextResponse.json(
+        { error: "Reorder alert not found." },
+        { status: 404 }
+      );
+    }
+
+    if (!canAccessBranch(currentUser, alert.branchId)) {
+      return NextResponse.json(
+        { error: "You cannot resolve alerts for this branch." },
+        { status: 403 }
+      );
+    }
+
+    if (alert.status !== "PENDING") {
+      return NextResponse.json(
+        { error: "This reorder alert is already resolved." },
+        { status: 409 }
+      );
+    }
+
+    const updated = await prisma.reorderAlert.update({
+      where: { id: alert.id },
+      data: { status: "RESOLVED" },
+    });
+
+    return NextResponse.json(
+      { success: true, alert: updated },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Failed to resolve reorder alert:", error);
+    return NextResponse.json(
+      { error: "Failed to resolve reorder alert." },
+      { status: 500 }
     );
   }
 }
