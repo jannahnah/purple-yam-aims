@@ -194,6 +194,7 @@ export async function POST(request: Request) {
             sourceType === "FINISHED_PRODUCT"
               ? finishedSize
               : null,
+          isActive: true,
           minThreshold: threshold,
           businessId: auth.currentUser.businessId!,
         },
@@ -415,6 +416,245 @@ export async function PUT(request: Request) {
     console.error("PUT /api/item-master error:", error);
     return NextResponse.json(
       { error: "Failed to update item." },
+      { status: 500 }
+    );
+  }
+}
+
+
+export async function DELETE(request: Request) {
+  try {
+    const auth = await requireOwner();
+    if ("response" in auth) return auth.response;
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id")?.trim();
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "Item ID is required." },
+        { status: 400 }
+      );
+    }
+
+    const item = await prisma.item.findFirst({
+      where: {
+        id,
+        businessId: auth.currentUser.businessId!,
+      },
+      select: {
+        id: true,
+        name: true,
+        size: true,
+        isActive: true,
+      },
+    });
+
+    if (!item) {
+      return NextResponse.json(
+        { error: "Item not found." },
+        { status: 404 }
+      );
+    }
+
+    if (!item.isActive) {
+      return NextResponse.json(
+        { error: "This item is already deleted." },
+        { status: 409 }
+      );
+    }
+
+    const [stockCount, recipeAsFinishedCount, recipeAsIngredientCount, pendingAlertCount] =
+      await Promise.all([
+        prisma.branchStock.count({
+          where: {
+            itemId: id,
+            quantity: { gt: 0 },
+          },
+        }),
+        prisma.productionRecipe.count({
+          where: { finishedItemId: id },
+        }),
+        prisma.productionRecipe.count({
+          where: { ingredientItemId: id },
+        }),
+        prisma.reorderAlert.count({
+          where: {
+            itemId: id,
+            status: "PENDING",
+          },
+        }),
+      ]);
+
+    if (stockCount > 0) {
+      return NextResponse.json(
+        {
+          error:
+            "This item still has stock in one or more branches. Reduce the stock to zero before deleting it.",
+        },
+        { status: 409 }
+      );
+    }
+
+    if (recipeAsFinishedCount > 0) {
+      return NextResponse.json(
+        {
+          error:
+            "This finished product has a production recipe. Clear the recipe before deleting the item.",
+        },
+        { status: 409 }
+      );
+    }
+
+    if (recipeAsIngredientCount > 0) {
+      return NextResponse.json(
+        {
+          error:
+            "This item is used by one or more production recipes. Remove it from those recipes before deleting it.",
+        },
+        { status: 409 }
+      );
+    }
+
+    if (pendingAlertCount > 0) {
+      return NextResponse.json(
+        {
+          error:
+            "This item has a pending reorder alert. Resolve the alert before deleting the item.",
+        },
+        { status: 409 }
+      );
+    }
+
+    const deletedItem = await prisma.$transaction(async (tx) => {
+      const updated = await tx.item.update({
+        where: { id },
+        data: { isActive: false },
+      });
+
+      await tx.itemAuditLog.create({
+        data: {
+          itemId: id,
+          performedById: auth.currentUser.id,
+          action: "DELETE",
+          field: "isActive",
+          previousValue: "true",
+          currentValue: "false",
+        },
+      });
+
+      return updated;
+    });
+
+    return NextResponse.json({
+      success: true,
+      item: deletedItem,
+      message: "Item deleted successfully.",
+    });
+  } catch (error) {
+    console.error("DELETE /api/item-master error:", error);
+    return NextResponse.json(
+      { error: "Failed to delete item." },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const auth = await requireOwner();
+    if ("response" in auth) return auth.response;
+
+    const body = await request.json();
+    const id = cleanString(body.id);
+    const action = cleanString(body.action);
+
+    if (action !== "restore" || !id) {
+      return NextResponse.json(
+        { error: "A valid restore action and item ID are required." },
+        { status: 400 }
+      );
+    }
+
+    const item = await prisma.item.findFirst({
+      where: {
+        id,
+        businessId: auth.currentUser.businessId!,
+      },
+      select: {
+        id: true,
+        name: true,
+        size: true,
+        isActive: true,
+      },
+    });
+
+    if (!item) {
+      return NextResponse.json(
+        { error: "Item not found." },
+        { status: 404 }
+      );
+    }
+
+    if (item.isActive) {
+      return NextResponse.json(
+        { error: "This item is already active." },
+        { status: 409 }
+      );
+    }
+
+    const duplicate = await prisma.item.findFirst({
+      where: {
+        businessId: auth.currentUser.businessId!,
+        name: {
+          equals: item.name,
+          mode: "insensitive",
+        },
+        isActive: true,
+        ...(item.sourceType === "FINISHED_PRODUCT"
+          ? { size: item.size }
+          : {}),
+        NOT: { id },
+      },
+      select: { id: true },
+    });
+
+    if (duplicate) {
+      return NextResponse.json(
+        { error: "An active item with the same name already exists." },
+        { status: 409 }
+      );
+    }
+
+    const restored = await prisma.$transaction(async (tx) => {
+      const updated = await tx.item.update({
+        where: { id },
+        data: { isActive: true },
+      });
+
+      await tx.itemAuditLog.create({
+        data: {
+          itemId: id,
+          performedById: auth.currentUser.id,
+          action: "RESTORE",
+          field: "isActive",
+          previousValue: "false",
+          currentValue: "true",
+        },
+      });
+
+      return updated;
+    });
+
+    return NextResponse.json({
+      success: true,
+      item: restored,
+      message: "Item restored successfully.",
+    });
+  } catch (error) {
+    console.error("PATCH /api/item-master error:", error);
+    return NextResponse.json(
+      { error: "Failed to restore item." },
       { status: 500 }
     );
   }
