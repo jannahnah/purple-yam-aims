@@ -77,16 +77,6 @@ export async function GET(req: Request) {
               },
             });
           }
-        } else if (existingNotification) {
-          await tx.reorderAlert.update({
-            where: {
-              id: existingNotification.id,
-            },
-            data: {
-              status: "RESOLVED",
-            },
-          });
-        }
       }
     });
 
