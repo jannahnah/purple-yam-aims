@@ -1,12 +1,48 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth/current-user";
+import { canAccessBranch } from "@/lib/auth/authorization";
 
 export async function GET(request: Request) {
   try {
+    const currentUser = await getCurrentUser();
+
+    if (!currentUser) {
+      return NextResponse.json(
+        { error: "Unauthorized." },
+        { status: 401 }
+      );
+    }
+
+    if (
+      currentUser.role !== "OWNER" &&
+      currentUser.role !== "BRANCH_MANAGER"
+    ) {
+      return NextResponse.json(
+        { error: "You do not have permission to view production recipes." },
+        { status: 403 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
 
     const finishedItemId = searchParams.get("finishedItemId");
-    const branchId = searchParams.get("branchId");
+    const requestedBranchId = searchParams.get("branchId");
+    const branchId =
+      currentUser.role === "OWNER"
+        ? requestedBranchId
+        : currentUser.branchId;
+
+    if (
+      currentUser.role === "BRANCH_MANAGER" &&
+      requestedBranchId &&
+      !canAccessBranch(currentUser, requestedBranchId)
+    ) {
+      return NextResponse.json(
+        { error: "You cannot access production data for this branch." },
+        { status: 403 }
+      );
+    }
 
     if (!finishedItemId) {
       return NextResponse.json(
