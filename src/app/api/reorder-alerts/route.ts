@@ -261,6 +261,40 @@ export async function PATCH(request: Request) {
       );
     }
 
+    const stock = await prisma.branchStock.findUnique({
+      where: {
+        branchId_itemId: {
+          branchId: alert.branchId,
+          itemId: alert.itemId,
+        },
+      },
+      select: {
+        quantity: true,
+        item: {
+          select: {
+            minThreshold: true,
+          },
+        },
+      },
+    });
+
+    if (!stock) {
+      return NextResponse.json(
+        { error: "Current inventory record was not found." },
+        { status: 404 }
+      );
+    }
+
+    if (stock.quantity <= stock.item.minThreshold) {
+      return NextResponse.json(
+        {
+          error:
+            "This alert cannot be resolved until stock is above the minimum threshold.",
+        },
+        { status: 409 }
+      );
+    }
+
     const updated = await prisma.reorderAlert.update({
       where: { id: alert.id },
       data: { status: "RESOLVED" },
