@@ -26,6 +26,7 @@ type Item = {
   name: string;
   sourceType: SourceType;
   category: Category;
+  size: "SMALL" | "ROUND" | "MEDIUM" | "LARGE" | null;
   unit: string;
   minThreshold: number;
   recipeAsFinished: RecipeIngredient[];
@@ -66,6 +67,7 @@ function createEmptyItemForm() {
     name: "",
     sourceType: "BRANCH_SOURCED" as SourceType,
     category: "RAW_MATERIAL" as Category,
+    size: "" as "" | "SMALL" | "ROUND" | "MEDIUM" | "LARGE",
     unit: "pcs",
     minThreshold: "0",
   };
@@ -175,6 +177,7 @@ export default function ItemMasterClient() {
       category: item.sourceType === "FINISHED_PRODUCT"
         ? "RAW_MATERIAL"
         : item.category,
+      size: item.size ?? "",
       unit: item.unit,
       minThreshold: String(item.minThreshold),
     });
@@ -425,7 +428,7 @@ export default function ItemMasterClient() {
             <table className="aims-table min-w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  {["Item", "Type", "Category", "Unit", "Threshold", "Recipe", "Action"].map((heading) => (
+                  {["Item", "Size", "Type", "Category", "Unit", "Threshold", "Recipe", "Action"].map((heading) => (
                     <th
                       key={heading}
                       className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500"
@@ -438,7 +441,7 @@ export default function ItemMasterClient() {
               <tbody className="divide-y divide-gray-100">
                 {loading ? (
                   <tr>
-                    <td colSpan={7} className="px-5 py-12 text-center text-sm text-gray-500">
+                    <td colSpan={8} className="px-5 py-12 text-center text-sm text-gray-500">
                       Loading Item Master...
                     </td>
                   </tr>
@@ -453,6 +456,11 @@ export default function ItemMasterClient() {
                     <tr key={item.id} className="hover:bg-gray-50">
                       <td className="px-5 py-4">
                         <span className="font-medium text-gray-900">{item.name}</span>
+                      </td>
+                      <td className="px-5 py-4 text-sm text-gray-600">
+                        {item.size
+                          ? item.size.charAt(0) + item.size.slice(1).toLowerCase()
+                          : "—"}
                       </td>
                       <td className="px-5 py-4">
                         <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${sourceBadgeClass(item.sourceType)}`}>
@@ -697,6 +705,10 @@ export default function ItemMasterClient() {
                           event.target.value === "FINISHED_PRODUCT"
                             ? "RAW_MATERIAL"
                             : form.category,
+                        size:
+                          event.target.value === "FINISHED_PRODUCT"
+                            ? form.size
+                            : "",
                       }))
                     }
                     className="aims-control w-full px-3 text-sm"
@@ -706,6 +718,34 @@ export default function ItemMasterClient() {
                     <option value="FINISHED_PRODUCT">Finished Product</option>
                   </select>
                 </div>
+
+                {itemForm.sourceType === "FINISHED_PRODUCT" && (
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                      Finished Product Size
+                    </label>
+                    <select
+                      value={itemForm.size}
+                      onChange={(event) =>
+                        setItemForm((form) => ({
+                          ...form,
+                          size: event.target.value as ItemForm["size"],
+                        }))
+                      }
+                      className="aims-control w-full px-3 text-sm"
+                      required
+                    >
+                      <option value="">Select size</option>
+                      <option value="SMALL">Small</option>
+                      <option value="ROUND">Round</option>
+                      <option value="MEDIUM">Medium</option>
+                      <option value="LARGE">Large</option>
+                    </select>
+                    <p className="mt-1 text-xs text-gray-400">
+                      Each finished-product size is a separate stock and recipe record.
+                    </p>
+                  </div>
+                )}
 
                 {itemForm.sourceType !== "FINISHED_PRODUCT" && (
                   <div>
