@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { formatItemLabel } from "@/lib/item-label";
 
 type Transaction = {
   id: string;
@@ -28,6 +29,7 @@ type Transaction = {
 
   item: {
     name: string;
+    size?: "SMALL" | "ROUND" | "MEDIUM" | "LARGE" | null;
     unit: string;
     sourceType: string;
   };
@@ -75,7 +77,7 @@ export default function TransactionHistory({
       Array.from(
         new Set(
           transactions.map(
-            (transaction) => transaction.item.name
+            (transaction) => formatItemLabel(transaction.item)
           )
         )
       ).sort(),

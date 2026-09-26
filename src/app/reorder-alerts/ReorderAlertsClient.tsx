@@ -131,6 +131,41 @@ export default function ReorderAlertsClient({
     });
   }
 
+  async function resolveAlert(alertId: string) {
+    try {
+      setError("");
+      const response = await fetch("/api/reorder-alerts", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ alertId }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data?.error || "Failed to resolve reorder alert."
+        );
+      }
+
+      setAlerts((current) =>
+        current.map((alert) =>
+          alert.id === alertId
+            ? { ...alert, status: "RESOLVED" }
+            : alert
+        )
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to resolve reorder alert."
+      );
+    }
+  }
+
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-6">
       {/* Page Header */}
@@ -194,8 +229,8 @@ export default function ReorderAlertsClient({
 
             <p className="mt-0.5 text-xs text-red-600">
               Review these items and initiate replenishment as
-              needed. Alerts are automatically resolved when
-              stock rises above the minimum threshold.
+              needed. An alert remains pending until an Owner or
+              Branch Manager manually resolves it.
             </p>
           </div>
         </div>
@@ -281,6 +316,9 @@ export default function ReorderAlertsClient({
                   <th className="whitespace-nowrap px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Status
                   </th>
+                  <th className="whitespace-nowrap px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    Action
+                  </th>
                 </tr>
               </thead>
 
@@ -344,6 +382,15 @@ export default function ReorderAlertsClient({
                           Pending
                         </span>
                       </td>
+                      <td className="whitespace-nowrap px-5 py-4">
+                        <button
+                          type="button"
+                          onClick={() => resolveAlert(alert.id)}
+                          className="rounded-lg border border-green-200 bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-700 transition hover:bg-green-100"
+                        >
+                          Mark Resolved
+                        </button>
+                      </td>
                     </tr>
                   );
                 })}
@@ -362,8 +409,8 @@ export default function ReorderAlertsClient({
             </h2>
 
             <p className="mt-0.5 text-xs text-gray-400">
-              Previously triggered alerts that have automatically
-              resolved after stock moved above the threshold.
+              Previously triggered alerts that were manually
+              resolved by an Owner or Branch Manager.
             </p>
           </div>
 

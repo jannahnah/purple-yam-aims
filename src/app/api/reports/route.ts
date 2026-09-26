@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/current-user";
+import { formatItemLabel } from "@/lib/item-label";
 
 export async function GET() {
   try {
@@ -37,7 +38,12 @@ export async function GET() {
      * Uses the real BranchStock + Item + Branch records.
      */
     const inventory = await prisma.branchStock.findMany({
-      where: branchWhere,
+      where: {
+        ...branchWhere,
+        item: {
+          isActive: true,
+        },
+      },
       include: {
         item: true,
         branch: true,
@@ -192,7 +198,7 @@ export async function GET() {
           ).toISOString(),
           item: {
             id: primary.item.id,
-            name: primary.item.name,
+            name: formatItemLabel(primary.item),
             unit: primary.item.unit,
             sourceType: primary.item.sourceType,
           },
@@ -232,7 +238,7 @@ export async function GET() {
           },
           item: {
             id: stock.item.id,
-            name: stock.item.name,
+            name: formatItemLabel(stock.item),
             sourceType: stock.item.sourceType,
             unit: stock.item.unit,
             minThreshold: stock.item.minThreshold,
@@ -249,7 +255,7 @@ export async function GET() {
           },
           item: {
             id: transaction.item.id,
-            name: transaction.item.name,
+            name: formatItemLabel(transaction.item),
             unit: transaction.item.unit,
           },
           quantity: Math.abs(transaction.quantityDelta),
@@ -265,7 +271,7 @@ export async function GET() {
           },
           item: {
             id: transaction.item.id,
-            name: transaction.item.name,
+            name: formatItemLabel(transaction.item),
             unit: transaction.item.unit,
           },
           quantity: transaction.quantityDelta,
@@ -288,7 +294,7 @@ export async function GET() {
           },
           item: {
             id: transaction.item.id,
-            name: transaction.item.name,
+            name: formatItemLabel(transaction.item),
             unit: transaction.item.unit,
             sourceType: transaction.item.sourceType,
           },

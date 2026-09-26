@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { recordSale } from "@/app/actions/sales";
+import { formatItemLabel } from "@/lib/item-label";
 
 interface Branch {
   id: string;
@@ -11,6 +12,7 @@ interface Branch {
 interface Item {
   id: string;
   name: string;
+  size?: "SMALL" | "ROUND" | "MEDIUM" | "LARGE" | null;
   unit: string;
   sourceType: string;
 }
@@ -236,7 +238,7 @@ export default function SalesModal({
                   >
                     {finishedItems.map((item) => (
                       <option key={item.id} value={item.id}>
-                        {item.name}
+                        {formatItemLabel(item)}
                       </option>
                     ))}
                   </select>

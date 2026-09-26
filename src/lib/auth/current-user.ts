@@ -2,7 +2,13 @@ import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { verifySessionToken } from "@/lib/auth/session";
 
-export async function getCurrentUser() {
+type GetCurrentUserOptions = {
+  allowPasswordChange?: boolean;
+};
+
+export async function getCurrentUser(
+  options: GetCurrentUserOptions = {}
+) {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get("purple_yam_session")?.value;
 
@@ -39,6 +45,17 @@ export async function getCurrentUser() {
       },
     },
   });
+
+  if (!user || user.status !== "ACTIVE") {
+    return null;
+  }
+
+  if (
+    user.mustChangePassword &&
+    !options.allowPasswordChange
+  ) {
+    return null;
+  }
 
   return user;
 }

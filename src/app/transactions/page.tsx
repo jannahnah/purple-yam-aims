@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth/current-user";
 import { redirect } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import TransactionHistory from "./TransactionHistory";
+import { formatItemLabel } from "@/lib/item-label";
 
 export const revalidate = 0;
 
@@ -111,6 +112,7 @@ export default async function TransactionsPage() {
 
             item: {
               name: transaction.item.name,
+              size: transaction.item.size,
               unit: transaction.item.unit,
               sourceType:
                 transaction.item.sourceType,

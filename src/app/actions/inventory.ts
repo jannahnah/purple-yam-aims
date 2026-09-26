@@ -55,6 +55,10 @@ export async function adjustStock({
       throw new Error("Item not found.");
     }
 
+    if (!item.isActive) {
+      throw new Error("This item is deleted or inactive.");
+    }
+
     const branch = await tx.branch.findUnique({
       where: { id: branchId },
     });

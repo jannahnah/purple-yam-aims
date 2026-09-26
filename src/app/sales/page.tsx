@@ -2,6 +2,7 @@ import { requireRole } from "@/lib/auth/authorization";
 import { prisma } from "@/lib/prisma";
 import AppShell from "@/components/AppShell";
 import SalesClient from "./SalesClient";
+import { formatItemLabel } from "@/lib/item-label";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,7 @@ export default async function SalesPage() {
       prisma.item.findMany({
         where: {
           sourceType: "FINISHED_PRODUCT",
+          isActive: true,
         },
         orderBy: {
           name: "asc",
@@ -30,6 +32,7 @@ export default async function SalesPage() {
           branchId,
           item: {
             sourceType: "FINISHED_PRODUCT",
+            isActive: true,
           },
         },
         include: {
@@ -52,6 +55,7 @@ export default async function SalesPage() {
           item: {
             select: {
               name: true,
+              size: true,
               unit: true,
             },
           },
@@ -81,6 +85,7 @@ export default async function SalesPage() {
         products={finishedItems.map((item) => ({
           id: item.id,
           name: item.name,
+          size: item.size,
           unit: item.unit,
         }))}
         stock={branchStock.map((record) => ({
@@ -90,6 +95,7 @@ export default async function SalesPage() {
         salesHistory={salesHistory.map((sale) => ({
           id: sale.id,
           productName: sale.item.name,
+          size: sale.item.size,
           unit: sale.item.unit,
           quantity: Math.abs(Number(sale.quantityDelta)),
           createdAt: sale.createdAt.toISOString(),

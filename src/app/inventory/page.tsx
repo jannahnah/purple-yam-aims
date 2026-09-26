@@ -26,7 +26,12 @@ export default async function InventoryPage() {
       : { branchId: "__NO_BRANCH__" };
 
   const stockRecords = await prisma.branchStock.findMany({
-    where: branchFilter,
+    where: {
+      ...branchFilter,
+      item: {
+        isActive: true,
+      },
+    },
     include: {
       item: true,
       branch: true,
@@ -72,6 +77,9 @@ export default async function InventoryPage() {
   });
 
   const items = await prisma.item.findMany({
+    where: {
+      isActive: true,
+    },
     orderBy: {
       name: "asc",
     },

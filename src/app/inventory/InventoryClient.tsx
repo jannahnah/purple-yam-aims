@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import StockActionsModal from "./StockActionsModal";
 import ProductionModal from "./ProductionModal";
 import SalesModal from "./SalesModal";
+import { formatItemLabel } from "@/lib/item-label";
 
 type Role = "OWNER" | "BRANCH_MANAGER" | "CASHIER";
 
@@ -15,6 +16,7 @@ type Branch = {
 type Item = {
   id: string;
   name: string;
+  size?: "SMALL" | "ROUND" | "MEDIUM" | "LARGE" | null;
   sourceType: string;
   unit: string;
   minThreshold: number;
@@ -141,7 +143,7 @@ export default function InventoryClient({
     return stockRecords.filter((stock) => {
       const matchesSearch =
         normalizedSearch === "" ||
-        stock.item.name
+        formatItemLabel(stock.item)
           .toLowerCase()
           .includes(normalizedSearch) ||
         stock.branch.name

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { logProductionRun } from "@/app/actions/production";
+import { formatItemLabel } from "@/lib/item-label";
 
 interface Branch {
   id: string;
@@ -11,6 +12,7 @@ interface Branch {
 interface Item {
   id: string;
   name: string;
+  size?: "SMALL" | "ROUND" | "MEDIUM" | "LARGE" | null;
   unit: string;
   sourceType: string;
 }
@@ -27,6 +29,7 @@ interface RecipeResponse {
   finishedItem: {
     id: string;
     name: string;
+    size?: "SMALL" | "ROUND" | "MEDIUM" | "LARGE" | null;
     unit: string;
     sourceType: string;
   };
@@ -358,7 +361,7 @@ export default function ProductionModal({
                   >
                     {finishedItems.map((item) => (
                       <option key={item.id} value={item.id}>
-                        {item.name}
+                        {formatItemLabel(item)}
                       </option>
                     ))}
                   </select>

@@ -1,116 +1,281 @@
-import { PrismaClient, Role, ItemSourceType } from "@prisma/client";
+import {
+  PrismaClient,
+  Role,
+  ItemCategory,
+  ItemSourceType,
+} from "@prisma/client";
+import { hashPassword } from "../src/lib/auth/password";
 
 const prisma = new PrismaClient();
 
+async function ensureUser(data: {
+  username: string;
+  email: string;
+  password: string;
+  role: Role;
+  branchId: string | null;
+  businessId: string;
+  mustChangePassword: boolean;
+}) {
+  const existing = await prisma.user.findUnique({
+    where: { username: data.username },
+  });
+
+  if (existing) {
+    return existing;
+  }
+
+  return prisma.user.create({ data });
+}
+
+async function ensureItem(data: {
+  name: string;
+  sourceType: ItemSourceType;
+  category: ItemCategory;
+  unit: string;
+  minThreshold: number;
+  businessId: string;
+}) {
+  const existing = await prisma.item.findFirst({
+    where: {
+      businessId: data.businessId,
+      name: data.name,
+    },
+  });
+
+  if (existing) {
+    if (existing.category !== data.category) {
+      return prisma.item.update({
+        where: { id: existing.id },
+        data: { category: data.category },
+      });
+    }
+    return existing;
+  }
+
+  return prisma.item.create({ data });
+}
+
 async function main() {
-  console.log("Seeding database according to PRD specification...");
+  console.log(
+    "Bootstrapping Purple Yam AIMS defaults without deleting existing operational data..."
+  );
 
-  // Clear existing records
-  await prisma.reorderAlert.deleteMany();
-  await prisma.stockTransaction.deleteMany();
-  await prisma.productionRecipe.deleteMany();
-  await prisma.branchStock.deleteMany();
-  await prisma.user.deleteMany();
-  await prisma.item.deleteMany();
-  await prisma.branch.deleteMany();
-
-  // Create Head Commissary + 3 Satellite Branches
-  const commissary = await prisma.branch.create({
-    data: { id: "commissary", name: "Main Commissary / Head Branch", location: "Central Hub" },
+  const business = await prisma.business.upsert({
+    where: { id: "purple-yam" },
+    update: { name: "Purple Yam" },
+    create: {
+      id: "purple-yam",
+      name: "Purple Yam",
+    },
   });
 
-  const branch1 = await prisma.branch.create({
-    data: { id: "branch-1", name: "Purple Yam - Branch 1", location: "Downtown" },
+  // Keep these IDs stable so existing transactions, users, and stock remain linked.
+  const commissary = await prisma.branch.upsert({
+    where: { id: "commissary" },
+    update: {
+      name: "Butuan/Main Branch",
+      location: "Butuan City",
+      isCommissary: true,
+      businessId: business.id,
+    },
+    create: {
+      id: "commissary",
+      name: "Butuan/Main Branch",
+      location: "Butuan City",
+      isCommissary: true,
+      businessId: business.id,
+    },
   });
 
-  const branch2 = await prisma.branch.create({
-    data: { id: "branch-2", name: "Purple Yam - Branch 2", location: "Uptown Mall" },
+  const libertad = await prisma.branch.upsert({
+    where: { id: "branch-1" },
+    update: {
+      name: "Libertad",
+      location: "Libertad",
+      isCommissary: false,
+      businessId: business.id,
+    },
+    create: {
+      id: "branch-1",
+      name: "Libertad",
+      location: "Libertad",
+      isCommissary: false,
+      businessId: business.id,
+    },
   });
 
-  const branch3 = await prisma.branch.create({
-    data: { id: "branch-3", name: "Purple Yam - Branch 3", location: "Highway Express" },
+  const cabadbaran = await prisma.branch.upsert({
+    where: { id: "branch-2" },
+    update: {
+      name: "Cabadbaran",
+      location: "Cabadbaran",
+      isCommissary: false,
+      businessId: business.id,
+    },
+    create: {
+      id: "branch-2",
+      name: "Cabadbaran",
+      location: "Cabadbaran",
+      isCommissary: false,
+      businessId: business.id,
+    },
   });
 
-  // Create Users
-  await prisma.user.createMany({
-    data: [
-      {
-        username: "owner",
-        email: "owner@purpleyam.local",
-        password: "owner123",
-        role: Role.OWNER,
-        branchId: null,
-      },
-      {
-        username: "manager_b1",
-        email: "manager.b1@purpleyam.local",
-        password: "manager123",
-        role: Role.BRANCH_MANAGER,
-        branchId: branch1.id,
-      },
-      {
-        username: "cashier_b1",
-        email: "cashier.b1@purpleyam.local",
-        password: "cashier123",
-        role: Role.CASHIER,
-        branchId: branch1.id,
-      },
-      {
-        username: "user",
-        email: "user@purpleyam.local",
-        password: "user123",
-        role: Role.CASHIER,
-        branchId: branch1.id,
-      },
-    ],
+  const sanFrancisco = await prisma.branch.upsert({
+    where: { id: "branch-3" },
+    update: {
+      name: "San Francisco",
+      location: "San Francisco",
+      isCommissary: false,
+      businessId: business.id,
+    },
+    create: {
+      id: "branch-3",
+      name: "San Francisco",
+      location: "San Francisco",
+      isCommissary: false,
+      businessId: business.id,
+    },
   });
 
-  // Create Items
-  const yamFlour = await prisma.item.create({
-    data: { name: "Purple Yam Premix", sourceType: ItemSourceType.COMMISSARY_SUPPLIED, unit: "kg", minThreshold: 10.0 },
+  const ownerPassword = await hashPassword("owner123");
+  const managerPassword = await hashPassword("manager123");
+  const cashierPassword = await hashPassword("cashier123");
+  const userPassword = await hashPassword("user123");
+
+  // Create test/default accounts only when they do not already exist.
+  // Existing passwords, status, assignments, and audit history are preserved.
+  await ensureUser({
+    username: "owner",
+    email: "owner@purpleyam.local",
+    password: ownerPassword,
+    role: Role.OWNER,
+    branchId: null,
+    businessId: business.id,
+    mustChangePassword: false,
   });
 
-  const condensedMilk = await prisma.item.create({
-    data: { name: "Condensed Milk", sourceType: ItemSourceType.BRANCH_SOURCED, unit: "cans", minThreshold: 15.0 },
+  await ensureUser({
+    username: "manager_b1",
+    email: "manager.b1@purpleyam.local",
+    password: managerPassword,
+    role: Role.BRANCH_MANAGER,
+    branchId: libertad.id,
+    businessId: business.id,
+    mustChangePassword: true,
   });
 
-  const butter = await prisma.item.create({
-    data: { name: "Butter", sourceType: ItemSourceType.BRANCH_SOURCED, unit: "kg", minThreshold: 5.0 },
+  await ensureUser({
+    username: "cashier_b1",
+    email: "cashier.b1@purpleyam.local",
+    password: cashierPassword,
+    role: Role.CASHIER,
+    branchId: libertad.id,
+    businessId: business.id,
+    mustChangePassword: true,
   });
 
-  const ubeCake = await prisma.item.create({
-    data: { name: "Purple Yam Cake (Finished)", sourceType: ItemSourceType.FINISHED_PRODUCT, unit: "pcs", minThreshold: 3.0 },
+  await ensureUser({
+    username: "user",
+    email: "user@purpleyam.local",
+    password: userPassword,
+    role: Role.CASHIER,
+    branchId: libertad.id,
+    businessId: business.id,
+    mustChangePassword: true,
   });
 
-  // Create Recipe
-  await prisma.productionRecipe.createMany({
-    data: [
-      { finishedItemId: ubeCake.id, ingredientItemId: yamFlour.id, requiredQuantity: 0.5 },
-      { finishedItemId: ubeCake.id, ingredientItemId: condensedMilk.id, requiredQuantity: 1.0 },
-      { finishedItemId: ubeCake.id, ingredientItemId: butter.id, requiredQuantity: 0.2 },
-    ],
+  // Actual Purple Yam stock-room item master from the uploaded inventory workbook.
+  // Packaging is separated from ingredients used in production.
+  await ensureItem({
+    name: "Premix Dry (UBE)",
+    sourceType: ItemSourceType.COMMISSARY_SUPPLIED,
+    category: ItemCategory.RAW_MATERIAL,
+    unit: "pack",
+    minThreshold: 0.0,
+    businessId: business.id,
   });
 
-  // Initialize Stock across Branches
-  const allBranches = [commissary, branch1, branch2, branch3];
-  
-  for (const branch of allBranches) {
-    await prisma.branchStock.createMany({
-      data: [
-        { branchId: branch.id, itemId: yamFlour.id, quantity: branch.id === "commissary" ? 100.0 : 15.0 },
-        { branchId: branch.id, itemId: condensedMilk.id, quantity: 30.0 },
-        { branchId: branch.id, itemId: butter.id, quantity: 10.0 },
-        { branchId: branch.id, itemId: ubeCake.id, quantity: branch.id === "commissary" ? 0.0 : 5.0 },
-      ],
+  await ensureItem({
+    name: "Premix Wet (UBE)",
+    sourceType: ItemSourceType.COMMISSARY_SUPPLIED,
+    category: ItemCategory.RAW_MATERIAL,
+    unit: "pack",
+    minThreshold: 0.0,
+    businessId: business.id,
+  });
+
+  await ensureItem({
+    name: "Choco Premix Dry",
+    sourceType: ItemSourceType.COMMISSARY_SUPPLIED,
+    category: ItemCategory.RAW_MATERIAL,
+    unit: "pack",
+    minThreshold: 0.0,
+    businessId: business.id,
+  });
+
+  await ensureItem({
+    name: "Condensed Milk",
+    sourceType: ItemSourceType.BRANCH_SOURCED,
+    category: ItemCategory.RAW_MATERIAL,
+    unit: "can",
+    minThreshold: 0.0,
+    businessId: business.id,
+  });
+
+  await ensureItem({
+    name: "Evaporated Milk",
+    sourceType: ItemSourceType.BRANCH_SOURCED,
+    category: ItemCategory.RAW_MATERIAL,
+    unit: "can",
+    minThreshold: 0.0,
+    businessId: business.id,
+  });
+
+  await ensureItem({
+    name: "Creamcheese Wet",
+    sourceType: ItemSourceType.BRANCH_SOURCED,
+    category: ItemCategory.RAW_MATERIAL,
+    unit: "pack",
+    minThreshold: 0.0,
+    businessId: business.id,
+  });
+
+  for (const item of [
+    { name: "BOX (Large)", sourceType: ItemSourceType.BRANCH_SOURCED, unit: "pcs" },
+    { name: "BOX (Medium)", sourceType: ItemSourceType.BRANCH_SOURCED, unit: "pcs" },
+    { name: "BOX (Small - Round)", sourceType: ItemSourceType.BRANCH_SOURCED, unit: "pcs" },
+    { name: "BASE (Large)", sourceType: ItemSourceType.BRANCH_SOURCED, unit: "pcs" },
+    { name: "BASE (Medium)", sourceType: ItemSourceType.BRANCH_SOURCED, unit: "pcs" },
+    { name: "Base (Small - Round)", sourceType: ItemSourceType.BRANCH_SOURCED, unit: "pcs" },
+    { name: "Box Custard", sourceType: ItemSourceType.BRANCH_SOURCED, unit: "pcs" },
+    { name: "Ube Calamansi Box", sourceType: ItemSourceType.BRANCH_SOURCED, unit: "pcs" },
+  ]) {
+    await ensureItem({
+      name: item.name,
+      sourceType: item.sourceType,
+      category: ItemCategory.PACKAGING,
+      unit: item.unit,
+      minThreshold: 0.0,
+      businessId: business.id,
     });
   }
 
-  console.log("Database successfully seeded!");
+  // Production recipes are intentionally not seeded from mock data.
+  // They must be configured from the business's approved recipe/formulation records.
+  
+  // Actual quantities are loaded through the audited Inventory Import workflow.
+  // Seed intentionally creates no inventory quantities.
+  
+  console.log(
+    "Database bootstrap completed. Existing inventory and transaction history were preserved."
+  );
 }
 
 main()
-  .catch((e) => {
-    console.error(e);
+  .catch((error) => {
+    console.error(error);
     process.exit(1);
   })
   .finally(async () => {
