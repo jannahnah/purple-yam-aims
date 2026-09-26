@@ -89,7 +89,12 @@ export async function GET(request: Request) {
 
     const [inventory, transactions] = await Promise.all([
       prisma.branchStock.findMany({
-        where: branchWhere,
+        where: {
+          ...branchWhere,
+          item: {
+            isActive: true,
+          },
+        },
         include: {
           item: true,
           branch: true,
