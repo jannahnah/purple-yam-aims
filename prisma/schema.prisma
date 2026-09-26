@@ -69,6 +69,7 @@ model Item {
   name         String
   sourceType   ItemSourceType
   category     ItemCategory   @default(RAW_MATERIAL)
+  size         FinishedProductSize?
   unit         String
   minThreshold Float          @default(10.0)
   businessId   String?
@@ -185,6 +186,13 @@ enum ItemSourceType {
 enum ItemCategory {
   RAW_MATERIAL
   PACKAGING
+}
+
+enum FinishedProductSize {
+  SMALL
+  ROUND
+  MEDIUM
+  LARGE
 }
 
 enum TransactionType {
