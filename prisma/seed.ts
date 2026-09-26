@@ -1,26 +1,160 @@
-import { PrismaClient, Role, ItemSourceType } from "@prisma/client";
+import {
+  PrismaClient,
+  Role,
+  ItemSourceType,
+} from "@prisma/client";
 import { hashPassword } from "../src/lib/auth/password";
 
 const prisma = new PrismaClient();
 
-async function main() {
-  console.log("Seeding database according to PRD specification...");
+async function ensureUser(data: {
+  username: string;
+  email: string;
+  password: string;
+  role: Role;
+  branchId: string | null;
+  businessId: string;
+  mustChangePassword: boolean;
+}) {
+  const existing = await prisma.user.findUnique({
+    where: { username: data.username },
+  });
 
-  // Clear existing records
-  await prisma.reorderAlert.deleteMany();
-  await prisma.stockTransaction.deleteMany();
-  await prisma.userAuditLog.deleteMany();
-  await prisma.productionRecipe.deleteMany();
-  await prisma.branchStock.deleteMany();
-  await prisma.user.deleteMany();
-  await prisma.item.deleteMany();
-  await prisma.branch.deleteMany();
-  await prisma.business.deleteMany();
+  if (existing) {
+    return existing;
+  }
 
-  const business = await prisma.business.create({
+  return prisma.user.create({ data });
+}
+
+async function ensureItem(data: {
+  name: string;
+  sourceType: ItemSourceType;
+  unit: string;
+  minThreshold: number;
+  businessId: string;
+}) {
+  const existing = await prisma.item.findFirst({
+    where: {
+      businessId: data.businessId,
+      name: data.name,
+    },
+  });
+
+  if (existing) {
+    return existing;
+  }
+
+  return prisma.item.create({ data });
+}
+
+async function ensureStock(
+  branchId: string,
+  itemId: string,
+  quantity: number
+) {
+  const existing = await prisma.branchStock.findUnique({
+    where: {
+      branchId_itemId: {
+        branchId,
+        itemId,
+      },
+    },
+  });
+
+  if (existing) {
+    return existing;
+  }
+
+  return prisma.branchStock.create({
     data: {
+      branchId,
+      itemId,
+      quantity,
+    },
+  });
+}
+
+async function main() {
+  console.log(
+    "Bootstrapping Purple Yam AIMS defaults without deleting existing operational data..."
+  );
+
+  const business = await prisma.business.upsert({
+    where: { id: "purple-yam" },
+    update: { name: "Purple Yam" },
+    create: {
       id: "purple-yam",
       name: "Purple Yam",
+    },
+  });
+
+  // Keep these IDs stable so existing transactions, users, and stock remain linked.
+  const commissary = await prisma.branch.upsert({
+    where: { id: "commissary" },
+    update: {
+      name: "Butuan / Main Branch",
+      location: "Butuan City",
+      isCommissary: true,
+      businessId: business.id,
+    },
+    create: {
+      id: "commissary",
+      name: "Butuan / Main Branch",
+      location: "Butuan City",
+      isCommissary: true,
+      businessId: business.id,
+    },
+  });
+
+  const libertad = await prisma.branch.upsert({
+    where: { id: "branch-1" },
+    update: {
+      name: "Libertad",
+      location: "Libertad",
+      isCommissary: false,
+      businessId: business.id,
+    },
+    create: {
+      id: "branch-1",
+      name: "Libertad",
+      location: "Libertad",
+      isCommissary: false,
+      businessId: business.id,
+    },
+  });
+
+  const cabadbaran = await prisma.branch.upsert({
+    where: { id: "branch-2" },
+    update: {
+      name: "Cabadbaran",
+      location: "Cabadbaran",
+      isCommissary: false,
+      businessId: business.id,
+    },
+    create: {
+      id: "branch-2",
+      name: "Cabadbaran",
+      location: "Cabadbaran",
+      isCommissary: false,
+      businessId: business.id,
+    },
+  });
+
+  const sanFrancisco = await prisma.branch.upsert({
+    where: { id: "branch-3" },
+    update: {
+      name: "San Francisco",
+      location: "San Francisco",
+      isCommissary: false,
+      businessId: business.id,
+    },
+    create: {
+      id: "branch-3",
+      name: "San Francisco",
+      location: "San Francisco",
+      isCommissary: false,
+      businessId: business.id,
     },
   });
 
@@ -29,183 +163,148 @@ async function main() {
   const cashierPassword = await hashPassword("cashier123");
   const userPassword = await hashPassword("user123");
 
-  // Create Head Commissary + 3 Satellite Branches
-  const commissary = await prisma.branch.create({
-    data: {
-      id: "commissary",
-      name: "Main Commissary / Head Branch",
-      location: "Central Hub",
-      businessId: business.id,
-    },
+  // Create test/default accounts only when they do not already exist.
+  // Existing passwords, status, assignments, and audit history are preserved.
+  await ensureUser({
+    username: "owner",
+    email: "owner@purpleyam.local",
+    password: ownerPassword,
+    role: Role.OWNER,
+    branchId: null,
+    businessId: business.id,
+    mustChangePassword: false,
   });
 
-  const branch1 = await prisma.branch.create({
-    data: {
-      id: "branch-1",
-      name: "Purple Yam - Branch 1",
-      location: "Downtown",
-      businessId: business.id,
-    },
+  await ensureUser({
+    username: "manager_b1",
+    email: "manager.b1@purpleyam.local",
+    password: managerPassword,
+    role: Role.BRANCH_MANAGER,
+    branchId: libertad.id,
+    businessId: business.id,
+    mustChangePassword: true,
   });
 
-  const branch2 = await prisma.branch.create({
-    data: {
-      id: "branch-2",
-      name: "Purple Yam - Branch 2",
-      location: "Uptown Mall",
-      businessId: business.id,
-    },
+  await ensureUser({
+    username: "cashier_b1",
+    email: "cashier.b1@purpleyam.local",
+    password: cashierPassword,
+    role: Role.CASHIER,
+    branchId: libertad.id,
+    businessId: business.id,
+    mustChangePassword: true,
   });
 
-  const branch3 = await prisma.branch.create({
-    data: {
-      id: "branch-3",
-      name: "Purple Yam - Branch 3",
-      location: "Highway Express",
-      businessId: business.id,
-    },
+  await ensureUser({
+    username: "user",
+    email: "user@purpleyam.local",
+    password: userPassword,
+    role: Role.CASHIER,
+    branchId: libertad.id,
+    businessId: business.id,
+    mustChangePassword: true,
   });
 
-  // Create Users
-  await prisma.user.createMany({
-    data: [
-      {
-        username: "owner",
-        email: "owner@purpleyam.local",
-        password: ownerPassword,
-        role: Role.OWNER,
-        branchId: null,
-        businessId: business.id,
-        mustChangePassword: false,
-      },
-      {
-        username: "manager_b1",
-        email: "manager.b1@purpleyam.local",
-        password: managerPassword,
-        role: Role.BRANCH_MANAGER,
-        branchId: branch1.id,
-        businessId: business.id,
-        mustChangePassword: true,
-      },
-      {
-        username: "cashier_b1",
-        email: "cashier.b1@purpleyam.local",
-        password: cashierPassword,
-        role: Role.CASHIER,
-        branchId: branch1.id,
-        businessId: business.id,
-        mustChangePassword: true,
-      },
-      {
-        username: "user",
-        email: "user@purpleyam.local",
-        password: userPassword,
-        role: Role.CASHIER,
-        branchId: branch1.id,
-        businessId: business.id,
-        mustChangePassword: true,
-      },
-    ],
+  const yamFlour = await ensureItem({
+    name: "Purple Yam Premix",
+    sourceType: ItemSourceType.COMMISSARY_SUPPLIED,
+    unit: "kg",
+    minThreshold: 10.0,
+    businessId: business.id,
   });
 
-  // Create Items
-  const yamFlour = await prisma.item.create({
-    data: {
-      name: "Purple Yam Premix",
-      sourceType: ItemSourceType.COMMISSARY_SUPPLIED,
-      unit: "kg",
-      minThreshold: 10.0,
-      businessId: business.id,
-    },
+  const condensedMilk = await ensureItem({
+    name: "Condensed Milk",
+    sourceType: ItemSourceType.BRANCH_SOURCED,
+    unit: "cans",
+    minThreshold: 15.0,
+    businessId: business.id,
   });
 
-  const condensedMilk = await prisma.item.create({
-    data: {
-      name: "Condensed Milk",
-      sourceType: ItemSourceType.BRANCH_SOURCED,
-      unit: "cans",
-      minThreshold: 15.0,
-      businessId: business.id,
-    },
+  const butter = await ensureItem({
+    name: "Butter",
+    sourceType: ItemSourceType.BRANCH_SOURCED,
+    unit: "kg",
+    minThreshold: 5.0,
+    businessId: business.id,
   });
 
-  const butter = await prisma.item.create({
-    data: {
-      name: "Butter",
-      sourceType: ItemSourceType.BRANCH_SOURCED,
-      unit: "kg",
-      minThreshold: 5.0,
-      businessId: business.id,
-    },
+  const ubeCake = await ensureItem({
+    name: "Purple Yam Cake (Finished)",
+    sourceType: ItemSourceType.FINISHED_PRODUCT,
+    unit: "pcs",
+    minThreshold: 3.0,
+    businessId: business.id,
   });
 
-  const ubeCake = await prisma.item.create({
-    data: {
-      name: "Purple Yam Cake (Finished)",
-      sourceType: ItemSourceType.FINISHED_PRODUCT,
-      unit: "pcs",
-      minThreshold: 3.0,
-      businessId: business.id,
-    },
-  });
-
-  // Create Recipe
-  await prisma.productionRecipe.createMany({
-    data: [
-      {
+  await prisma.productionRecipe.upsert({
+    where: {
+      finishedItemId_ingredientItemId: {
         finishedItemId: ubeCake.id,
         ingredientItemId: yamFlour.id,
-        requiredQuantity: 0.5,
       },
-      {
-        finishedItemId: ubeCake.id,
-        ingredientItemId: condensedMilk.id,
-        requiredQuantity: 1.0,
-      },
-      {
-        finishedItemId: ubeCake.id,
-        ingredientItemId: butter.id,
-        requiredQuantity: 0.2,
-      },
-    ],
+    },
+    update: { requiredQuantity: 0.5 },
+    create: {
+      finishedItemId: ubeCake.id,
+      ingredientItemId: yamFlour.id,
+      requiredQuantity: 0.5,
+    },
   });
 
-  // Initialize Stock across Branches
-  const allBranches = [commissary, branch1, branch2, branch3];
+  await prisma.productionRecipe.upsert({
+    where: {
+      finishedItemId_ingredientItemId: {
+        finishedItemId: ubeCake.id,
+        ingredientItemId: condensedMilk.id,
+      },
+    },
+    update: { requiredQuantity: 1.0 },
+    create: {
+      finishedItemId: ubeCake.id,
+      ingredientItemId: condensedMilk.id,
+      requiredQuantity: 1.0,
+    },
+  });
 
-  for (const branch of allBranches) {
-    await prisma.branchStock.createMany({
-      data: [
-        {
-          branchId: branch.id,
-          itemId: yamFlour.id,
-          quantity: branch.id === "commissary" ? 100.0 : 15.0,
-        },
-        {
-          branchId: branch.id,
-          itemId: condensedMilk.id,
-          quantity: 30.0,
-        },
-        {
-          branchId: branch.id,
-          itemId: butter.id,
-          quantity: 10.0,
-        },
-        {
-          branchId: branch.id,
-          itemId: ubeCake.id,
-          quantity: branch.id === "commissary" ? 0.0 : 5.0,
-        },
-      ],
-    });
+  await prisma.productionRecipe.upsert({
+    where: {
+      finishedItemId_ingredientItemId: {
+        finishedItemId: ubeCake.id,
+        ingredientItemId: butter.id,
+      },
+    },
+    update: { requiredQuantity: 0.2 },
+    create: {
+      finishedItemId: ubeCake.id,
+      ingredientItemId: butter.id,
+      requiredQuantity: 0.2,
+    },
+  });
+
+  // Only create missing stock rows.
+  // Existing quantities are deliberately preserved, so running db seed cannot
+  // reset real inventory after the client baseline is loaded.
+  await ensureStock(commissary.id, yamFlour.id, 100.0);
+  await ensureStock(commissary.id, condensedMilk.id, 30.0);
+  await ensureStock(commissary.id, butter.id, 10.0);
+  await ensureStock(commissary.id, ubeCake.id, 0.0);
+
+  for (const branch of [libertad, cabadbaran, sanFrancisco]) {
+    await ensureStock(branch.id, yamFlour.id, 15.0);
+    await ensureStock(branch.id, condensedMilk.id, 30.0);
+    await ensureStock(branch.id, butter.id, 10.0);
+    await ensureStock(branch.id, ubeCake.id, 5.0);
   }
 
-  console.log("Database successfully seeded!");
+  console.log(
+    "Database bootstrap completed. Existing inventory and transaction history were preserved."
+  );
 }
 
 main()
-  .catch((e) => {
-    console.error(e);
+  .catch((error) => {
+    console.error(error);
     process.exit(1);
   })
   .finally(async () => {
