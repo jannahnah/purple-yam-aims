@@ -70,6 +70,7 @@ model Item {
   sourceType   ItemSourceType
   category     ItemCategory   @default(RAW_MATERIAL)
   size         FinishedProductSize?
+  isActive     Boolean        @default(true)
   unit         String
   minThreshold Float          @default(10.0)
   businessId   String?
