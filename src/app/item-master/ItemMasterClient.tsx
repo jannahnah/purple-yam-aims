@@ -309,7 +309,13 @@ export default function ItemMasterClient() {
       }
 
       await loadItems();
-      setRecipeMessage("Recipe saved successfully.");
+
+      // Return the builder to a clean "Select finished product" state
+      // after the recipe is safely persisted.
+      setSelectedFinishedId("");
+      setRecipeRows([]);
+      setRecipeMessage("");
+      setSuccess("Recipe saved successfully.");
     } catch (err) {
       setRecipeMessage(
         err instanceof Error ? err.message : "Failed to save recipe."
