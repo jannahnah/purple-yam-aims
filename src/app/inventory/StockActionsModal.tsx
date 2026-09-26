@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { adjustStock, transferStock } from "@/app/actions/inventory";
+import { formatItemLabel } from "@/lib/item-label";
 
 type Role = "OWNER" | "BRANCH_MANAGER" | "CASHIER";
 
@@ -20,6 +21,7 @@ interface Branch {
 interface Item {
   id: string;
   name: string;
+  size?: "SMALL" | "ROUND" | "MEDIUM" | "LARGE" | null;
   unit: string;
 }
 
