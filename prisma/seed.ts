@@ -101,14 +101,14 @@ async function main() {
   const commissary = await prisma.branch.upsert({
     where: { id: "commissary" },
     update: {
-      name: "Butuan / Main Branch",
+      name: "Butuan/Main Branch",
       location: "Butuan City",
       isCommissary: true,
       businessId: business.id,
     },
     create: {
       id: "commissary",
-      name: "Butuan / Main Branch",
+      name: "Butuan/Main Branch",
       location: "Butuan City",
       isCommissary: true,
       businessId: business.id,
