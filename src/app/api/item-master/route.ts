@@ -10,6 +10,20 @@ const SOURCE_TYPES = [
 
 const CATEGORIES = ["RAW_MATERIAL", "PACKAGING"] as const;
 
+const FINISHED_SIZES = [
+  "SMALL",
+  "ROUND",
+  "MEDIUM",
+  "LARGE",
+] as const;
+
+function normalizeFinishedSize(value: unknown) {
+  const size = cleanString(value);
+  return FINISHED_SIZES.includes(size as (typeof FINISHED_SIZES)[number])
+    ? (size as (typeof FINISHED_SIZES)[number])
+    : null;
+}
+
 function cleanString(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
@@ -107,11 +121,19 @@ export async function POST(request: Request) {
     const sourceType = cleanString(body.sourceType);
     const category = cleanString(body.category);
     const unit = cleanString(body.unit);
+    const finishedSize = normalizeFinishedSize(body.size);
     const threshold = parseThreshold(body.minThreshold);
 
     if (!name || !unit) {
       return NextResponse.json(
         { error: "Item name and unit are required." },
+        { status: 400 }
+      );
+    }
+
+    if (sourceType === "FINISHED_PRODUCT" && !finishedSize) {
+      return NextResponse.json(
+        { error: "Finished products require a size: Small, Round, Medium, or Large." },
         { status: 400 }
       );
     }
@@ -144,6 +166,9 @@ export async function POST(request: Request) {
           equals: name,
           mode: "insensitive",
         },
+        ...(sourceType === "FINISHED_PRODUCT"
+          ? { size: finishedSize }
+          : {}),
       },
       select: { id: true },
     });
@@ -165,6 +190,10 @@ export async function POST(request: Request) {
             sourceType === "FINISHED_PRODUCT"
               ? "RAW_MATERIAL"
               : category as (typeof CATEGORIES)[number],
+          size:
+            sourceType === "FINISHED_PRODUCT"
+              ? finishedSize
+              : null,
           minThreshold: threshold,
           businessId: auth.currentUser.businessId!,
         },
@@ -204,11 +233,19 @@ export async function PUT(request: Request) {
     const sourceType = cleanString(body.sourceType);
     const category = cleanString(body.category);
     const unit = cleanString(body.unit);
+    const finishedSize = normalizeFinishedSize(body.size);
     const threshold = parseThreshold(body.minThreshold);
 
     if (!id || !name || !unit) {
       return NextResponse.json(
         { error: "Item ID, name, and unit are required." },
+        { status: 400 }
+      );
+    }
+
+    if (sourceType === "FINISHED_PRODUCT" && !finishedSize) {
+      return NextResponse.json(
+        { error: "Finished products require a size: Small, Round, Medium, or Large." },
         { status: 400 }
       );
     }
@@ -255,6 +292,9 @@ export async function PUT(request: Request) {
           equals: name,
           mode: "insensitive",
         },
+        ...(sourceType === "FINISHED_PRODUCT"
+          ? { size: finishedSize }
+          : {}),
         NOT: { id },
       },
       select: { id: true },
@@ -271,11 +311,19 @@ export async function PUT(request: Request) {
       where: { itemId: id },
     });
 
-    if (hasHistory && (unit !== item.unit || sourceType !== item.sourceType)) {
+    if (
+      hasHistory &&
+      (
+        unit !== item.unit ||
+        sourceType !== item.sourceType ||
+        (sourceType === "FINISHED_PRODUCT" && finishedSize !== item.size) ||
+        (sourceType !== "FINISHED_PRODUCT" && item.size !== null)
+      )
+    ) {
       return NextResponse.json(
         {
           error:
-            "Unit and source type cannot be changed after the item has transaction history. Edit the name or threshold instead.",
+            "Unit, source type, and finished-product size cannot be changed after the item has transaction history. Edit the name or threshold instead.",
         },
         { status: 409 }
       );
@@ -292,6 +340,10 @@ export async function PUT(request: Request) {
             sourceType === "FINISHED_PRODUCT"
               ? "RAW_MATERIAL"
               : category as (typeof CATEGORIES)[number],
+          size:
+            sourceType === "FINISHED_PRODUCT"
+              ? finishedSize
+              : null,
           minThreshold: threshold,
         },
       });
@@ -324,6 +376,17 @@ export async function PUT(request: Request) {
           field: "category",
           previousValue: item.category,
           currentValue: saved.category,
+        });
+      }
+
+      if (item.size !== saved.size) {
+        auditRows.push({
+          itemId: id,
+          performedById: auth.currentUser.id,
+          action: "UPDATE",
+          field: "size",
+          previousValue: item.size ?? null,
+          currentValue: saved.size ?? null,
         });
       }
 
