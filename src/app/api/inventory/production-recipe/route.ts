@@ -286,6 +286,15 @@ export async function POST(request: Request) {
     }
 
     await prisma.$transaction(async (tx) => {
+      const previousRecipe = await tx.productionRecipe.findMany({
+        where: { finishedItemId },
+        orderBy: { ingredientItemId: "asc" },
+        select: {
+          ingredientItemId: true,
+          requiredQuantity: true,
+        },
+      });
+
       await tx.productionRecipe.deleteMany({
         where: { finishedItemId },
       });
@@ -296,6 +305,17 @@ export async function POST(request: Request) {
           ingredientItemId: ingredient.itemId,
           requiredQuantity: ingredient.requiredQuantity,
         })),
+      });
+
+      await tx.itemAuditLog.create({
+        data: {
+          itemId: finishedItemId,
+          performedById: auth.currentUser.id,
+          action: "RECIPE_UPDATE",
+          field: "recipe",
+          previousValue: JSON.stringify(previousRecipe),
+          currentValue: JSON.stringify(ingredients),
+        },
       });
     });
 
@@ -344,8 +364,30 @@ export async function DELETE(request: Request) {
       );
     }
 
-    await prisma.productionRecipe.deleteMany({
-      where: { finishedItemId },
+    await prisma.$transaction(async (tx) => {
+      const previousRecipe = await tx.productionRecipe.findMany({
+        where: { finishedItemId },
+        orderBy: { ingredientItemId: "asc" },
+        select: {
+          ingredientItemId: true,
+          requiredQuantity: true,
+        },
+      });
+
+      await tx.productionRecipe.deleteMany({
+        where: { finishedItemId },
+      });
+
+      await tx.itemAuditLog.create({
+        data: {
+          itemId: finishedItemId,
+          performedById: auth.currentUser.id,
+          action: "RECIPE_CLEAR",
+          field: "recipe",
+          previousValue: JSON.stringify(previousRecipe),
+          currentValue: null,
+        },
+      });
     });
 
     return NextResponse.json({ success: true });
