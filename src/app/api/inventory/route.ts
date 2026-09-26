@@ -21,14 +21,16 @@ export async function GET() {
           : { branchId: "__NO_BRANCH__" };
 
     const items = await prisma.item.findMany({
-      where:
-        currentUser.role === "OWNER"
-          ? undefined
+      where: {
+        isActive: true,
+        ...(currentUser.role === "OWNER"
+          ? {}
           : {
               branchStocks: {
                 some: branchWhere,
               },
-            },
+            }),
+      },
       include: {
         branchStocks: {
           where: branchWhere,
