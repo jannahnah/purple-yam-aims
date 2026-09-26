@@ -216,6 +216,15 @@ async function main() {
   });
 
   await ensureItem({
+    name: "Condensed Milk",
+    sourceType: ItemSourceType.BRANCH_SOURCED,
+    category: ItemCategory.RAW_MATERIAL,
+    unit: "can",
+    minThreshold: 0.0,
+    businessId: business.id,
+  });
+
+  await ensureItem({
     name: "Evaporated Milk",
     sourceType: ItemSourceType.BRANCH_SOURCED,
     category: ItemCategory.RAW_MATERIAL,
