@@ -353,8 +353,8 @@ export async function PUT(request: Request) {
         performedById: string;
         action: string;
         field: string;
-        previousValue: string;
-        currentValue: string;
+        previousValue: string | null;
+        currentValue: string | null;
       }> = [];
 
       if (item.name !== saved.name) {
