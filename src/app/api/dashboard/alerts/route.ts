@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { canAccessBranch } from "@/lib/auth/authorization";
+import { formatItemLabel } from "@/lib/item-label";
 
 export async function GET(req: Request) {
   try {
@@ -93,6 +94,7 @@ export async function GET(req: Request) {
             name: true,
             unit: true,
             minThreshold: true,
+            size: true,
           },
         },
         branch: {
@@ -123,6 +125,10 @@ export async function GET(req: Request) {
 
         return {
           ...alert,
+          item: {
+            ...alert.item,
+            name: formatItemLabel(alert.item),
+          },
           currentQuantity: stock?.quantity ?? 0,
         };
       })
