@@ -599,7 +599,7 @@ export default function InventoryClient({
                       >
                         <td className="px-5 py-4">
                           <p className="font-semibold text-gray-900">
-                            {stock.item.name}
+                            {formatItemLabel(stock.item)}
                           </p>
                         </td>
 
