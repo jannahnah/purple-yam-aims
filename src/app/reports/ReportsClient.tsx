@@ -467,9 +467,9 @@ export default function ReportsClient({
             {exportOpen && !exporting && (
               <div role="menu" className="absolute right-0 z-20 mt-2 w-80 overflow-hidden rounded-xl border border-gray-200 bg-white p-1.5 shadow-lg">
                 <div className="px-3 py-2">
-                  <p className="text-xs font-semibold text-gray-900">Export all reports</p>
+                  <p className="text-xs font-semibold text-gray-900">Export transaction history</p>
                   <p className="mt-0.5 text-xs text-gray-500">
-                    {currentUser.role === "OWNER" ? "Includes all branches." : "Includes your assigned branch only."}
+                    {currentUser.role === "OWNER" ? "Includes all branches in branch-based worksheets." : "Includes your assigned branch only."}
                   </p>
                 </div>
 
