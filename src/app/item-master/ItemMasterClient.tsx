@@ -763,6 +763,9 @@ export default function ItemMasterClient() {
               {finishedProducts.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}
+                  {item.size
+                    ? ` — ${item.size.charAt(0) + item.size.slice(1).toLowerCase()}`
+                    : ""}
                 </option>
               ))}
             </select>
@@ -770,6 +773,22 @@ export default function ItemMasterClient() {
 
           {selectedFinishedId ? (
             <div className="mt-5 space-y-4">
+              <div className="rounded-lg border border-purple-100 bg-purple-50 px-4 py-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-purple-600">
+                  Recipe for
+                </p>
+                <p className="mt-1 text-sm font-semibold text-purple-900">
+                  {(() => {
+                    const selected = finishedProducts.find(
+                      (item) => item.id === selectedFinishedId
+                    );
+                    return selected
+                      ? `${selected.name}${selected.size ? ` — ${selected.size.charAt(0) + selected.size.slice(1).toLowerCase()}` : ""}`
+                      : "Selected finished product";
+                  })()}
+                </p>
+              </div>
+
               <div className="overflow-x-auto rounded-lg border border-gray-200">
                 <table className="min-w-full text-sm">
                   <thead className="bg-gray-50">
