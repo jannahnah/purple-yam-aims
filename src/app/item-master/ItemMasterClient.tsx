@@ -485,9 +485,6 @@ export default function ItemMasterClient() {
       <div className="mx-auto w-full max-w-7xl space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-purple-600">
-              Owner Controls
-            </p>
             <h1 className="mt-1 text-2xl font-bold text-gray-900">
               Item Master
             </h1>
@@ -545,6 +542,7 @@ export default function ItemMasterClient() {
           </div>
         </div>
 
+        <div className="grid gap-6 md:grid-cols-[minmax(0,1.35fr)_minmax(360px,1fr)] md:items-start">
         <section className="aims-card overflow-hidden">
           <div className="border-b border-gray-100 px-5 py-4">
             <h2 className="text-base font-semibold text-gray-900">
@@ -670,78 +668,6 @@ export default function ItemMasterClient() {
             Items with remaining stock or active recipes cannot be deleted.
           </div>
         </section>
-
-        {archivedItems.length > 0 && (
-          <section className="aims-card overflow-hidden">
-            <div className="border-b border-gray-100 px-5 py-4">
-              <h2 className="text-base font-semibold text-gray-700">
-                Deleted Items
-              </h2>
-              <p className="mt-1 text-xs text-gray-500">
-                Deleted items remain stored for audit history and can be restored.
-              </p>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="aims-table min-w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    {["Item", "Size", "Type", "Unit", "Action"].map((heading) => (
-                      <th
-                        key={heading}
-                        className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500"
-                      >
-                        {heading}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {archivedItems.map((item) => (
-                    <tr key={item.id} className="bg-gray-50/70">
-                      <td className="px-5 py-4 font-medium text-gray-700">
-                        {item.name}
-                      </td>
-                      <td className="px-5 py-4 text-sm text-gray-500">
-                        {item.size
-                          ? item.size.charAt(0) +
-                            item.size.slice(1).toLowerCase()
-                          : "—"}
-                      </td>
-                      <td className="px-5 py-4 text-sm text-gray-500">
-                        {SOURCE_LABELS[item.sourceType]}
-                      </td>
-                      <td className="px-5 py-4 text-sm text-gray-500">
-                        {item.unit}
-                      </td>
-                      <td className="px-5 py-4">
-                        <button
-                          type="button"
-                          onClick={() => handleRestoreItem(item)}
-                          title="Restore item"
-                          aria-label={`Restore ${item.name}`}
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-green-100 bg-green-50 text-green-700 transition hover:bg-green-100"
-                        >
-                          <svg
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="1.8"
-                            className="h-4 w-4"
-                            aria-hidden="true"
-                          >
-                            <path d="M9 14 4 9l5-5" />
-                            <path d="M4 9h9a6 6 0 0 1 6 6v1" />
-                          </svg>
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        )}
 
         <section className="aims-card p-5 sm:p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -922,6 +848,80 @@ export default function ItemMasterClient() {
           )}
         </section>
       </div>
+
+        </div>
+
+        {archivedItems.length > 0 && (
+          <section className="aims-card overflow-hidden">
+            <div className="border-b border-gray-100 px-5 py-4">
+              <h2 className="text-base font-semibold text-gray-700">
+                Deleted Items
+              </h2>
+              <p className="mt-1 text-xs text-gray-500">
+                Deleted items remain stored for audit history and can be restored.
+              </p>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="aims-table min-w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    {["Item", "Size", "Type", "Unit", "Action"].map((heading) => (
+                      <th
+                        key={heading}
+                        className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500"
+                      >
+                        {heading}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {archivedItems.map((item) => (
+                    <tr key={item.id} className="bg-gray-50/70">
+                      <td className="px-5 py-4 font-medium text-gray-700">
+                        {item.name}
+                      </td>
+                      <td className="px-5 py-4 text-sm text-gray-500">
+                        {item.size
+                          ? item.size.charAt(0) +
+                            item.size.slice(1).toLowerCase()
+                          : "—"}
+                      </td>
+                      <td className="px-5 py-4 text-sm text-gray-500">
+                        {SOURCE_LABELS[item.sourceType]}
+                      </td>
+                      <td className="px-5 py-4 text-sm text-gray-500">
+                        {item.unit}
+                      </td>
+                      <td className="px-5 py-4">
+                        <button
+                          type="button"
+                          onClick={() => handleRestoreItem(item)}
+                          title="Restore item"
+                          aria-label={`Restore ${item.name}`}
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-green-100 bg-green-50 text-green-700 transition hover:bg-green-100"
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            className="h-4 w-4"
+                            aria-hidden="true"
+                          >
+                            <path d="M9 14 4 9l5-5" />
+                            <path d="M4 9h9a6 6 0 0 1 6 6v1" />
+                          </svg>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
 
       {toasts.length > 0 && (
         <div className="fixed bottom-5 right-5 z-[200] flex w-[min(92vw,420px)] flex-col gap-2">
