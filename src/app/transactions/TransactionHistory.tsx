@@ -469,7 +469,7 @@ export default function TransactionHistory({
         </section>
 
                 {viewMode === "CUSTOM" && (
-          <section className="w-full rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+          <section className="w-full rounded-2xl border border-gray-200 bg-white p-4 shadow-sm lg:h-[620px]">
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="text-sm font-semibold text-gray-700">
                 From
@@ -495,8 +495,8 @@ export default function TransactionHistory({
 
 
 
-        <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
-          <section className="mx-auto w-full max-w-5xl rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+        <div className="grid items-stretch gap-4 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)]">
+          <section className="w-full rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
             <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-lg font-bold text-gray-900">Activity Calendar</h2>
@@ -539,7 +539,7 @@ export default function TransactionHistory({
               ))}
             </div>
 
-            <div className="mt-2 grid grid-cols-7 gap-1">
+            <div className="mt-2 grid grid-cols-7 border-l border-t border-gray-200">
               {calendarDays.map((day) => {
                 const key = inputDate(day);
                 const count = transactionDays.get(key) ?? 0;
@@ -551,7 +551,7 @@ export default function TransactionHistory({
                     key={key}
                     type="button"
                     onClick={() => selectDay(day)}
-                    className={`min-h-16 rounded-lg border p-1.5 text-left transition sm:min-h-20 ${
+                    className={`min-h-16 border-b border-r border-gray-200 p-1.5 text-left transition sm:min-h-20 ${
                       isSelected
                         ? "border-purple-500 bg-purple-50 ring-1 ring-purple-300"
                         : "border-transparent hover:border-purple-200 hover:bg-purple-50/50"
@@ -574,7 +574,7 @@ export default function TransactionHistory({
 
 
 
-          <section className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+          <section className="flex w-full flex-col rounded-2xl border border-gray-200 bg-white shadow-sm lg:h-[620px]">
             <div className="border-b border-gray-100 px-5 py-3.5">
               <h2 className="text-lg font-bold text-gray-900">
                 {viewMode === "DAY" ? `Activity on ${displayDate(selectedDate)}` : `Transaction Ledger — ${periodLabel}`}
@@ -594,7 +594,7 @@ export default function TransactionHistory({
                 No transactions were recorded for this period.
               </div>
             ) : (
-              <div className="max-h-[520px] overflow-auto">
+              <div className="min-h-0 flex-1 overflow-auto">
                 <table className="min-w-[980px] w-full text-left text-sm">
                   <thead className="sticky top-0 z-10 bg-gray-50 text-xs uppercase tracking-wide text-gray-500 shadow-sm">
                     <tr>
