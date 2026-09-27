@@ -156,7 +156,7 @@ export async function GET(request: Request) {
             branchId: currentUser.branchId ?? "__NO_BRANCH__",
           };
 
-    const [inventory, transactions] = await Promise.all([
+    const [inventory, transactions, branches] = await Promise.all([
       prisma.branchStock.findMany({
         where: {
           ...branchWhere,
@@ -192,6 +192,16 @@ export async function GET(request: Request) {
         },
         orderBy: {
           createdAt: "desc",
+        },
+      }),
+      prisma.branch.findMany({
+        where: branchWhere,
+        select: {
+          id: true,
+          name: true,
+        },
+        orderBy: {
+          name: "asc",
         },
       }),
     ]);
@@ -431,6 +441,13 @@ export async function GET(request: Request) {
         transactions: typeof transactions;
       }
     >();
+
+    for (const branch of branches) {
+      branchGroups.set(branch.id, {
+        name: branch.name,
+        transactions: [],
+      });
+    }
 
     for (const transaction of transactions) {
       const existing = branchGroups.get(transaction.branchId);
