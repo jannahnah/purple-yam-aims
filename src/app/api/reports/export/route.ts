@@ -47,6 +47,65 @@ function formatTransactionType(value: string) {
     .replace(/\b\w/g, (character) => character.toUpperCase());
 }
 
+function formatDateKey(value: Date) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Manila",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(value);
+}
+
+function formatDateColumn(dateKey: string) {
+  const date = new Date(`${dateKey}T00:00:00+08:00`);
+  return new Intl.DateTimeFormat("en-PH", {
+    timeZone: "Asia/Manila",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
+}
+
+function buildDateKeys(startDate: string, endDate: string) {
+  const keys: string[] = [];
+  const cursor = new Date(`${startDate}T00:00:00+08:00`);
+  const end = new Date(`${endDate}T00:00:00+08:00`);
+
+  while (cursor <= end) {
+    keys.push(formatDateKey(cursor));
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+
+  return keys;
+}
+
+function parseExportDateRange(url: URL) {
+  const startDate = url.searchParams.get("startDate");
+  const endDate = url.searchParams.get("endDate");
+
+  if (!startDate && !endDate) {
+    return null;
+  }
+
+  if (!startDate || !endDate || !/^\d{4}-\d{2}-\d{2}$/.test(startDate) || !/^\d{4}-\d{2}-\d{2}$/.test(endDate)) {
+    throw new Error("Start date and end date are required in YYYY-MM-DD format.");
+  }
+
+  const start = new Date(`${startDate}T00:00:00+08:00`);
+  const end = new Date(`${endDate}T00:00:00+08:00`);
+
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || start > end) {
+    throw new Error("Start date must be on or before end date.");
+  }
+
+  return {
+    startDate,
+    endDate,
+    startAt: start,
+    endAt: new Date(end.getTime() + 24 * 60 * 60 * 1000),
+  };
+}
+
 export async function GET(request: Request) {
   try {
     const currentUser = await getCurrentUser();
@@ -78,6 +137,16 @@ export async function GET(request: Request) {
       );
     }
 
+    let exportDateRange;
+    try {
+      exportDateRange = parseExportDateRange(url);
+    } catch (error) {
+      return NextResponse.json(
+        { error: error instanceof Error ? error.message : "Invalid export date range." },
+        { status: 400 }
+      );
+    }
+
     // Branch scope is derived exclusively from the authenticated user.
     // A Branch Manager cannot override this with a query parameter.
     const branchWhere =
@@ -105,7 +174,17 @@ export async function GET(request: Request) {
         ],
       }),
       prisma.stockTransaction.findMany({
-        where: branchWhere,
+        where: {
+          ...branchWhere,
+          ...(exportDateRange
+            ? {
+                createdAt: {
+                  gte: exportDateRange.startAt,
+                  lt: exportDateRange.endAt,
+                },
+              }
+            : {}),
+        },
         include: {
           item: true,
           branch: true,
@@ -331,6 +410,68 @@ export async function GET(request: Request) {
       "User Role": transaction.user.role,
     }));
 
+    const transactionDateKeys = exportDateRange
+      ? buildDateKeys(exportDateRange.startDate, exportDateRange.endDate)
+      : Array.from(new Set(transactions.map((transaction) => formatDateKey(transaction.createdAt)))).sort();
+
+    const dailyTransactionGroups = new Map<string, {
+      branch: string;
+      item: string;
+      unit: string;
+      transaction: string;
+      daily: Map<string, number>;
+    }>();
+
+    for (const transaction of transactions) {
+      const dateKey = formatDateKey(transaction.createdAt);
+      const key = [
+        transaction.branchId,
+        transaction.itemId,
+        transaction.type,
+      ].join("|");
+      const existing = dailyTransactionGroups.get(key);
+
+      if (existing) {
+        existing.daily.set(
+          dateKey,
+          (existing.daily.get(dateKey) ?? 0) + transaction.quantityDelta
+        );
+      } else {
+        dailyTransactionGroups.set(key, {
+          branch: transaction.branch.name,
+          item: formatItemLabel(transaction.item),
+          unit: transaction.item.unit,
+          transaction: formatTransactionType(transaction.type),
+          daily: new Map([[dateKey, transaction.quantityDelta]]),
+        });
+      }
+    }
+
+    const transactionHistoryByDateRows = [...dailyTransactionGroups.values()]
+      .sort((a, b) =>
+        [a.branch, a.item, a.transaction].join("|").localeCompare(
+          [b.branch, b.item, b.transaction].join("|")
+        )
+      )
+      .map((group) => {
+        const row: Record<string, string | number> = {
+          Branch: group.branch,
+          Item: group.item,
+          Unit: group.unit,
+          Transaction: group.transaction,
+        };
+
+        let total = 0;
+        for (const dateKey of transactionDateKeys) {
+          const change = group.daily.get(dateKey) ?? 0;
+          row[formatDateColumn(dateKey)] = change;
+          total += change;
+        }
+
+        row["Total Change"] = total;
+        return row;
+      });
+
     const sheets = [
       { name: "Inventory Report", rows: inventoryRows },
       { name: "Low Stock Report", rows: lowStockRows },
@@ -342,6 +483,10 @@ export async function GET(request: Request) {
         rows: transferDeliveryRows,
       },
       { name: "Transaction History", rows: transactionRows },
+      {
+        name: "Transaction History by Date",
+        rows: transactionHistoryByDateRows,
+      },
     ].map((sheet) => {
       if (sheet.rows.length > 0) return sheet;
 
@@ -357,6 +502,9 @@ export async function GET(request: Request) {
     });
 
     const filenameDate = formatDate(new Date());
+    const filenameRange = exportDateRange
+      ? `-${exportDateRange.startDate}-to-${exportDateRange.endDate}`
+      : "";
 
     if (format === "xlsx") {
       const workbook = XLSX.utils.book_new();
@@ -395,7 +543,7 @@ export async function GET(request: Request) {
         headers: {
           "Content-Type":
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-          "Content-Disposition": `attachment; filename="purple-yam-reports-${filenameDate}.xlsx"`,
+          "Content-Disposition": `attachment; filename="purple-yam-reports-${filenameDate}${filenameRange}.xlsx"`,
           "Cache-Control": "no-store",
         },
       });
@@ -416,7 +564,7 @@ export async function GET(request: Request) {
       status: 200,
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
-        "Content-Disposition": `attachment; filename="purple-yam-reports-${filenameDate}.csv"`,
+        "Content-Disposition": `attachment; filename="purple-yam-reports-${filenameDate}${filenameRange}.csv"`,
         "Cache-Control": "no-store",
       },
     });
