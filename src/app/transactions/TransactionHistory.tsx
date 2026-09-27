@@ -502,7 +502,7 @@ export default function TransactionHistory({
               ))}
             </div>
 
-            <div className="mt-2 overflow-hidden rounded-lg border border-gray-100">
+            <div className="mt-2 overflow-hidden rounded-lg bg-white">
               <div className="grid grid-cols-7 bg-white">
                 {calendarDays.map((day) => {
                   const key = inputDate(day);
@@ -519,7 +519,7 @@ export default function TransactionHistory({
                       key={key}
                       type="button"
                       onClick={() => selectDay(day)}
-                      className={`relative flex h-12 flex-col items-center justify-center border-b border-r border-gray-100 text-center transition ${
+                      className={`relative flex h-12 flex-col items-center justify-center rounded-md text-center transition ${
                         isSelected
                           ? "bg-purple-100 text-purple-700"
                           : viewMode === "DAY"
