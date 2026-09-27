@@ -191,6 +191,8 @@ export default function ReportsClient({
   const [exportOpen, setExportOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState("");
+  const [exportStartDate, setExportStartDate] = useState("");
+  const [exportEndDate, setExportEndDate] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -298,10 +300,25 @@ export default function ReportsClient({
 
   async function exportReports(format: "xlsx" | "csv") {
     try {
+      if (!exportStartDate || !exportEndDate) {
+        throw new Error("Select a start date and end date before exporting.");
+      }
+
+      if (exportStartDate > exportEndDate) {
+        throw new Error("Start date must be on or before end date.");
+      }
+
       setExporting(true);
       setExportError("");
       setExportOpen(false);
-      const response = await fetch("/api/reports/export?format=" + format, {
+
+      const params = new URLSearchParams({
+        format,
+        startDate: exportStartDate,
+        endDate: exportEndDate,
+      });
+
+      const response = await fetch("/api/reports/export?" + params.toString(), {
         method: "GET",
         cache: "no-store",
       });
@@ -448,17 +465,62 @@ export default function ReportsClient({
               {!exporting && <span aria-hidden="true">{exportOpen ? "▴" : "▾"}</span>}
             </button>
             {exportOpen && !exporting && (
-              <div role="menu" className="absolute right-0 z-20 mt-2 w-64 overflow-hidden rounded-xl border border-gray-200 bg-white p-1.5 shadow-lg">
+              <div role="menu" className="absolute right-0 z-20 mt-2 w-80 overflow-hidden rounded-xl border border-gray-200 bg-white p-1.5 shadow-lg">
                 <div className="px-3 py-2">
                   <p className="text-xs font-semibold text-gray-900">Export all reports</p>
                   <p className="mt-0.5 text-xs text-gray-500">
                     {currentUser.role === "OWNER" ? "Includes all branches." : "Includes your assigned branch only."}
                   </p>
                 </div>
-                <button type="button" role="menuitem" onClick={() => exportReports("xlsx")} className="flex w-full items-center rounded-lg px-3 py-2.5 text-left text-sm font-medium text-gray-700 hover:bg-purple-50 hover:text-purple-700">
+
+                <div className="border-y border-gray-100 px-3 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    Transaction history date range
+                  </p>
+                  <p className="mt-1 text-xs text-gray-400">
+                    Daily transaction columns will be generated for this period.
+                  </p>
+
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <label className="text-xs font-medium text-gray-600">
+                      Start date
+                      <input
+                        type="date"
+                        value={exportStartDate}
+                        onChange={(event) => setExportStartDate(event.target.value)}
+                        className="aims-control mt-1 w-full px-2.5 text-sm"
+                      />
+                    </label>
+
+                    <label className="text-xs font-medium text-gray-600">
+                      End date
+                      <input
+                        type="date"
+                        value={exportEndDate}
+                        min={exportStartDate || undefined}
+                        onChange={(event) => setExportEndDate(event.target.value)}
+                        className="aims-control mt-1 w-full px-2.5 text-sm"
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  role="menuitem"
+                  disabled={!exportStartDate || !exportEndDate}
+                  onClick={() => exportReports("xlsx")}
+                  className="flex w-full items-center rounded-lg px-3 py-2.5 text-left text-sm font-medium text-gray-700 hover:bg-purple-50 hover:text-purple-700 disabled:cursor-not-allowed disabled:opacity-40"
+                >
                   Export Excel (.xlsx)
                 </button>
-                <button type="button" role="menuitem" onClick={() => exportReports("csv")} className="flex w-full items-center rounded-lg px-3 py-2.5 text-left text-sm font-medium text-gray-700 hover:bg-purple-50 hover:text-purple-700">
+                <button
+                  type="button"
+                  role="menuitem"
+                  disabled={!exportStartDate || !exportEndDate}
+                  onClick={() => exportReports("csv")}
+                  className="flex w-full items-center rounded-lg px-3 py-2.5 text-left text-sm font-medium text-gray-700 hover:bg-purple-50 hover:text-purple-700 disabled:cursor-not-allowed disabled:opacity-40"
+                >
                   Export CSV (.csv)
                 </button>
               </div>
