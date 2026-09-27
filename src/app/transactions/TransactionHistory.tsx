@@ -458,8 +458,8 @@ export default function TransactionHistory({
           ))}
         </section>
 
-                <div className="grid items-stretch gap-4 lg:grid-rows-[390px] lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)]">
-          <section className="h-full w-full rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+                <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)]">
+          <section className="w-full rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
             <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-sm font-bold text-gray-900">Activity calendar</h2>
@@ -563,7 +563,7 @@ export default function TransactionHistory({
 
 
 
-          <section className="flex h-full w-full min-h-0 flex-col rounded-2xl border border-gray-200 bg-white shadow-sm">
+          <section className="flex min-h-[390px] w-full flex-col rounded-2xl border border-gray-200 bg-white shadow-sm">
             <div className="border-b border-gray-100 px-5 py-3.5">
               <h2 className="text-lg font-bold text-gray-900">
                 {viewMode === "DAY" ? `Activity on ${displayDate(selectedDate)}` : `Transaction Ledger — ${periodLabel}`}
