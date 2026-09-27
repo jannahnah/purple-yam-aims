@@ -16,8 +16,8 @@ export const metadata: Metadata = {
   title: "Purple Yam Inventory Management System",
   description: "Multi-branch inventory management system for Purple Yam",
   icons: {
-    icon: "/purple-yam-logo.jpg",
-    shortcut: "/purple-yam-logo.jpg",
+    icon: "/purple-yam-favicon.svg",
+    shortcut: "/purple-yam-favicon.svg",
     apple: "/purple-yam-logo.jpg",
   },
 };
