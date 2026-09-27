@@ -15,6 +15,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Purple Yam Inventory Management System",
   description: "Multi-branch inventory management system for Purple Yam",
+  icons: {
+    icon: "/purple-yam-logo.jpg",
+    shortcut: "/purple-yam-logo.jpg",
+    apple: "/purple-yam-logo.jpg",
+  },
 };
 
 export default function RootLayout({
