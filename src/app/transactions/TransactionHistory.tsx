@@ -34,7 +34,7 @@ type CurrentUser = {
   branchName: string | null;
 };
 
-type ViewMode = "DAY" | "WEEK" | "MONTH" | "CUSTOM";
+type ViewMode = "DAY" | "WEEK" | "MONTH";
 
 const TZ = "Asia/Manila";
 
@@ -150,8 +150,6 @@ export default function TransactionHistory({
   const [branchFilter, setBranchFilter] = useState("ALL");
   const [typeFilter, setTypeFilter] = useState("ALL");
   const [itemFilter, setItemFilter] = useState("ALL");
-  const [customFrom, setCustomFrom] = useState(() => inputDate(addDays(new Date(), -6)));
-  const [customTo, setCustomTo] = useState(() => inputDate(new Date()));
 
   const branches = useMemo(
     () => Array.from(new Set(transactions.map((t) => t.branch.name))).sort(),
@@ -210,13 +208,7 @@ export default function TransactionHistory({
       return { from: startOfMonth(selectedDate), to: endOfMonth(selectedDate) };
     }
 
-    const from = new Date(`${customFrom}T00:00:00`);
-    const to = new Date(`${customTo}T00:00:00`);
-    return {
-      from: from <= to ? from : to,
-      to: from <= to ? to : from,
-    };
-  }, [viewMode, selectedDate, customFrom, customTo]);
+  }, [viewMode, selectedDate]);
 
   const periodTransactions = useMemo(
     () =>
@@ -376,7 +368,7 @@ export default function TransactionHistory({
         <section className="rounded-2xl border border-gray-200 bg-white p-3 shadow-sm">
           <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
             <div className="flex flex-wrap gap-1.5">
-              {(["DAY", "WEEK", "MONTH", "CUSTOM"] as ViewMode[]).map((mode) => (
+              {(["DAY", "WEEK", "MONTH"] as ViewMode[]).map((mode) => (
                 <button
                   key={mode}
                   type="button"
@@ -391,9 +383,7 @@ export default function TransactionHistory({
                     ? "Day"
                     : mode === "WEEK"
                       ? "Week"
-                      : mode === "MONTH"
-                        ? "Month"
-                        : "Custom Range"}
+                      : "Month"}
                 </button>
               ))}
             </div>
@@ -468,35 +458,8 @@ export default function TransactionHistory({
           ))}
         </section>
 
-                {viewMode === "CUSTOM" && (
-          <section className="w-full rounded-2xl border border-gray-200 bg-white p-4 shadow-sm lg:h-[390px]">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="text-sm font-semibold text-gray-700">
-                From
-                <input
-                  type="date"
-                  value={customFrom}
-                  onChange={(event) => setCustomFrom(event.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 font-normal"
-                />
-              </label>
-              <label className="text-sm font-semibold text-gray-700">
-                To
-                <input
-                  type="date"
-                  value={customTo}
-                  onChange={(event) => setCustomTo(event.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 font-normal"
-                />
-              </label>
-            </div>
-          </section>
-        )}
-
-
-
-        <div className="grid items-stretch gap-4 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)]">
-          <section className="w-full rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+                <div className="grid items-stretch gap-4 lg:grid-rows-[390px] lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)]">
+          <section className="h-full w-full rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
             <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-sm font-bold text-gray-900">Activity calendar</h2>
@@ -546,6 +509,9 @@ export default function TransactionHistory({
                   const count = transactionDays.get(key) ?? 0;
                   const isCurrentMonth = day.getMonth() === calendarMonth.getMonth();
                   const isSelected = key === inputDate(selectedDate);
+                  const periodFrom = inputDate(period.from);
+                  const periodTo = inputDate(period.to);
+                  const isInPeriod = key >= periodFrom && key <= periodTo;
                   const isActive = count > 0;
 
                   return (
@@ -555,13 +521,17 @@ export default function TransactionHistory({
                       onClick={() => selectDay(day)}
                       className={`relative flex h-12 flex-col items-center justify-center border-b border-r border-gray-100 text-center transition ${
                         isSelected
-                          ? "bg-purple-50 text-purple-700"
-                          : isActive
-                            ? "hover:bg-purple-50/70"
-                            : "hover:bg-gray-50"
+                          ? "bg-purple-100 text-purple-700"
+                          : viewMode === "DAY"
+                            ? isActive
+                              ? "hover:bg-purple-50/70"
+                              : "hover:bg-gray-50"
+                            : isInPeriod && isCurrentMonth
+                              ? "bg-purple-50 text-purple-700"
+                              : "hover:bg-gray-50"
                       } ${isCurrentMonth ? "text-gray-800" : "text-gray-300"}`}
                     >
-                      <span className={`text-xs font-medium ${isSelected ? "font-bold text-purple-700" : ""}`}>
+                      <span className={`text-xs font-medium ${isSelected || (viewMode !== "DAY" && isInPeriod) ? "font-bold text-purple-700" : ""}`}>
                         {day.getDate()}
                       </span>
                       {isActive && (
@@ -593,7 +563,7 @@ export default function TransactionHistory({
 
 
 
-          <section className="flex w-full flex-col rounded-2xl border border-gray-200 bg-white shadow-sm lg:h-[390px]">
+          <section className="flex h-full w-full min-h-0 flex-col rounded-2xl border border-gray-200 bg-white shadow-sm">
             <div className="border-b border-gray-100 px-5 py-3.5">
               <h2 className="text-lg font-bold text-gray-900">
                 {viewMode === "DAY" ? `Activity on ${displayDate(selectedDate)}` : `Transaction Ledger — ${periodLabel}`}
@@ -670,7 +640,7 @@ export default function TransactionHistory({
         </div>
 
         {(viewMode === "WEEK" || viewMode === "MONTH") && (
-          <section className="mx-auto w-full max-w-5xl rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+          <section className="w-full rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
             <h2 className="text-lg font-bold text-gray-900">
               Planning Summary
             </h2>
