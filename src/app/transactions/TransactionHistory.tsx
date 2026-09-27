@@ -210,6 +210,7 @@ export default function TransactionHistory({
       return { from: startOfMonth(selectedDate), to: endOfMonth(selectedDate) };
     }
 
+    return { from: selectedDate, to: selectedDate };
   }, [viewMode, selectedDate]);
 
   const periodTransactions = useMemo(
