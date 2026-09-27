@@ -47,6 +47,65 @@ function formatTransactionType(value: string) {
     .replace(/\b\w/g, (character) => character.toUpperCase());
 }
 
+function formatDateKey(value: Date) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Manila",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(value);
+}
+
+function formatDateColumn(dateKey: string) {
+  const date = new Date(`${dateKey}T00:00:00+08:00`);
+  return new Intl.DateTimeFormat("en-PH", {
+    timeZone: "Asia/Manila",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
+}
+
+function buildDateKeys(startDate: string, endDate: string) {
+  const keys: string[] = [];
+  const cursor = new Date(`${startDate}T00:00:00+08:00`);
+  const end = new Date(`${endDate}T00:00:00+08:00`);
+
+  while (cursor <= end) {
+    keys.push(formatDateKey(cursor));
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+
+  return keys;
+}
+
+function parseExportDateRange(url: URL) {
+  const startDate = url.searchParams.get("startDate");
+  const endDate = url.searchParams.get("endDate");
+
+  if (!startDate && !endDate) {
+    return null;
+  }
+
+  if (!startDate || !endDate || !/^\d{4}-\d{2}-\d{2}$/.test(startDate) || !/^\d{4}-\d{2}-\d{2}$/.test(endDate)) {
+    throw new Error("Start date and end date are required in YYYY-MM-DD format.");
+  }
+
+  const start = new Date(`${startDate}T00:00:00+08:00`);
+  const end = new Date(`${endDate}T00:00:00+08:00`);
+
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || start > end) {
+    throw new Error("Start date must be on or before end date.");
+  }
+
+  return {
+    startDate,
+    endDate,
+    startAt: start,
+    endAt: new Date(end.getTime() + 24 * 60 * 60 * 1000),
+  };
+}
+
 export async function GET(request: Request) {
   try {
     const currentUser = await getCurrentUser();
@@ -78,6 +137,16 @@ export async function GET(request: Request) {
       );
     }
 
+    let exportDateRange;
+    try {
+      exportDateRange = parseExportDateRange(url);
+    } catch (error) {
+      return NextResponse.json(
+        { error: error instanceof Error ? error.message : "Invalid export date range." },
+        { status: 400 }
+      );
+    }
+
     // Branch scope is derived exclusively from the authenticated user.
     // A Branch Manager cannot override this with a query parameter.
     const branchWhere =
@@ -87,7 +156,7 @@ export async function GET(request: Request) {
             branchId: currentUser.branchId ?? "__NO_BRANCH__",
           };
 
-    const [inventory, transactions] = await Promise.all([
+    const [inventory, transactions, branches] = await Promise.all([
       prisma.branchStock.findMany({
         where: {
           ...branchWhere,
@@ -105,7 +174,17 @@ export async function GET(request: Request) {
         ],
       }),
       prisma.stockTransaction.findMany({
-        where: branchWhere,
+        where: {
+          ...branchWhere,
+          ...(exportDateRange
+            ? {
+                createdAt: {
+                  gte: exportDateRange.startAt,
+                  lt: exportDateRange.endAt,
+                },
+              }
+            : {}),
+        },
         include: {
           item: true,
           branch: true,
@@ -113,6 +192,16 @@ export async function GET(request: Request) {
         },
         orderBy: {
           createdAt: "desc",
+        },
+      }),
+      prisma.branch.findMany({
+        where: branchWhere,
+        select: {
+          id: true,
+          name: true,
+        },
+        orderBy: {
+          name: "asc",
         },
       }),
     ]);
@@ -331,47 +420,178 @@ export async function GET(request: Request) {
       "User Role": transaction.user.role,
     }));
 
-    const sheets = [
-      { name: "Inventory Report", rows: inventoryRows },
-      { name: "Low Stock Report", rows: lowStockRows },
-      { name: "Out of Stock", rows: outOfStockRows },
-      { name: "Sales Summary", rows: salesRows },
-      { name: "Production Summary", rows: productionRows },
-      {
-        name: "Transfer & Delivery",
-        rows: transferDeliveryRows,
-      },
-      { name: "Transaction History", rows: transactionRows },
-    ].map((sheet) => {
-      if (sheet.rows.length > 0) return sheet;
+    const transactionDateKeys = exportDateRange
+      ? buildDateKeys(exportDateRange.startDate, exportDateRange.endDate)
+      : Array.from(
+          new Set(
+            transactions.map((transaction) =>
+              formatDateKey(transaction.createdAt)
+            )
+          )
+        ).sort();
 
-      return {
-        ...sheet,
-        rows: [
-          {
-            "Report Date & Time": reportDateTime,
-            Status: "No records found",
-          },
-        ],
-      };
-    });
+    const branchTransactionTypes = Array.from(
+      new Set(transactions.map((transaction) => transaction.type))
+    );
+
+    const branchGroups = new Map<
+      string,
+      {
+        name: string;
+        transactions: typeof transactions;
+      }
+    >();
+
+    for (const branch of branches) {
+      branchGroups.set(branch.id, {
+        name: branch.name,
+        transactions: [],
+      });
+    }
+
+    for (const transaction of transactions) {
+      const existing = branchGroups.get(transaction.branchId);
+
+      if (existing) {
+        existing.transactions.push(transaction);
+      } else {
+        branchGroups.set(transaction.branchId, {
+          name: transaction.branch.name,
+          transactions: [transaction],
+        });
+      }
+    }
+
+    const branchTransactionSheets = [...branchGroups.values()].map(
+      (branch) => {
+        const rows: Array<Array<string | number>> = [
+          ["PURPLE YAM", branch.name.toUpperCase()],
+          [
+            "Transaction History",
+            exportDateRange
+              ? `${exportDateRange.startDate} to ${exportDateRange.endDate}`
+              : "All recorded transaction dates",
+          ],
+          [],
+        ];
+
+        const dates = transactionDateKeys.map(formatDateColumn);
+
+        for (const transactionType of branchTransactionTypes) {
+          const typeTransactions = branch.transactions.filter(
+            (transaction) => transaction.type === transactionType
+          );
+
+          if (typeTransactions.length === 0) {
+            continue;
+          }
+
+          rows.push([formatTransactionType(transactionType)]);
+          rows.push(["Item", "Unit", ...dates, "Total Change"]);
+
+          const itemGroups = new Map<
+            string,
+            {
+              item: string;
+              unit: string;
+              daily: Map<string, number>;
+            }
+          >();
+
+          for (const transaction of typeTransactions) {
+            const existing = itemGroups.get(transaction.itemId);
+            const dateKey = formatDateKey(transaction.createdAt);
+
+            if (existing) {
+              existing.daily.set(
+                dateKey,
+                (existing.daily.get(dateKey) ?? 0) +
+                  transaction.quantityDelta
+              );
+            } else {
+              itemGroups.set(transaction.itemId, {
+                item: formatItemLabel(transaction.item),
+                unit: transaction.item.unit,
+                daily: new Map([[dateKey, transaction.quantityDelta]]),
+              });
+            }
+          }
+
+          for (const item of [...itemGroups.values()].sort((a, b) =>
+            a.item.localeCompare(b.item)
+          )) {
+            const row: Array<string | number> = [
+              item.item,
+              item.unit,
+            ];
+            let total = 0;
+
+            for (const dateKey of transactionDateKeys) {
+              const change = item.daily.get(dateKey) ?? 0;
+              row.push(change);
+              total += change;
+            }
+
+            row.push(total);
+            rows.push(row);
+          }
+
+          rows.push([]);
+        }
+
+        if (rows.length === 3) {
+          rows.push(["No transactions found for this branch and date range."]);
+        }
+
+        return {
+          name: branch.name,
+          rows,
+        };
+      }
+    );
+
+    const branchSheetNames = new Set<string>();
+
+    for (const branch of branchGroups.values()) {
+      const baseName = branch.name.replace(/[\\/?*\[\]:]/g, "").slice(0, 31) || "Branch";
+      let sheetName = baseName;
+      let suffix = 2;
+
+      while (branchSheetNames.has(sheetName)) {
+        const suffixText = ` ${suffix}`;
+        sheetName = `${baseName.slice(0, 31 - suffixText.length)}${suffixText}`;
+        suffix += 1;
+      }
+
+      branchSheetNames.add(sheetName);
+
+      const sheet = branchTransactionSheets.find(
+        (candidate) => candidate.name === branch.name
+      );
+
+      if (sheet) {
+        sheet.name = sheetName;
+      }
+    }
 
     const filenameDate = formatDate(new Date());
+    const filenameRange = exportDateRange
+      ? `-${exportDateRange.startDate}-to-${exportDateRange.endDate}`
+      : "";
 
     if (format === "xlsx") {
       const workbook = XLSX.utils.book_new();
 
-      for (const sheet of sheets) {
-        const worksheet = XLSX.utils.json_to_sheet(sheet.rows);
+      for (const sheet of branchTransactionSheets) {
+        const worksheet = XLSX.utils.aoa_to_sheet(sheet.rows);
 
-        worksheet["!cols"] = Object.keys(sheet.rows[0] ?? {}).map(
-          (key) => ({
-            wch: Math.min(Math.max(key.length + 2, 16), 32),
-          })
-        );
+        worksheet["!cols"] = [
+          { wch: 28 },
+          { wch: 12 },
+          ...transactionDateKeys.map(() => ({ wch: 14 })),
+          { wch: 16 },
+        ];
 
-        // Make the generated timestamp easy to verify when comparing
-        // exported reports against the live system.
         if (worksheet["A1"]) {
           worksheet["A1"].s = {
             font: { bold: true },
@@ -395,16 +615,16 @@ export async function GET(request: Request) {
         headers: {
           "Content-Type":
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-          "Content-Disposition": `attachment; filename="purple-yam-reports-${filenameDate}.xlsx"`,
+          "Content-Disposition": `attachment; filename="purple-yam-transaction-history-${filenameDate}${filenameRange}.xlsx"`,
           "Cache-Control": "no-store",
         },
       });
     }
 
-    // CSV cannot contain multiple worksheets, so all six reports are
-    // exported into one readable CSV with clearly separated sections.
-    const csvSections = sheets.map((sheet) => {
-      const worksheet = XLSX.utils.json_to_sheet(sheet.rows);
+    // CSV cannot contain multiple worksheets, so each branch is
+    // exported as a clearly separated branch section.
+    const csvSections = branchTransactionSheets.map((sheet) => {
+      const worksheet = XLSX.utils.aoa_to_sheet(sheet.rows);
       const csv = XLSX.utils.sheet_to_csv(worksheet);
       return `# ${sheet.name}\n${csv.trim()}`;
     });
@@ -416,7 +636,7 @@ export async function GET(request: Request) {
       status: 200,
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
-        "Content-Disposition": `attachment; filename="purple-yam-reports-${filenameDate}.csv"`,
+        "Content-Disposition": `attachment; filename="purple-yam-transaction-history-${filenameDate}${filenameRange}.csv"`,
         "Cache-Control": "no-store",
       },
     });
