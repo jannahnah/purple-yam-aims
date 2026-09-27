@@ -485,9 +485,6 @@ export default function ItemMasterClient() {
       <div className="mx-auto w-full max-w-7xl space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-purple-600">
-              Owner Controls
-            </p>
             <h1 className="mt-1 text-2xl font-bold text-gray-900">
               Item Master
             </h1>
@@ -545,7 +542,8 @@ export default function ItemMasterClient() {
           </div>
         </div>
 
-        <section className="aims-card overflow-hidden">
+        <div className="grid gap-6 md:grid-cols-[minmax(0,1.35fr)_minmax(360px,1fr)] md:items-start">
+        <section className="aims-card overflow-hidden md:col-start-1 md:row-start-1">
           <div className="border-b border-gray-100 px-5 py-4">
             <h2 className="text-base font-semibold text-gray-900">
               Item Master Records
@@ -672,7 +670,7 @@ export default function ItemMasterClient() {
         </section>
 
         {archivedItems.length > 0 && (
-          <section className="aims-card overflow-hidden">
+          <section className="aims-card overflow-hidden md:col-start-1 md:row-start-2">
             <div className="border-b border-gray-100 px-5 py-4">
               <h2 className="text-base font-semibold text-gray-700">
                 Deleted Items
@@ -743,7 +741,7 @@ export default function ItemMasterClient() {
           </section>
         )}
 
-        <section className="aims-card p-5 sm:p-6">
+        <section className="aims-card p-5 sm:p-6 md:col-start-2 md:row-start-1">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h2 className="text-base font-semibold text-gray-900">
@@ -924,6 +922,8 @@ export default function ItemMasterClient() {
       </div>
 
       {toasts.length > 0 && (
+        </div>
+
         <div className="fixed bottom-5 right-5 z-[200] flex w-[min(92vw,420px)] flex-col gap-2">
           {toasts.map((toast) => (
             <div
