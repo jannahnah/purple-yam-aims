@@ -57,6 +57,7 @@ export default async function ManagerDashboardPage() {
           item: {
             select: {
               name: true,
+              size: true,
               unit: true,
             },
           },
@@ -138,6 +139,7 @@ export default async function ManagerDashboardPage() {
           createdAt:
             transaction.createdAt.toISOString(),
           itemName: transaction.item.name,
+          itemSize: transaction.item.size,
           unit: transaction.item.unit,
           username: transaction.user.username,
         }))}
