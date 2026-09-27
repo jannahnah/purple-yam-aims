@@ -32,11 +32,13 @@ export default function SignupRoleClient({ role }: Props) {
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-purple-300/70">
               {roleLabel} Account
             </p>
-            <h1 className="mt-3 text-2xl font-bold text-white">Contact Your Owner</h1>
+            <h1 className="mt-3 text-2xl font-bold text-white">
+              Contact Your Owner
+            </h1>
             <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-purple-100/60">
-              New {roleLabel} accounts are created by the Owner and assigned to
-              the appropriate branch. Please contact your Owner for your account
-              credentials.
+              New {roleLabel} accounts are created by the Owner and assigned
+              to the appropriate branch. Please contact your Owner for your
+              account credentials.
             </p>
 
             <div className="mt-6 rounded-2xl border border-purple-300/10 bg-purple-900/20 px-4 py-4 text-left text-xs leading-5 text-purple-100/55">
@@ -91,7 +93,7 @@ export default function SignupRoleClient({ role }: Props) {
       const response = await fetch("/api/auth/signup/owner", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: { name, email, password, confirmPassword },
+        body: JSON.stringify({ name, email, password, confirmPassword }),
       });
 
       const data = await response.json();
@@ -117,7 +119,9 @@ export default function SignupRoleClient({ role }: Props) {
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-purple-300/70">
             Owner Registration
           </p>
-          <h1 className="mt-2 text-3xl font-bold text-white">Create Owner Account</h1>
+          <h1 className="mt-2 text-3xl font-bold text-white">
+            Create Owner Account
+          </h1>
           <p className="mt-2 text-sm leading-6 text-purple-100/60">
             Use the client&apos;s business email for the primary Owner account.
           </p>
@@ -201,7 +205,10 @@ export default function SignupRoleClient({ role }: Props) {
             </div>
 
             {error && (
-              <div role="alert" className="rounded-xl border border-red-400/20 bg-red-500/10 px-3.5 py-2.5 text-xs text-red-300">
+              <div
+                role="alert"
+                className="rounded-xl border border-red-400/20 bg-red-500/10 px-3.5 py-2.5 text-xs text-red-300"
+              >
                 {error}
               </div>
             )}
