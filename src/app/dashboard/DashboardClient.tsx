@@ -30,7 +30,6 @@ type StockRecord = {
     unit: string;
     minThreshold: number;
     sourceType: string;
-    size?: "SMALL" | "ROUND" | "MEDIUM" | "LARGE" | null;
   };
   branch: {
     id: string;
