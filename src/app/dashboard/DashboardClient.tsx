@@ -373,7 +373,7 @@ export default function DashboardClient({
         <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
             <p className="text-sm font-medium text-gray-500">
-              Inventory Items
+              Item Types
             </p>
 
             <p className="mt-3 text-3xl font-bold text-gray-900">
@@ -381,7 +381,7 @@ export default function DashboardClient({
             </p>
 
             <p className="mt-1 text-xs text-gray-500">
-              Across all branches
+              Active item master records
             </p>
           </div>
 
