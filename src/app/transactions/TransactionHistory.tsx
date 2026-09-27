@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { formatItemLabel } from "@/lib/item-label";
 
 type Transaction = {
@@ -150,6 +150,8 @@ export default function TransactionHistory({
   const [branchFilter, setBranchFilter] = useState("ALL");
   const [typeFilter, setTypeFilter] = useState("ALL");
   const [itemFilter, setItemFilter] = useState("ALL");
+  const calendarRef = useRef<HTMLElement | null>(null);
+  const [calendarHeight, setCalendarHeight] = useState<number | null>(null);
 
   const branches = useMemo(
     () => Array.from(new Set(transactions.map((t) => t.branch.name))).sort(),
@@ -337,6 +339,18 @@ export default function TransactionHistory({
 
   const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+  useEffect(() => {
+    const element = calendarRef.current;
+    if (!element) return;
+
+    const updateHeight = () => setCalendarHeight(element.getBoundingClientRect().height);
+    updateHeight();
+
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [calendarMonth, viewMode, periodTransactions.length]);
+
   return (
     <main className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
       <div className="mx-auto max-w-7xl space-y-6">
@@ -458,8 +472,8 @@ export default function TransactionHistory({
           ))}
         </section>
 
-                <div className="grid items-stretch gap-4 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)]">
-          <section className="w-full rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+                <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)]">
+          <section ref={calendarRef} className="w-full rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
             <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-sm font-bold text-gray-900">Activity calendar</h2>
@@ -563,7 +577,10 @@ export default function TransactionHistory({
 
 
 
-          <section className="flex h-full min-h-0 w-full flex-col rounded-2xl border border-gray-200 bg-white shadow-sm">
+          <section
+            className="flex min-h-0 w-full flex-col rounded-2xl border border-gray-200 bg-white shadow-sm"
+            style={calendarHeight ? { height: `${calendarHeight}px` } : undefined}
+          >
             <div className="border-b border-gray-100 px-5 py-3.5">
               <h2 className="text-lg font-bold text-gray-900">
                 {viewMode === "DAY" ? `Activity on ${displayDate(selectedDate)}` : `Transaction Ledger — ${periodLabel}`}
