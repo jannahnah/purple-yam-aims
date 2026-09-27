@@ -95,6 +95,7 @@ export default async function CashierDashboardPage() {
         item: {
           select: {
             name: true,
+            size: true,
             unit: true,
           },
         },
