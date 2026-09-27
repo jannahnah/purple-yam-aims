@@ -368,7 +368,7 @@ export default function TransactionHistory({
             </h1>
             <p className="mt-1 max-w-3xl text-sm text-gray-500">
               Review sales, production, consumption, stock receipts, and
-              inventory movements by day, week, month, or custom period.
+              inventory movements by day, week, or month.
             </p>
           </div>
 
