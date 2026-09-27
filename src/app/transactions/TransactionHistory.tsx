@@ -497,11 +497,11 @@ export default function TransactionHistory({
 
         <div className="grid items-stretch gap-4 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)]">
           <section className="w-full rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="text-lg font-bold text-gray-900">Activity Calendar</h2>
+                <h2 className="text-sm font-bold text-gray-900">Activity calendar</h2>
                 <p className="text-sm text-gray-500">
-                  Select a date to see everything recorded that day.
+                  Select a date to inspect its transactions.
                 </p>
               </div>
 
@@ -509,12 +509,12 @@ export default function TransactionHistory({
                 <button
                   type="button"
                   onClick={() => moveMonth(-1)}
-                  className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold hover:bg-gray-50"
+                  className="rounded-md border border-gray-200 px-2.5 py-1.5 text-xs font-semibold hover:bg-gray-50"
                   aria-label="Previous month"
                 >
                   ←
                 </button>
-                <p className="min-w-36 text-center text-sm font-semibold text-gray-900">
+                <p className="min-w-28 text-center text-xs font-semibold text-gray-900">
                   {new Intl.DateTimeFormat("en-PH", {
                     month: "long",
                     year: "numeric",
@@ -523,7 +523,7 @@ export default function TransactionHistory({
                 <button
                   type="button"
                   onClick={() => moveMonth(1)}
-                  className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold hover:bg-gray-50"
+                  className="rounded-md border border-gray-200 px-2.5 py-1.5 text-xs font-semibold hover:bg-gray-50"
                   aria-label="Next month"
                 >
                   →
@@ -533,43 +533,62 @@ export default function TransactionHistory({
 
             <div className="grid grid-cols-7 border-b border-gray-100 pb-2">
               {weekDays.map((day) => (
-                <div key={day} className="text-center text-xs font-semibold uppercase tracking-wide text-gray-400">
+                <div key={day} className="py-2 text-center text-[9px] font-semibold uppercase tracking-wide text-gray-400">
                   {day}
                 </div>
               ))}
             </div>
 
-            <div className="mt-2 grid grid-cols-7 border-l border-t border-gray-200">
-              {calendarDays.map((day) => {
-                const key = inputDate(day);
-                const count = transactionDays.get(key) ?? 0;
-                const isCurrentMonth = day.getMonth() === calendarMonth.getMonth();
-                const isSelected = key === inputDate(selectedDate);
+            <div className="mt-2 overflow-hidden rounded-lg border border-gray-100">
+              <div className="grid grid-cols-7 bg-white">
+                {calendarDays.map((day) => {
+                  const key = inputDate(day);
+                  const count = transactionDays.get(key) ?? 0;
+                  const isCurrentMonth = day.getMonth() === calendarMonth.getMonth();
+                  const isSelected = key === inputDate(selectedDate);
+                  const isActive = count > 0;
 
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => selectDay(day)}
-                    className={`min-h-16 border-b border-r border-gray-200 p-1.5 text-left transition sm:min-h-20 ${
-                      isSelected
-                        ? "border-purple-500 bg-purple-50 ring-1 ring-purple-300"
-                        : "border-transparent hover:border-purple-200 hover:bg-purple-50/50"
-                    } ${isCurrentMonth ? "text-gray-900" : "text-gray-300"}`}
-                  >
-                    <span className={`text-sm font-semibold ${isSelected ? "text-purple-700" : ""}`}>
-                      {day.getDate()}
-                    </span>
-
-                    {count > 0 && (
-                      <span className="mt-2 block w-fit rounded-full bg-purple-100 px-1.5 py-0.5 text-[10px] font-bold text-purple-700">
-                        {count} {count === 1 ? "record" : "records"}
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => selectDay(day)}
+                      className={`relative flex h-12 flex-col items-center justify-center border-b border-r border-gray-100 text-center transition ${
+                        isSelected
+                          ? "bg-purple-50 text-purple-700"
+                          : isActive
+                            ? "hover:bg-purple-50/70"
+                            : "hover:bg-gray-50"
+                      } ${isCurrentMonth ? "text-gray-800" : "text-gray-300"}`}
+                    >
+                      <span className={`text-xs font-medium ${isSelected ? "font-bold text-purple-700" : ""}`}>
+                        {day.getDate()}
                       </span>
-                    )}
-                  </button>
-                );
-              })}
+                      {isActive && (
+                        <span
+                          className={`mt-1 h-1.5 rounded-full ${
+                            count >= 3 ? "w-5 bg-purple-600" : "w-1.5 bg-purple-300"
+                          }`}
+                          aria-label={`${count} transaction records`}
+                        />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
+
+            <div className="mt-3 flex items-center gap-4 border-t border-gray-100 pt-2 text-[10px] text-gray-500">
+              <span className="inline-flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-purple-300" />
+                1–2 activities
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="h-1.5 w-5 rounded-full bg-purple-600" />
+                3+ activities
+              </span>
+            </div>
+          
           </section>
 
 
