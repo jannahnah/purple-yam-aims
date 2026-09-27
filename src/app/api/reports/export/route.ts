@@ -574,31 +574,6 @@ export async function GET(request: Request) {
       }
     }
 
-    const sheets = [
-      { name: "Inventory Report", rows: inventoryRows },
-      { name: "Low Stock Report", rows: lowStockRows },
-      { name: "Out of Stock", rows: outOfStockRows },
-      { name: "Sales Summary", rows: salesRows },
-      { name: "Production Summary", rows: productionRows },
-      {
-        name: "Transfer & Delivery",
-        rows: transferDeliveryRows,
-      },
-      { name: "Transaction History", rows: transactionRows },
-    ].map((sheet) => {
-      if (sheet.rows.length > 0) return sheet;
-
-      return {
-        ...sheet,
-        rows: [
-          {
-            "Report Date & Time": reportDateTime,
-            Status: "No records found",
-          },
-        ],
-      };
-    });
-
     const filenameDate = formatDate(new Date());
     const filenameRange = exportDateRange
       ? `-${exportDateRange.startDate}-to-${exportDateRange.endDate}`
@@ -606,28 +581,6 @@ export async function GET(request: Request) {
 
     if (format === "xlsx") {
       const workbook = XLSX.utils.book_new();
-
-      for (const sheet of sheets) {
-        const worksheet = XLSX.utils.json_to_sheet(sheet.rows);
-
-        worksheet["!cols"] = Object.keys(sheet.rows[0] ?? {}).map(
-          (key) => ({
-            wch: Math.min(Math.max(key.length + 2, 16), 32),
-          })
-        );
-
-        if (worksheet["A1"]) {
-          worksheet["A1"].s = {
-            font: { bold: true },
-          };
-        }
-
-        XLSX.utils.book_append_sheet(
-          workbook,
-          worksheet,
-          sheet.name.slice(0, 31)
-        );
-      }
 
       for (const sheet of branchTransactionSheets) {
         const worksheet = XLSX.utils.aoa_to_sheet(sheet.rows);
@@ -638,6 +591,12 @@ export async function GET(request: Request) {
           ...transactionDateKeys.map(() => ({ wch: 14 })),
           { wch: 16 },
         ];
+
+        if (worksheet["A1"]) {
+          worksheet["A1"].s = {
+            font: { bold: true },
+          };
+        }
 
         XLSX.utils.book_append_sheet(
           workbook,
@@ -656,7 +615,7 @@ export async function GET(request: Request) {
         headers: {
           "Content-Type":
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-          "Content-Disposition": `attachment; filename="purple-yam-reports-${filenameDate}${filenameRange}.xlsx"`,
+          "Content-Disposition": `attachment; filename="purple-yam-transaction-history-${filenameDate}${filenameRange}.xlsx"`,
           "Cache-Control": "no-store",
         },
       });
@@ -670,12 +629,13 @@ export async function GET(request: Request) {
         const csv = XLSX.utils.sheet_to_csv(worksheet);
         return `# ${sheet.name}\n${csv.trim()}`;
       }),
-      ...branchTransactionSheets.map((sheet) => {
-        const worksheet = XLSX.utils.aoa_to_sheet(sheet.rows);
-        const csv = XLSX.utils.sheet_to_csv(worksheet);
-        return `# ${sheet.name}\n${csv.trim()}`;
-      }),
-    ];
+      ...bran    // CSV cannot contain multiple worksheets, so each branch is
+    // exported as a clearly separated branch section.
+    const csvSections = branchTransactionSheets.map((sheet) => {
+      const worksheet = XLSX.utils.aoa_to_sheet(sheet.rows);
+      const csv = XLSX.utils.sheet_to_csv(worksheet);
+      return `# ${sheet.name}\n${csv.trim()}`;
+    });
 
     const csvContent = csvSections.join("\n\n");
     const csvWithBom = "\uFEFF" + csvContent + "\n";
@@ -684,7 +644,7 @@ export async function GET(request: Request) {
       status: 200,
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
-        "Content-Disposition": `attachment; filename="purple-yam-reports-${filenameDate}${filenameRange}.csv"`,
+        "Content-Disposition": `attachment; filename="purple-yam-transaction-history-${filenameDate}${filenameRange}.csv"`,
         "Cache-Control": "no-store",
       },
     });
