@@ -21,6 +21,9 @@ export default async function ManagerDashboardPage() {
       prisma.branchStock.findMany({
         where: {
           branchId,
+          item: {
+            isActive: true,
+          },
         },
         include: {
           item: true,
