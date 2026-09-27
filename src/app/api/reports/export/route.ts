@@ -412,65 +412,150 @@ export async function GET(request: Request) {
 
     const transactionDateKeys = exportDateRange
       ? buildDateKeys(exportDateRange.startDate, exportDateRange.endDate)
-      : Array.from(new Set(transactions.map((transaction) => formatDateKey(transaction.createdAt)))).sort();
+      : Array.from(
+          new Set(
+            transactions.map((transaction) =>
+              formatDateKey(transaction.createdAt)
+            )
+          )
+        ).sort();
 
-    const dailyTransactionGroups = new Map<string, {
-      branch: string;
-      item: string;
-      unit: string;
-      transaction: string;
-      daily: Map<string, number>;
-    }>();
+    const branchTransactionTypes = Array.from(
+      new Set(transactions.map((transaction) => transaction.type))
+    );
+
+    const branchGroups = new Map<
+      string,
+      {
+        name: string;
+        transactions: typeof transactions;
+      }
+    >();
 
     for (const transaction of transactions) {
-      const dateKey = formatDateKey(transaction.createdAt);
-      const key = [
-        transaction.branchId,
-        transaction.itemId,
-        transaction.type,
-      ].join("|");
-      const existing = dailyTransactionGroups.get(key);
+      const existing = branchGroups.get(transaction.branchId);
 
       if (existing) {
-        existing.daily.set(
-          dateKey,
-          (existing.daily.get(dateKey) ?? 0) + transaction.quantityDelta
-        );
+        existing.transactions.push(transaction);
       } else {
-        dailyTransactionGroups.set(key, {
-          branch: transaction.branch.name,
-          item: formatItemLabel(transaction.item),
-          unit: transaction.item.unit,
-          transaction: formatTransactionType(transaction.type),
-          daily: new Map([[dateKey, transaction.quantityDelta]]),
+        branchGroups.set(transaction.branchId, {
+          name: transaction.branch.name,
+          transactions: [transaction],
         });
       }
     }
 
-    const transactionHistoryByDateRows = [...dailyTransactionGroups.values()]
-      .sort((a, b) =>
-        [a.branch, a.item, a.transaction].join("|").localeCompare(
-          [b.branch, b.item, b.transaction].join("|")
-        )
-      )
-      .map((group) => {
-        const row: Record<string, string | number> = {
-          Branch: group.branch,
-          Item: group.item,
-          Unit: group.unit,
-          Transaction: group.transaction,
-        };
+    const branchTransactionSheets = [...branchGroups.values()].map(
+      (branch) => {
+        const rows: Array<Array<string | number>> = [
+          ["PURPLE YAM", branch.name.toUpperCase()],
+          [
+            "Transaction History",
+            exportDateRange
+              ? `${exportDateRange.startDate} to ${exportDateRange.endDate}`
+              : "All recorded transaction dates",
+          ],
+          [],
+        ];
 
-        let total = 0;
-        for (const dateKey of transactionDateKeys) {
-          const change = group.daily.get(dateKey) ?? 0;
-          row[formatDateColumn(dateKey)] = change;
-          total += change;
+        const dates = transactionDateKeys.map(formatDateColumn);
+
+        for (const transactionType of branchTransactionTypes) {
+          const typeTransactions = branch.transactions.filter(
+            (transaction) => transaction.type === transactionType
+          );
+
+          if (typeTransactions.length === 0) {
+            continue;
+          }
+
+          rows.push([formatTransactionType(transactionType)]);
+          rows.push(["Item", "Unit", ...dates, "Total Change"]);
+
+          const itemGroups = new Map<
+            string,
+            {
+              item: string;
+              unit: string;
+              daily: Map<string, number>;
+            }
+          >();
+
+          for (const transaction of typeTransactions) {
+            const existing = itemGroups.get(transaction.itemId);
+            const dateKey = formatDateKey(transaction.createdAt);
+
+            if (existing) {
+              existing.daily.set(
+                dateKey,
+                (existing.daily.get(dateKey) ?? 0) +
+                  transaction.quantityDelta
+              );
+            } else {
+              itemGroups.set(transaction.itemId, {
+                item: formatItemLabel(transaction.item),
+                unit: transaction.item.unit,
+                daily: new Map([[dateKey, transaction.quantityDelta]]),
+              });
+            }
+          }
+
+          for (const item of [...itemGroups.values()].sort((a, b) =>
+            a.item.localeCompare(b.item)
+          )) {
+            const row: Array<string | number> = [
+              item.item,
+              item.unit,
+            ];
+            let total = 0;
+
+            for (const dateKey of transactionDateKeys) {
+              const change = item.daily.get(dateKey) ?? 0;
+              row.push(change);
+              total += change;
+            }
+
+            row.push(total);
+            rows.push(row);
+          }
+
+          rows.push([]);
         }
 
-        row["Total Change"] = total;
-        return row;
-      });
+        if (rows.length === 3) {
+          rows.push(["No transactions found for this branch and date range."]);
+        }
+
+        return {
+          name: branch.name,
+          rows,
+        };
+      }
+    );
+
+    const branchSheetNames = new Set<string>();
+
+    for (const branch of branchGroups.values()) {
+      const baseName = branch.name.replace(/[\\/?*\[\]:]/g, "").slice(0, 31) || "Branch";
+      let sheetName = baseName;
+      let suffix = 2;
+
+      while (branchSheetNames.has(sheetName)) {
+        const suffixText = ` ${suffix}`;
+        sheetName = `${baseName.slice(0, 31 - suffixText.length)}${suffixText}`;
+        suffix += 1;
+      }
+
+      branchSheetNames.add(sheetName);
+
+      const sheet = branchTransactionSheets.find(
+        (candidate) => candidate.name === branch.name
+      );
+
+      if (sheet) {
+        sheet.name = sheetName;
+      }
+    }
 
     const sheets = [
       { name: "Inventory Report", rows: inventoryRows },
@@ -483,10 +568,6 @@ export async function GET(request: Request) {
         rows: transferDeliveryRows,
       },
       { name: "Transaction History", rows: transactionRows },
-      {
-        name: "Transaction History by Date",
-        rows: transactionHistoryByDateRows,
-      },
     ].map((sheet) => {
       if (sheet.rows.length > 0) return sheet;
 
@@ -518,13 +599,28 @@ export async function GET(request: Request) {
           })
         );
 
-        // Make the generated timestamp easy to verify when comparing
-        // exported reports against the live system.
         if (worksheet["A1"]) {
           worksheet["A1"].s = {
             font: { bold: true },
           };
         }
+
+        XLSX.utils.book_append_sheet(
+          workbook,
+          worksheet,
+          sheet.name.slice(0, 31)
+        );
+      }
+
+      for (const sheet of branchTransactionSheets) {
+        const worksheet = XLSX.utils.aoa_to_sheet(sheet.rows);
+
+        worksheet["!cols"] = [
+          { wch: 28 },
+          { wch: 12 },
+          ...transactionDateKeys.map(() => ({ wch: 14 })),
+          { wch: 16 },
+        ];
 
         XLSX.utils.book_append_sheet(
           workbook,
@@ -549,13 +645,20 @@ export async function GET(request: Request) {
       });
     }
 
-    // CSV cannot contain multiple worksheets, so all six reports are
-    // exported into one readable CSV with clearly separated sections.
-    const csvSections = sheets.map((sheet) => {
-      const worksheet = XLSX.utils.json_to_sheet(sheet.rows);
-      const csv = XLSX.utils.sheet_to_csv(worksheet);
-      return `# ${sheet.name}\n${csv.trim()}`;
-    });
+    // CSV cannot contain multiple worksheets, so the export keeps the
+    // same branch-first structure with clearly separated branch sections.
+    const csvSections = [
+      ...sheets.map((sheet) => {
+        const worksheet = XLSX.utils.json_to_sheet(sheet.rows);
+        const csv = XLSX.utils.sheet_to_csv(worksheet);
+        return `# ${sheet.name}\n${csv.trim()}`;
+      }),
+      ...branchTransactionSheets.map((sheet) => {
+        const worksheet = XLSX.utils.aoa_to_sheet(sheet.rows);
+        const csv = XLSX.utils.sheet_to_csv(worksheet);
+        return `# ${sheet.name}\n${csv.trim()}`;
+      }),
+    ];
 
     const csvContent = csvSections.join("\n\n");
     const csvWithBom = "\uFEFF" + csvContent + "\n";
