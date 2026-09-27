@@ -232,40 +232,43 @@ export default function TransactionHistory({
     let sales = 0;
     let production = 0;
     let consumption = 0;
-    let received = 0;
+    let stockReceipts = 0;
     let transfers = 0;
     let adjustments = 0;
 
     for (const transaction of periodTransactions) {
       if (transaction.type === "SALE") {
-        sales += Math.abs(transaction.quantityDelta);
+        sales += 1;
       } else if (
         transaction.type === "PRODUCTION" &&
-        transaction.item.sourceType === "FINISHED_PRODUCT" &&
         transaction.quantityDelta > 0
       ) {
-        production += transaction.quantityDelta;
+        production += 1;
       } else if (
         transaction.type === "PRODUCTION" &&
         transaction.quantityDelta < 0
       ) {
-        consumption += Math.abs(transaction.quantityDelta);
-      } else if (
-        transaction.type === "STOCK_RECEIPT" &&
-        transaction.quantityDelta > 0
-      ) {
-        received += transaction.quantityDelta;
+        consumption += 1;
+      } else if (transaction.type === "STOCK_RECEIPT") {
+        stockReceipts += 1;
       } else if (
         transaction.type === "TRANSFER_IN" ||
         transaction.type === "TRANSFER_OUT"
       ) {
-        transfers += Math.abs(transaction.quantityDelta);
+        transfers += 1;
       } else if (transaction.type === "ADJUSTMENT") {
         adjustments += 1;
       }
     }
 
-    return { sales, production, consumption, received, transfers, adjustments };
+    return {
+      sales,
+      production,
+      consumption,
+      stockReceipts,
+      transfers,
+      adjustments,
+    };
   }, [periodTransactions]);
 
   const productSales = useMemo(() => {
@@ -455,9 +458,9 @@ export default function TransactionHistory({
         <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           {[
             ["Sales", summary.sales, "text-red-600"],
-            ["Produced", summary.production, "text-purple-700"],
-            ["Consumed", summary.consumption, "text-orange-600"],
-            ["Received", summary.received, "text-green-700"],
+            ["Production", summary.production, "text-purple-700"],
+            ["Consumption", summary.consumption, "text-orange-600"],
+            ["Stock Receipts", summary.stockReceipts, "text-green-700"],
             ["Transfers", summary.transfers, "text-blue-700"],
             ["Adjustments", summary.adjustments, "text-amber-700"],
           ].map(([label, value, tone]) => (
