@@ -563,14 +563,20 @@ export default function StockActionsModal({
                       Select source branch
                     </option>
 
-                    {transferBranches.map((branch) => (
-                      <option
-                        key={branch.id}
-                        value={branch.id}
-                      >
-                        {branch.name}
-                      </option>
-                    ))}
+                    {transferBranches
+                      .filter(
+                        (branch) =>
+                          user.role === "OWNER" ||
+                          branch.id === user.branchId
+                      )
+                      .map((branch) => (
+                        <option
+                          key={branch.id}
+                          value={branch.id}
+                        >
+                          {branch.name}
+                        </option>
+                      ))}
                   </select>
 
                   <p className="mt-1 text-[11px] text-gray-500">
