@@ -86,6 +86,7 @@ export default async function ManagerDashboardPage() {
   const inventory = stockRecords.map((stock) => ({
     itemId: stock.itemId,
     itemName: stock.item.name,
+    itemSize: stock.item.size,
     sourceType: stock.item.sourceType,
     unit: stock.item.unit,
     quantity: stock.quantity,
