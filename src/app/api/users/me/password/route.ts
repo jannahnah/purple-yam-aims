@@ -9,7 +9,9 @@ import {
 
 export async function PUT(request: Request) {
   try {
-    const currentUser = await getCurrentUser();
+    const currentUser = await getCurrentUser({
+      allowPasswordChange: true,
+    });
 
     if (!currentUser) {
       return NextResponse.json(

@@ -1,7 +1,13 @@
 import { createHmac, timingSafeEqual } from "crypto";
 
+const configuredSessionSecret = process.env.SESSION_SECRET;
+
+if (process.env.NODE_ENV === "production" && !configuredSessionSecret) {
+  throw new Error("SESSION_SECRET must be configured in production.");
+}
+
 const SESSION_SECRET =
-  process.env.SESSION_SECRET || "development-session-secret-change-later";
+  configuredSessionSecret || "development-session-secret-change-later";
 
 const SESSION_MAX_AGE = 60 * 60 * 8; // 8 hours
 

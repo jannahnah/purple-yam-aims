@@ -65,6 +65,10 @@ export async function recordSale({
       );
     }
 
+    if (!finishedItem.isActive) {
+      throw new Error("The selected finished product is deleted or inactive.");
+    }
+
     if (
       finishedItem.sourceType !==
       "FINISHED_PRODUCT"

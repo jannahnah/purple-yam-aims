@@ -173,12 +173,21 @@ export default function AppSidebar({
               )}
 
               {isOwner && (
-                <Link
-                  href="/users"
-                  className={getNavClass("/users")}
-                >
-                  User Management
-                </Link>
+                <>
+                  <Link
+                    href="/users"
+                    className={getNavClass("/users")}
+                  >
+                    User Management
+                  </Link>
+
+                  <Link
+                    href="/item-master"
+                    className={getNavClass("/item-master")}
+                  >
+                    Item Master
+                  </Link>
+                </>
               )}
             </>
           )}

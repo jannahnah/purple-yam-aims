@@ -9,7 +9,9 @@ export type UserRole =
 export async function requireUser(options?: {
   allowPasswordChange?: boolean;
 }) {
-  const user = await getCurrentUser();
+  const user = await getCurrentUser({
+    allowPasswordChange: true,
+  });
 
   if (!user) {
     redirect("/");

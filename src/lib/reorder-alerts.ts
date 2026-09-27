@@ -51,14 +51,5 @@ export async function updateReorderAlert(
         },
       });
     }
-  } else if (existingAlert) {
-    await tx.reorderAlert.update({
-      where: {
-        id: existingAlert.id,
-      },
-      data: {
-        status: "RESOLVED",
-      },
-    });
   }
 }

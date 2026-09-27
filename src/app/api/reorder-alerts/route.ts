@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { canAccessBranch } from "@/lib/auth/authorization";
+import { formatItemLabel } from "@/lib/item-label";
 
 export async function GET(req: Request) {
   try {
@@ -114,15 +115,6 @@ export async function GET(req: Request) {
               },
             });
           }
-        } else if (existingAlert) {
-          await tx.reorderAlert.update({
-            where: {
-              id: existingAlert.id,
-            },
-            data: {
-              status: "RESOLVED",
-            },
-          });
         }
       }
     });
@@ -144,6 +136,7 @@ export async function GET(req: Request) {
               name: true,
               unit: true,
               minThreshold: true,
+              size: true,
             },
           },
           branch: {
@@ -181,7 +174,10 @@ export async function GET(req: Request) {
           status: alert.status,
           createdAt: alert.createdAt,
           branch: alert.branch,
-          item: alert.item,
+          item: {
+            ...alert.item,
+            name: formatItemLabel(alert.item),
+          },
           currentQuantity:
             stock?.quantity ?? 0,
         };
@@ -207,6 +203,118 @@ export async function GET(req: Request) {
       {
         status: 500,
       }
+    );
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const currentUser = await getCurrentUser();
+
+    if (!currentUser) {
+      return NextResponse.json({ error: "You must be logged in." }, { status: 401 });
+    }
+
+    if (
+      currentUser.role !== "OWNER" &&
+      currentUser.role !== "BRANCH_MANAGER"
+    ) {
+      return NextResponse.json(
+        { error: "Only the Owner or Branch Manager can resolve reorder alerts." },
+        { status: 403 }
+      );
+    }
+
+    const body = await request.json();
+    const alertId =
+      typeof body.alertId === "string" ? body.alertId.trim() : "";
+
+    if (!alertId) {
+      return NextResponse.json(
+        { error: "Alert ID is required." },
+        { status: 400 }
+      );
+    }
+
+    const alert = await prisma.reorderAlert.findUnique({
+      where: { id: alertId },
+      select: {
+        id: true,
+        branchId: true,
+        itemId: true,
+        status: true,
+      },
+    });
+
+    if (!alert) {
+      return NextResponse.json(
+        { error: "Reorder alert not found." },
+        { status: 404 }
+      );
+    }
+
+    if (!canAccessBranch(currentUser, alert.branchId)) {
+      return NextResponse.json(
+        { error: "You cannot resolve alerts for this branch." },
+        { status: 403 }
+      );
+    }
+
+    if (alert.status !== "PENDING") {
+      return NextResponse.json(
+        { error: "This reorder alert is already resolved." },
+        { status: 409 }
+      );
+    }
+
+    const stock = await prisma.branchStock.findUnique({
+      where: {
+        branchId_itemId: {
+          branchId: alert.branchId,
+          itemId: alert.itemId,
+        },
+      },
+      select: {
+        quantity: true,
+        item: {
+          select: {
+            minThreshold: true,
+          },
+        },
+      },
+    });
+
+    if (!stock) {
+      return NextResponse.json(
+        { error: "Current inventory record was not found." },
+        { status: 404 }
+      );
+    }
+
+    if (stock.quantity <= stock.item.minThreshold) {
+      return NextResponse.json(
+        {
+          error:
+            "This alert cannot be resolved until stock is above the minimum threshold.",
+        },
+        { status: 409 }
+      );
+    }
+
+    const updated = await prisma.reorderAlert.update({
+      where: { id: alert.id },
+      data: { status: "RESOLVED" },
+    });
+
+    return NextResponse.json(
+      { success: true, alert: updated },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Failed to resolve reorder alert:", error);
+    return NextResponse.json(
+      { error: "Failed to resolve reorder alert." },
+      { status: 500 }
     );
   }
 }

@@ -14,11 +14,16 @@ export default async function DashboardPage() {
     stockRecords,
     recentTransactions,
   ] = await Promise.all([
-    prisma.item.count(),
+    prisma.item.count({ where: { isActive: true } }),
 
     prisma.branch.count(),
 
     prisma.branchStock.findMany({
+      where: {
+        item: {
+          isActive: true,
+        },
+      },
       include: {
         item: true,
         branch: true,
@@ -38,6 +43,7 @@ export default async function DashboardPage() {
         item: {
           select: {
             name: true,
+            size: true,
             unit: true,
           },
         },

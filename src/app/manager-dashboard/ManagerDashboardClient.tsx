@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { formatItemLabel } from "@/lib/item-label";
 import { useEffect, useRef, useState } from "react";
 
 type InventoryItem = {
   itemId: string;
   itemName: string;
+  itemSize?: "SMALL" | "ROUND" | "MEDIUM" | "LARGE" | null;
   sourceType: string;
   unit: string;
   quantity: number;
@@ -32,6 +34,7 @@ type Transaction = {
   quantityDelta: number;
   createdAt: string;
   itemName: string;
+  itemSize?: "SMALL" | "ROUND" | "MEDIUM" | "LARGE" | null;
   unit: string;
   username: string;
 };
@@ -670,7 +673,10 @@ export default function ManagerDashboard({
 
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm text-gray-700">
-                        {transaction.itemName}
+                        {formatItemLabel({
+                          name: transaction.itemName,
+                          size: transaction.itemSize,
+                        })}
                       </p>
 
                       <p className="text-xs text-gray-400">
@@ -759,7 +765,10 @@ export default function ManagerDashboard({
                       className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50"
                     >
                       <td className="px-4 py-3 font-medium text-gray-900">
-                        {item.itemName}
+                        {formatItemLabel({
+                          name: item.itemName,
+                          size: item.itemSize,
+                        })}
                       </td>
 
                       <td className="px-4 py-3 text-xs text-gray-500">
@@ -835,7 +844,10 @@ export default function ManagerDashboard({
                       className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50"
                     >
                       <td className="px-4 py-3 font-medium text-gray-900">
-                        {product.itemName}
+                        {formatItemLabel({
+                          name: product.itemName,
+                          size: product.itemSize,
+                        })}
                       </td>
 
                       <td className="px-4 py-3 text-right">

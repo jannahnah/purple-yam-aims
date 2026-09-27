@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { recordSale } from "@/app/actions/sales";
+import { formatItemLabel } from "@/lib/item-label";
 
 type SalesUser = {
   username: string;
@@ -14,6 +15,7 @@ type SalesUser = {
 type Product = {
   id: string;
   name: string;
+  size?: "SMALL" | "ROUND" | "MEDIUM" | "LARGE" | null;
   unit: string;
 };
 
@@ -25,6 +27,7 @@ type StockRecord = {
 type SalesHistoryRecord = {
   id: string;
   productName: string;
+  size?: "SMALL" | "ROUND" | "MEDIUM" | "LARGE" | null;
   unit: string;
   quantity: number;
   createdAt: string | Date;
@@ -288,7 +291,7 @@ export default function SalesClient({
                             key={product.id}
                             value={product.id}
                           >
-                            {product.name}
+                            {formatItemLabel(product)}
                           </option>
                         ))}
                       </select>
@@ -381,7 +384,7 @@ export default function SalesClient({
                       </span>
 
                       <span className="text-right text-sm font-semibold text-gray-950">
-                        {selectedProduct?.name ?? "Unknown product"}
+                        {selectedProduct ? formatItemLabel(selectedProduct) : "Unknown product"}
                       </span>
                     </div>
 
@@ -509,7 +512,7 @@ export default function SalesClient({
                           />
 
                           <span className="truncate text-sm font-semibold text-gray-900">
-                            {product.name}
+                            {formatItemLabel(product)}
                           </span>
                         </div>
 
@@ -569,7 +572,10 @@ export default function SalesClient({
                         className="border-b border-gray-100 last:border-0"
                       >
                         <td className="px-4 py-4 font-medium text-gray-900">
-                          {sale.productName}
+                          {formatItemLabel({
+                            name: sale.productName,
+                            size: sale.size,
+                          })}
                         </td>
 
                         <td className="px-4 py-4 font-semibold text-red-600">

@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { formatItemLabel } from "@/lib/item-label";
 
 interface FinishedItem {
   id: string;
   name: string;
+  size?: "SMALL" | "ROUND" | "MEDIUM" | "LARGE" | null;
   unit: string;
   sourceType: string;
 }
@@ -19,6 +21,7 @@ interface BranchStock {
 interface RecentSale {
   id: string;
   itemName: string;
+  itemSize?: "SMALL" | "ROUND" | "MEDIUM" | "LARGE" | null;
   unit: string;
   quantity: number;
   createdAt: string;
@@ -211,7 +214,7 @@ export default function CashierDashboardClient({
                     className="flex items-center justify-between gap-4 px-5 py-4"
                   >
                     <span className="text-sm font-medium text-gray-900">
-                      {product.name}
+                      {formatItemLabel(product)}
                     </span>
 
                     <div className="flex items-center gap-3">
@@ -261,7 +264,10 @@ export default function CashierDashboardClient({
                 >
                   <div>
                     <p className="text-sm font-medium text-gray-900">
-                      {sale.itemName}
+                      {formatItemLabel({
+                        name: sale.itemName,
+                        size: sale.itemSize,
+                      })}
                     </p>
 
                     <p className="text-xs text-gray-400">

@@ -21,6 +21,9 @@ export default async function ManagerDashboardPage() {
       prisma.branchStock.findMany({
         where: {
           branchId,
+          item: {
+            isActive: true,
+          },
         },
         include: {
           item: true,
@@ -57,6 +60,7 @@ export default async function ManagerDashboardPage() {
           item: {
             select: {
               name: true,
+              size: true,
               unit: true,
             },
           },
@@ -82,6 +86,7 @@ export default async function ManagerDashboardPage() {
   const inventory = stockRecords.map((stock) => ({
     itemId: stock.itemId,
     itemName: stock.item.name,
+    itemSize: stock.item.size,
     sourceType: stock.item.sourceType,
     unit: stock.item.unit,
     quantity: stock.quantity,
@@ -138,6 +143,7 @@ export default async function ManagerDashboardPage() {
           createdAt:
             transaction.createdAt.toISOString(),
           itemName: transaction.item.name,
+          itemSize: transaction.item.size,
           unit: transaction.item.unit,
           username: transaction.user.username,
         }))}

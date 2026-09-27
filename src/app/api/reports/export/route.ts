@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/current-user";
+import { formatItemLabel } from "@/lib/item-label";
 
 export const runtime = "nodejs";
 
@@ -88,7 +89,12 @@ export async function GET(request: Request) {
 
     const [inventory, transactions] = await Promise.all([
       prisma.branchStock.findMany({
-        where: branchWhere,
+        where: {
+          ...branchWhere,
+          item: {
+            isActive: true,
+          },
+        },
         include: {
           item: true,
           branch: true,
@@ -193,7 +199,7 @@ export async function GET(request: Request) {
                 : latest,
             primary.createdAt
           ),
-          item: primary.item.name,
+          item: formatItemLabel(primary.item),
           sourceType: formatSourceType(primary.item.sourceType),
           unit: primary.item.unit,
           quantity: Math.abs(primary.quantityDelta),
@@ -223,7 +229,7 @@ export async function GET(request: Request) {
     const inventoryRows = inventory.map((stock) => ({
       "Report Date & Time": reportDateTime,
       Branch: stock.branch.name,
-      Item: stock.item.name,
+      Item: formatItemLabel(stock.item),
       "Source Type": formatSourceType(stock.item.sourceType),
       Unit: stock.item.unit,
       "Current Quantity": stock.quantity,
@@ -240,7 +246,7 @@ export async function GET(request: Request) {
       .map((stock) => ({
         "Report Date & Time": reportDateTime,
         Branch: stock.branch.name,
-        Item: stock.item.name,
+        Item: formatItemLabel(stock.item),
         "Source Type": formatSourceType(stock.item.sourceType),
         Unit: stock.item.unit,
         "Current Quantity": stock.quantity,
@@ -253,7 +259,7 @@ export async function GET(request: Request) {
       .map((stock) => ({
         "Report Date & Time": reportDateTime,
         Branch: stock.branch.name,
-        Item: stock.item.name,
+        Item: formatItemLabel(stock.item),
         "Source Type": formatSourceType(stock.item.sourceType),
         Unit: stock.item.unit,
         "Current Quantity": stock.quantity,
@@ -267,7 +273,7 @@ export async function GET(request: Request) {
         "Report Date & Time": reportDateTime,
         "Date & Time": formatDateTime(transaction.createdAt),
         Branch: transaction.branch.name,
-        Product: transaction.item.name,
+        Product: formatItemLabel(transaction.item),
         Unit: transaction.item.unit,
         Quantity: Math.abs(transaction.quantityDelta),
         "Recorded By": transaction.user.username,
@@ -284,7 +290,7 @@ export async function GET(request: Request) {
         "Report Date & Time": reportDateTime,
         "Date & Time": formatDateTime(transaction.createdAt),
         Branch: transaction.branch.name,
-        Product: transaction.item.name,
+        Product: formatItemLabel(transaction.item),
         Unit: transaction.item.unit,
         "Quantity Produced": transaction.quantityDelta,
         "Recorded By": transaction.user.username,
@@ -315,7 +321,7 @@ export async function GET(request: Request) {
       "Date & Time": formatDateTime(transaction.createdAt),
       Transaction: formatTransactionType(transaction.type),
       Branch: transaction.branch.name,
-      Item: transaction.item.name,
+      Item: formatItemLabel(transaction.item),
       "Source Type": formatSourceType(transaction.item.sourceType),
       Unit: transaction.item.unit,
       "Previous Quantity": transaction.previousQuantity ?? "",
