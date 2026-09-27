@@ -34,6 +34,7 @@ export default async function CashierDashboardPage() {
     prisma.item.findMany({
       where: {
         sourceType: "FINISHED_PRODUCT",
+        isActive: true,
       },
       orderBy: {
         name: "asc",
@@ -46,6 +47,7 @@ export default async function CashierDashboardPage() {
         branchId,
         item: {
           sourceType: "FINISHED_PRODUCT",
+          isActive: true,
         },
       },
       include: {
@@ -72,6 +74,7 @@ export default async function CashierDashboardPage() {
         item: {
           select: {
             name: true,
+            size: true,
             unit: true,
           },
         },
@@ -138,6 +141,7 @@ export default async function CashierDashboardPage() {
           (item) => ({
             id: item.id,
             name: item.name,
+            size: item.size,
             unit: item.unit,
             sourceType: item.sourceType,
           })
@@ -150,6 +154,7 @@ export default async function CashierDashboardPage() {
             item: {
               id: stock.item.id,
               name: stock.item.name,
+              size: stock.item.size,
               unit: stock.item.unit,
               sourceType: stock.item.sourceType,
             },
@@ -165,6 +170,7 @@ export default async function CashierDashboardPage() {
           (sale) => ({
             id: sale.id,
             itemName: sale.item.name,
+            itemSize: sale.item.size,
             unit: sale.item.unit,
             quantity: Math.abs(
               Number(sale.quantityDelta)
