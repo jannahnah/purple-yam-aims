@@ -195,7 +195,12 @@ export async function GET(request: Request) {
         },
       }),
       prisma.branch.findMany({
-        where: branchWhere,
+        where:
+          currentUser.role === "OWNER"
+            ? {}
+            : {
+                id: currentUser.branchId ?? "__NO_BRANCH__",
+              },
         select: {
           id: true,
           name: true,
