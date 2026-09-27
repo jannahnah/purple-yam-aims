@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import PurpleYamLogo from "@/components/PurpleYamLogo";
 
 type LoginRole = "OWNER" | "BRANCH_MANAGER" | "CASHIER";
 
@@ -71,7 +72,8 @@ export default function LoginByRoleClient({ role, roleLabel }: Props) {
       </div>
 
       <div className="relative z-10 w-full max-w-[430px]">
-        <div className="mb-6 text-center">
+        <div className="mb-6 text-center"><PurpleYamLogo size="md" />
+          <div className="mt-4"></div>
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-purple-300/70">
             Sign In As
           </p>

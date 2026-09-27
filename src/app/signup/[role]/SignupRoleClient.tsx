@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import PurpleYamLogo from "@/components/PurpleYamLogo";
 
 type SignupRole = "owner" | "branch-manager" | "cashier";
 
@@ -28,6 +29,8 @@ export default function SignupRoleClient({ role }: Props) {
     return (
       <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#16052b] px-4 py-8">
         <div className="relative z-10 w-full max-w-[480px]">
+          
+          <div className="mb-6 text-center"><PurpleYamLogo size="md" /></div>
           <div className="rounded-3xl border border-purple-300/20 bg-[#24133b]/95 p-7 text-center shadow-[0_25px_70px_rgba(0,0,0,0.45)]">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-purple-300/70">
               {roleLabel} Account
@@ -115,7 +118,8 @@ export default function SignupRoleClient({ role }: Props) {
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#16052b] px-4 py-8">
       <div className="relative z-10 w-full max-w-[430px]">
-        <div className="mb-6 text-center">
+        <div className="mb-6 text-center"><PurpleYamLogo size="md" />
+          <div className="mt-4"></div>
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-purple-300/70">
             Owner Registration
           </p>
