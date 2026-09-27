@@ -469,7 +469,7 @@ export default function TransactionHistory({
         </section>
 
                 {viewMode === "CUSTOM" && (
-          <section className="w-full rounded-2xl border border-gray-200 bg-white p-4 shadow-sm lg:h-[620px]">
+          <section className="w-full rounded-2xl border border-gray-200 bg-white p-4 shadow-sm lg:h-[390px]">
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="text-sm font-semibold text-gray-700">
                 From
@@ -593,7 +593,7 @@ export default function TransactionHistory({
 
 
 
-          <section className="flex w-full flex-col rounded-2xl border border-gray-200 bg-white shadow-sm lg:h-[620px]">
+          <section className="flex w-full flex-col rounded-2xl border border-gray-200 bg-white shadow-sm lg:h-[390px]">
             <div className="border-b border-gray-100 px-5 py-3.5">
               <h2 className="text-lg font-bold text-gray-900">
                 {viewMode === "DAY" ? `Activity on ${displayDate(selectedDate)}` : `Transaction Ledger — ${periodLabel}`}
