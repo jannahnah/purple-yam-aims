@@ -468,84 +468,8 @@ export default function TransactionHistory({
           ))}
         </section>
 
-        <section className="mx-auto w-full max-w-5xl rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-lg font-bold text-gray-900">Activity Calendar</h2>
-              <p className="text-sm text-gray-500">
-                Select a date to see everything recorded that day.
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => moveMonth(-1)}
-                className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold hover:bg-gray-50"
-                aria-label="Previous month"
-              >
-                ←
-              </button>
-              <p className="min-w-36 text-center text-sm font-semibold text-gray-900">
-                {new Intl.DateTimeFormat("en-PH", {
-                  month: "long",
-                  year: "numeric",
-                }).format(calendarMonth)}
-              </p>
-              <button
-                type="button"
-                onClick={() => moveMonth(1)}
-                className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold hover:bg-gray-50"
-                aria-label="Next month"
-              >
-                →
-              </button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-7 border-b border-gray-100 pb-2">
-            {weekDays.map((day) => (
-              <div key={day} className="text-center text-xs font-semibold uppercase tracking-wide text-gray-400">
-                {day}
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-2 grid grid-cols-7 gap-1">
-            {calendarDays.map((day) => {
-              const key = inputDate(day);
-              const count = transactionDays.get(key) ?? 0;
-              const isCurrentMonth = day.getMonth() === calendarMonth.getMonth();
-              const isSelected = key === inputDate(selectedDate);
-
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => selectDay(day)}
-                  className={`min-h-16 rounded-lg border p-1.5 text-left transition sm:min-h-20 ${
-                    isSelected
-                      ? "border-purple-500 bg-purple-50 ring-1 ring-purple-300"
-                      : "border-transparent hover:border-purple-200 hover:bg-purple-50/50"
-                  } ${isCurrentMonth ? "text-gray-900" : "text-gray-300"}`}
-                >
-                  <span className={`text-sm font-semibold ${isSelected ? "text-purple-700" : ""}`}>
-                    {day.getDate()}
-                  </span>
-
-                  {count > 0 && (
-                    <span className="mt-2 block w-fit rounded-full bg-purple-100 px-1.5 py-0.5 text-[10px] font-bold text-purple-700">
-                      {count} {count === 1 ? "record" : "records"}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
-        {viewMode === "CUSTOM" && (
-          <section className="mx-auto w-full max-w-5xl rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+                {viewMode === "CUSTOM" && (
+          <section className="w-full rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="text-sm font-semibold text-gray-700">
                 From
@@ -568,6 +492,163 @@ export default function TransactionHistory({
             </div>
           </section>
         )}
+
+
+
+        <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+          <section className="mx-auto w-full max-w-5xl rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Activity Calendar</h2>
+                <p className="text-sm text-gray-500">
+                  Select a date to see everything recorded that day.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => moveMonth(-1)}
+                  className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold hover:bg-gray-50"
+                  aria-label="Previous month"
+                >
+                  ←
+                </button>
+                <p className="min-w-36 text-center text-sm font-semibold text-gray-900">
+                  {new Intl.DateTimeFormat("en-PH", {
+                    month: "long",
+                    year: "numeric",
+                  }).format(calendarMonth)}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => moveMonth(1)}
+                  className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold hover:bg-gray-50"
+                  aria-label="Next month"
+                >
+                  →
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-7 border-b border-gray-100 pb-2">
+              {weekDays.map((day) => (
+                <div key={day} className="text-center text-xs font-semibold uppercase tracking-wide text-gray-400">
+                  {day}
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-2 grid grid-cols-7 gap-1">
+              {calendarDays.map((day) => {
+                const key = inputDate(day);
+                const count = transactionDays.get(key) ?? 0;
+                const isCurrentMonth = day.getMonth() === calendarMonth.getMonth();
+                const isSelected = key === inputDate(selectedDate);
+
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => selectDay(day)}
+                    className={`min-h-16 rounded-lg border p-1.5 text-left transition sm:min-h-20 ${
+                      isSelected
+                        ? "border-purple-500 bg-purple-50 ring-1 ring-purple-300"
+                        : "border-transparent hover:border-purple-200 hover:bg-purple-50/50"
+                    } ${isCurrentMonth ? "text-gray-900" : "text-gray-300"}`}
+                  >
+                    <span className={`text-sm font-semibold ${isSelected ? "text-purple-700" : ""}`}>
+                      {day.getDate()}
+                    </span>
+
+                    {count > 0 && (
+                      <span className="mt-2 block w-fit rounded-full bg-purple-100 px-1.5 py-0.5 text-[10px] font-bold text-purple-700">
+                        {count} {count === 1 ? "record" : "records"}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+
+
+          <section className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+            <div className="border-b border-gray-100 px-5 py-3.5">
+              <h2 className="text-lg font-bold text-gray-900">
+                {viewMode === "DAY" ? `Activity on ${displayDate(selectedDate)}` : `Transaction Ledger — ${periodLabel}`}
+              </h2>
+              <p className="mt-1 text-sm text-gray-500">
+                Inventory movements are shown like a bank-style ledger: previous
+                quantity → change → resulting balance.
+              </p>
+            </div>
+
+            {viewMode === "DAY" && selectedDayTransactions.length === 0 ? (
+              <div className="px-5 py-12 text-center text-sm text-gray-500">
+                No transactions were recorded on {displayDate(selectedDate)}.
+              </div>
+            ) : periodTransactions.length === 0 ? (
+              <div className="px-5 py-12 text-center text-sm text-gray-500">
+                No transactions were recorded for this period.
+              </div>
+            ) : (
+              <div className="max-h-[520px] overflow-auto">
+                <table className="min-w-[980px] w-full text-left text-sm">
+                  <thead className="sticky top-0 z-10 bg-gray-50 text-xs uppercase tracking-wide text-gray-500 shadow-sm">
+                    <tr>
+                      <th className="px-3 py-2.5">Date / Time</th>
+                      <th className="px-3 py-2.5">Activity</th>
+                      <th className="px-3 py-2.5">Item / Product</th>
+                      <th className="px-3 py-2.5">Branch</th>
+                      <th className="px-3 py-2.5 text-right">Previous</th>
+                      <th className="px-3 py-2.5 text-right">Change</th>
+                      <th className="px-3 py-2.5 text-right">Balance</th>
+                      <th className="px-3 py-2.5">Recorded By</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {periodTransactions
+                      .slice()
+                      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                      .map((transaction) => (
+                        <tr key={transaction.id} className="hover:bg-gray-50">
+                          <td className="whitespace-nowrap px-3 py-2.5 text-gray-600">
+                            <div>{displayDate(transaction.createdAt)}</div>
+                            <div className="text-xs text-gray-400">{displayTime(transaction.createdAt)}</div>
+                          </td>
+                          <td className="px-3 py-2.5">
+                            <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${transactionTone(transaction.type)}`}>
+                              {formatType(transaction.type)}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2.5 font-medium text-gray-900">
+                            {formatItemLabel(transaction.item)}
+                          </td>
+                          <td className="px-3 py-2.5 text-gray-600">{transaction.branch.name}</td>
+                          <td className="px-3 py-2.5 text-right text-gray-500">
+                            {transaction.previousQuantity === null ? "—" : formatNumber(transaction.previousQuantity)}
+                          </td>
+                          <td className={`px-3 py-2.5 text-right font-semibold ${
+                            transaction.quantityDelta > 0 ? "text-green-600" : transaction.quantityDelta < 0 ? "text-red-600" : "text-gray-500"
+                          }`}>
+                            {transaction.quantityDelta > 0 ? "+" : ""}
+                            {formatNumber(transaction.quantityDelta)}
+                          </td>
+                          <td className="px-3 py-2.5 text-right font-semibold text-gray-900">
+                            {transaction.newQuantity === null ? "—" : formatNumber(transaction.newQuantity)}
+                          </td>
+                          <td className="px-3 py-2.5 text-gray-600">{transaction.user.username}</td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+
+        </div>
 
         {(viewMode === "WEEK" || viewMode === "MONTH") && (
           <section className="mx-auto w-full max-w-5xl rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
@@ -619,79 +700,6 @@ export default function TransactionHistory({
           </section>
         )}
 
-        <section className="rounded-2xl border border-gray-200 bg-white shadow-sm">
-          <div className="border-b border-gray-100 px-5 py-3.5">
-            <h2 className="text-lg font-bold text-gray-900">
-              {viewMode === "DAY" ? `Activity on ${displayDate(selectedDate)}` : `Transaction Ledger — ${periodLabel}`}
-            </h2>
-            <p className="mt-1 text-sm text-gray-500">
-              Inventory movements are shown like a bank-style ledger: previous
-              quantity → change → resulting balance.
-            </p>
-          </div>
-
-          {viewMode === "DAY" && selectedDayTransactions.length === 0 ? (
-            <div className="px-5 py-12 text-center text-sm text-gray-500">
-              No transactions were recorded on {displayDate(selectedDate)}.
-            </div>
-          ) : periodTransactions.length === 0 ? (
-            <div className="px-5 py-12 text-center text-sm text-gray-500">
-              No transactions were recorded for this period.
-            </div>
-          ) : (
-            <div className="max-h-[560px] overflow-auto">
-              <table className="min-w-[980px] w-full text-left text-sm">
-                <thead className="sticky top-0 z-10 bg-gray-50 text-xs uppercase tracking-wide text-gray-500 shadow-sm">
-                  <tr>
-                    <th className="px-3 py-2.5">Date / Time</th>
-                    <th className="px-3 py-2.5">Activity</th>
-                    <th className="px-3 py-2.5">Item / Product</th>
-                    <th className="px-3 py-2.5">Branch</th>
-                    <th className="px-3 py-2.5 text-right">Previous</th>
-                    <th className="px-3 py-2.5 text-right">Change</th>
-                    <th className="px-3 py-2.5 text-right">Balance</th>
-                    <th className="px-3 py-2.5">Recorded By</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {periodTransactions
-                    .slice()
-                    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-                    .map((transaction) => (
-                      <tr key={transaction.id} className="hover:bg-gray-50">
-                        <td className="whitespace-nowrap px-3 py-2.5 text-gray-600">
-                          <div>{displayDate(transaction.createdAt)}</div>
-                          <div className="text-xs text-gray-400">{displayTime(transaction.createdAt)}</div>
-                        </td>
-                        <td className="px-3 py-2.5">
-                          <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${transactionTone(transaction.type)}`}>
-                            {formatType(transaction.type)}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2.5 font-medium text-gray-900">
-                          {formatItemLabel(transaction.item)}
-                        </td>
-                        <td className="px-3 py-2.5 text-gray-600">{transaction.branch.name}</td>
-                        <td className="px-4 py-3 text-right text-gray-500">
-                          {transaction.previousQuantity === null ? "—" : formatNumber(transaction.previousQuantity)}
-                        </td>
-                        <td className={`px-4 py-3 text-right font-semibold ${
-                          transaction.quantityDelta > 0 ? "text-green-600" : transaction.quantityDelta < 0 ? "text-red-600" : "text-gray-500"
-                        }`}>
-                          {transaction.quantityDelta > 0 ? "+" : ""}
-                          {formatNumber(transaction.quantityDelta)}
-                        </td>
-                        <td className="px-3 py-2.5 text-right font-semibold text-gray-900">
-                          {transaction.newQuantity === null ? "—" : formatNumber(transaction.newQuantity)}
-                        </td>
-                        <td className="px-3 py-2.5 text-gray-600">{transaction.user.username}</td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
       </div>
     </main>
   );
