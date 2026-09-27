@@ -543,7 +543,6 @@ export default function ItemMasterClient() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-[minmax(0,1.35fr)_minmax(360px,1fr)] md:items-start">
-        <div className="grid gap-6 md:grid-cols-[minmax(0,1.35fr)_minmax(360px,1fr)] md:items-start">
         <section className="aims-card overflow-hidden">
           <div className="border-b border-gray-100 px-5 py-4">
             <h2 className="text-base font-semibold text-gray-900">
@@ -853,7 +852,7 @@ export default function ItemMasterClient() {
         </div>
 
         {archivedItems.length > 0 && (
-          <section className="aims-card overflow-hidden md:col-start-1 md:row-start-2">
+          <section className="aims-card overflow-hidden">
             <div className="border-b border-gray-100 px-5 py-4">
               <h2 className="text-base font-semibold text-gray-700">
                 Deleted Items
