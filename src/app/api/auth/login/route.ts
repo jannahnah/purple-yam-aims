@@ -3,19 +3,33 @@ import { prisma } from "@/lib/prisma";
 import { createSessionToken, SESSION_MAX_AGE } from "@/lib/auth/session";
 import { verifyPassword } from "@/lib/auth/password";
 
+const validRoles = ["OWNER", "BRANCH_MANAGER", "CASHIER"] as const;
+type LoginRole = (typeof validRoles)[number];
+
+function getRoleLabel(role: LoginRole) {
+  if (role === "OWNER") return "Owner";
+  if (role === "BRANCH_MANAGER") return "Branch Manager";
+  return "Cashier";
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-  const email =
-      typeof body.email === "string" ? body.email.trim() : "";
+    const email =
+      typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
 
     const password =
       typeof body.password === "string" ? body.password : "";
 
+    const requestedRole =
+      typeof body.role === "string" && validRoles.includes(body.role)
+        ? (body.role as LoginRole)
+        : null;
+
     if (!email || !password) {
       return NextResponse.json(
-    { error: "Email and password are required." },
+        { error: "Email and password are required." },
         { status: 400 }
       );
     }
@@ -47,10 +61,18 @@ export async function POST(request: Request) {
       );
     }
 
-    const passwordValid = await verifyPassword(
-      password,
-      user.password
-    );
+    if (requestedRole && user.role !== requestedRole) {
+      return NextResponse.json(
+        {
+          error: `This account is not registered as a ${getRoleLabel(
+            requestedRole
+          )} account.`,
+        },
+        { status: 403 }
+      );
+    }
+
+    const passwordValid = await verifyPassword(password, user.password);
 
     if (!passwordValid) {
       return NextResponse.json(
