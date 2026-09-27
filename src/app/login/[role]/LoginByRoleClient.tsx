@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 type LoginRole = "OWNER" | "BRANCH_MANAGER" | "CASHIER";
 
@@ -18,13 +18,11 @@ export default function LoginByRoleClient({ role, roleLabel }: Props) {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
-  const searchParams = useSearchParams();
-
   useEffect(() => {
-    if (searchParams.get("registered") === "1") {
+    if (typeof window !== "undefined" && window.location.search.includes("registered=1")) {
       setNotice("Owner account created successfully. You can now sign in.");
     }
-  }, [searchParams]);
+  }, []);
 
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
