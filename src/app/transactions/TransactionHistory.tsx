@@ -373,15 +373,15 @@ export default function TransactionHistory({
           </div>
         </header>
 
-        <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-          <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-            <div className="flex flex-wrap gap-2">
+        <section className="rounded-2xl border border-gray-200 bg-white p-3 shadow-sm">
+          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+            <div className="flex flex-wrap gap-1.5">
               {(["DAY", "WEEK", "MONTH", "CUSTOM"] as ViewMode[]).map((mode) => (
                 <button
                   key={mode}
                   type="button"
                   onClick={() => setViewMode(mode)}
-                  className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
+                  className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition ${
                     viewMode === mode
                       ? "bg-purple-600 text-white"
                       : "border border-gray-200 bg-white text-gray-700 hover:bg-purple-50"
@@ -398,11 +398,11 @@ export default function TransactionHistory({
               ))}
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-2 sm:grid-cols-3 xl:min-w-[720px]">
               <select
                 value={branchFilter}
                 onChange={(event) => setBranchFilter(event.target.value)}
-                className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700"
+                className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-700"
               >
                 <option value="ALL">All Branches</option>
                 {branches.map((branch) => (
@@ -413,7 +413,7 @@ export default function TransactionHistory({
               <select
                 value={typeFilter}
                 onChange={(event) => setTypeFilter(event.target.value)}
-                className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700"
+                className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-700"
               >
                 <option value="ALL">All Activities</option>
                 <option value="SALE">Sales</option>
@@ -427,7 +427,7 @@ export default function TransactionHistory({
               <select
                 value={itemFilter}
                 onChange={(event) => setItemFilter(event.target.value)}
-                className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700"
+                className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-700"
               >
                 <option value="ALL">All Items / Products</option>
                 {items.map((item) => (
@@ -448,7 +448,7 @@ export default function TransactionHistory({
           )}
         </section>
 
-        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           {[
             ["Sales", summary.sales, "text-red-600"],
             ["Produced", summary.production, "text-purple-700"],
@@ -457,19 +457,19 @@ export default function TransactionHistory({
             ["Transfers", summary.transfers, "text-blue-700"],
             ["Adjustments", summary.adjustments, "text-amber-700"],
           ].map(([label, value, tone]) => (
-            <div key={String(label)} className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+            <div key={String(label)} className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 shadow-sm">
               <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
                 {label}
               </p>
-              <p className={`mt-2 text-2xl font-bold ${tone}`}>
+              <p className={`mt-1 text-xl font-bold ${tone}`}>
                 {formatNumber(Number(value))}
               </p>
             </div>
           ))}
         </section>
 
-        <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <section className="mx-auto w-full max-w-5xl rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-lg font-bold text-gray-900">Activity Calendar</h2>
               <p className="text-sm text-gray-500">
@@ -486,7 +486,7 @@ export default function TransactionHistory({
               >
                 ←
               </button>
-              <p className="min-w-40 text-center font-semibold text-gray-900">
+              <p className="min-w-36 text-center text-sm font-semibold text-gray-900">
                 {new Intl.DateTimeFormat("en-PH", {
                   month: "long",
                   year: "numeric",
@@ -523,7 +523,7 @@ export default function TransactionHistory({
                   key={key}
                   type="button"
                   onClick={() => selectDay(day)}
-                  className={`min-h-20 rounded-xl border p-2 text-left transition sm:min-h-24 ${
+                  className={`min-h-16 rounded-lg border p-1.5 text-left transition sm:min-h-20 ${
                     isSelected
                       ? "border-purple-500 bg-purple-50 ring-1 ring-purple-300"
                       : "border-transparent hover:border-purple-200 hover:bg-purple-50/50"
@@ -534,7 +534,7 @@ export default function TransactionHistory({
                   </span>
 
                   {count > 0 && (
-                    <span className="mt-3 block w-fit rounded-full bg-purple-100 px-2 py-1 text-[10px] font-bold text-purple-700">
+                    <span className="mt-2 block w-fit rounded-full bg-purple-100 px-1.5 py-0.5 text-[10px] font-bold text-purple-700">
                       {count} {count === 1 ? "record" : "records"}
                     </span>
                   )}
@@ -545,8 +545,8 @@ export default function TransactionHistory({
         </section>
 
         {viewMode === "CUSTOM" && (
-          <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-            <div className="grid gap-4 sm:grid-cols-2">
+          <section className="mx-auto w-full max-w-5xl rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+            <div className="grid gap-3 sm:grid-cols-2">
               <label className="text-sm font-semibold text-gray-700">
                 From
                 <input
@@ -570,7 +570,7 @@ export default function TransactionHistory({
         )}
 
         {(viewMode === "WEEK" || viewMode === "MONTH") && (
-          <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+          <section className="mx-auto w-full max-w-5xl rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
             <h2 className="text-lg font-bold text-gray-900">
               Planning Summary
             </h2>
@@ -620,7 +620,7 @@ export default function TransactionHistory({
         )}
 
         <section className="rounded-2xl border border-gray-200 bg-white shadow-sm">
-          <div className="border-b border-gray-100 px-5 py-4">
+          <div className="border-b border-gray-100 px-5 py-3.5">
             <h2 className="text-lg font-bold text-gray-900">
               {viewMode === "DAY" ? `Activity on ${displayDate(selectedDate)}` : `Transaction Ledger — ${periodLabel}`}
             </h2>
@@ -639,18 +639,18 @@ export default function TransactionHistory({
               No transactions were recorded for this period.
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="max-h-[560px] overflow-auto">
               <table className="min-w-[980px] w-full text-left text-sm">
-                <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
+                <thead className="sticky top-0 z-10 bg-gray-50 text-xs uppercase tracking-wide text-gray-500 shadow-sm">
                   <tr>
-                    <th className="px-4 py-3">Date / Time</th>
-                    <th className="px-4 py-3">Activity</th>
-                    <th className="px-4 py-3">Item / Product</th>
-                    <th className="px-4 py-3">Branch</th>
-                    <th className="px-4 py-3 text-right">Previous</th>
-                    <th className="px-4 py-3 text-right">Change</th>
-                    <th className="px-4 py-3 text-right">Balance</th>
-                    <th className="px-4 py-3">Recorded By</th>
+                    <th className="px-3 py-2.5">Date / Time</th>
+                    <th className="px-3 py-2.5">Activity</th>
+                    <th className="px-3 py-2.5">Item / Product</th>
+                    <th className="px-3 py-2.5">Branch</th>
+                    <th className="px-3 py-2.5 text-right">Previous</th>
+                    <th className="px-3 py-2.5 text-right">Change</th>
+                    <th className="px-3 py-2.5 text-right">Balance</th>
+                    <th className="px-3 py-2.5">Recorded By</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -659,19 +659,19 @@ export default function TransactionHistory({
                     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
                     .map((transaction) => (
                       <tr key={transaction.id} className="hover:bg-gray-50">
-                        <td className="whitespace-nowrap px-4 py-3 text-gray-600">
+                        <td className="whitespace-nowrap px-3 py-2.5 text-gray-600">
                           <div>{displayDate(transaction.createdAt)}</div>
                           <div className="text-xs text-gray-400">{displayTime(transaction.createdAt)}</div>
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-3 py-2.5">
                           <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${transactionTone(transaction.type)}`}>
                             {formatType(transaction.type)}
                           </span>
                         </td>
-                        <td className="px-4 py-3 font-medium text-gray-900">
+                        <td className="px-3 py-2.5 font-medium text-gray-900">
                           {formatItemLabel(transaction.item)}
                         </td>
-                        <td className="px-4 py-3 text-gray-600">{transaction.branch.name}</td>
+                        <td className="px-3 py-2.5 text-gray-600">{transaction.branch.name}</td>
                         <td className="px-4 py-3 text-right text-gray-500">
                           {transaction.previousQuantity === null ? "—" : formatNumber(transaction.previousQuantity)}
                         </td>
@@ -681,10 +681,10 @@ export default function TransactionHistory({
                           {transaction.quantityDelta > 0 ? "+" : ""}
                           {formatNumber(transaction.quantityDelta)}
                         </td>
-                        <td className="px-4 py-3 text-right font-semibold text-gray-900">
+                        <td className="px-3 py-2.5 text-right font-semibold text-gray-900">
                           {transaction.newQuantity === null ? "—" : formatNumber(transaction.newQuantity)}
                         </td>
-                        <td className="px-4 py-3 text-gray-600">{transaction.user.username}</td>
+                        <td className="px-3 py-2.5 text-gray-600">{transaction.user.username}</td>
                       </tr>
                     ))}
                 </tbody>
