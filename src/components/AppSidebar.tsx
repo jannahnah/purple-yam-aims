@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -84,8 +85,15 @@ export default function AppSidebar({
       {/* Brand */}
       <div className="border-b border-white/10 px-5 py-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-fuchsia-500 to-purple-700 text-sm font-bold shadow-lg shadow-purple-950/30">
-            PY
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white/10 shadow-lg shadow-purple-950/30 ring-1 ring-white/10">
+            <Image
+              src="/purple-yam-logo.jpg"
+              alt="Purple Yam"
+              width={40}
+              height={40}
+              priority
+              className="h-full w-full object-cover"
+            />
           </div>
 
           <div>
