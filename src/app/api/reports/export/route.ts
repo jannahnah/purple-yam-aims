@@ -621,15 +621,7 @@ export async function GET(request: Request) {
       });
     }
 
-    // CSV cannot contain multiple worksheets, so the export keeps the
-    // same branch-first structure with clearly separated branch sections.
-    const csvSections = [
-      ...sheets.map((sheet) => {
-        const worksheet = XLSX.utils.json_to_sheet(sheet.rows);
-        const csv = XLSX.utils.sheet_to_csv(worksheet);
-        return `# ${sheet.name}\n${csv.trim()}`;
-      }),
-      ...bran    // CSV cannot contain multiple worksheets, so each branch is
+    // CSV cannot contain multiple worksheets, so each branch is
     // exported as a clearly separated branch section.
     const csvSections = branchTransactionSheets.map((sheet) => {
       const worksheet = XLSX.utils.aoa_to_sheet(sheet.rows);
