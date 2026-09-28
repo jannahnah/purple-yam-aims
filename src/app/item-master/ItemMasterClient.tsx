@@ -481,14 +481,14 @@ export default function ItemMasterClient() {
   }
 
   return (
-    <div className="aims-page p-4 sm:p-6 lg:p-8">
-      <div className="mx-auto w-full space-y-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <div className="aims-page item-master-page p-3 sm:p-6 lg:p-8">
+      <div className="mx-auto w-full space-y-4 sm:space-y-6">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
           <div>
-            <h1 className="mt-1 text-2xl font-bold text-gray-900">
+            <h1 className="mt-1 text-xl font-bold text-gray-900 sm:text-2xl">
               Item Master
             </h1>
-            <p className="mt-1 max-w-3xl text-sm text-gray-500">
+            <p className="mt-1 max-w-3xl text-[11px] leading-4 text-gray-500 sm:text-sm sm:leading-normal">
               Create finished products, maintain inventory items, configure reorder thresholds,
               and define approved production recipes without hard-coding formulations.
             </p>
@@ -497,7 +497,7 @@ export default function ItemMasterClient() {
           <button
             type="button"
             onClick={openCreateItem}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-purple-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-purple-800"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-purple-700 px-3 py-2 text-xs font-semibold sm:px-4 sm:py-2.5 sm:text-sm text-white shadow-sm transition hover:bg-purple-800"
           >
             + Add Item
           </button>
@@ -515,12 +515,12 @@ export default function ItemMasterClient() {
           </div>
         )}
 
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className="aims-card p-5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+        <div className="item-master-stats grid grid-cols-3 gap-2 sm:gap-4">
+          <div className="aims-card p-2.5 sm:p-5">
+            <p className="text-[9px] font-semibold uppercase tracking-wide text-gray-500 sm:text-xs">
               Total Items
             </p>
-            <p className="mt-2 text-3xl font-bold text-gray-900">
+            <p className="mt-1 text-xl font-bold text-gray-900 sm:mt-2 sm:text-3xl">
               {activeItems.length}
             </p>
           </div>
@@ -542,25 +542,25 @@ export default function ItemMasterClient() {
           </div>
         </div>
 
-        <div className="grid min-w-0 gap-6 2xl:grid-cols-[minmax(0,1.35fr)_minmax(300px,1fr)] 2xl:items-start">
+        <div className="grid min-w-0 gap-3 sm:gap-6 2xl:grid-cols-[minmax(0,1.35fr)_minmax(300px,1fr)] 2xl:items-start">
         <section className="aims-card min-w-0 overflow-hidden">
-          <div className="border-b border-gray-100 px-5 py-4">
-            <h2 className="text-base font-semibold text-gray-900">
+          <div className="border-b border-gray-100 px-3 py-2.5 sm:px-5 sm:py-4">
+            <h2 className="text-sm font-semibold text-gray-900 sm:text-base">
               Item Master Records
             </h2>
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-0.5 text-[10px] leading-4 text-gray-500 sm:mt-1 sm:text-xs">
               Owner-managed names, source types, categories, units, and reorder thresholds.
             </p>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="aims-table min-w-full">
+            <table className="aims-table item-master-table min-w-[620px]">
               <thead className="bg-gray-50">
                 <tr>
                   {["Item", "Size", "Type", "Category", "Unit", "Threshold", "Recipe", "Action"].map((heading) => (
                     <th
                       key={heading}
-                      className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500"
+                      className="px-2 py-2 text-left text-[9px] font-semibold uppercase tracking-wide text-gray-500 sm:px-5 sm:py-3 sm:text-xs"
                     >
                       {heading}
                     </th>
@@ -583,24 +583,24 @@ export default function ItemMasterClient() {
                 ) : (
                   activeItems.map((item) => (
                     <tr key={item.id} className="hover:bg-gray-50">
-                      <td className="px-5 py-4">
-                        <span className="font-medium text-gray-900">{item.name}</span>
+                      <td className="px-2 py-2">
+                        <span className="text-[10px] font-medium text-gray-900 sm:text-sm">{item.name}</span>
                       </td>
-                      <td className="px-5 py-4 text-sm text-gray-600">
+                      <td className="px-2 py-2 text-[10px] text-gray-600 sm:px-5 sm:py-4 sm:text-sm">
                         {item.size
                           ? item.size.charAt(0) + item.size.slice(1).toLowerCase()
                           : "—"}
                       </td>
-                      <td className="px-5 py-4">
-                        <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${sourceBadgeClass(item.sourceType)}`}>
+                      <td className="px-2 py-2">
+                        <span className={`inline-flex rounded-full px-1.5 py-0.5 text-[8px] font-semibold leading-3 sm:px-2.5 sm:py-1 sm:text-xs ${sourceBadgeClass(item.sourceType)}`}>
                           {SOURCE_LABELS[item.sourceType]}
                         </span>
                       </td>
-                      <td className="px-5 py-4 text-sm text-gray-600">
+                      <td className="px-2 py-2 text-[10px] text-gray-600 sm:px-5 sm:py-4 sm:text-sm">
                         {getCategoryLabel(item)}
                       </td>
                       <td className="px-5 py-4 text-sm text-gray-600">{item.unit}</td>
-                      <td className="px-5 py-4 text-sm font-medium text-gray-700">
+                      <td className="px-2 py-2 text-[10px] font-medium text-gray-700 sm:px-5 sm:py-4 sm:text-sm">
                         {item.minThreshold}
                       </td>
                       <td className="px-5 py-4 text-sm text-gray-600">
@@ -617,14 +617,14 @@ export default function ItemMasterClient() {
                             onClick={() => openEditItem(item)}
                             title="Edit item"
                             aria-label={`Edit ${item.name}`}
-                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-500 transition hover:border-purple-200 hover:bg-purple-50 hover:text-purple-700"
+                            className="inline-flex h-7 w-7 items-center justify-center rounded-md border sm:h-9 sm:w-9 sm:rounded-lg border border-gray-200 bg-white text-gray-500 transition hover:border-purple-200 hover:bg-purple-50 hover:text-purple-700"
                           >
                             <svg
                               viewBox="0 0 24 24"
                               fill="none"
                               stroke="currentColor"
                               strokeWidth="1.8"
-                              className="h-4 w-4"
+                              className="h-3 w-3 sm:h-4 sm:w-4"
                               aria-hidden="true"
                             >
                               <path d="M12 20h9" />
@@ -863,7 +863,7 @@ export default function ItemMasterClient() {
             </div>
 
             <div className="overflow-x-auto">
-              <table className="aims-table min-w-full">
+              <table className="aims-table item-master-table min-w-[620px]">
                 <thead className="bg-gray-50">
                   <tr>
                     {["Item", "Size", "Type", "Unit", "Action"].map((heading) => (
