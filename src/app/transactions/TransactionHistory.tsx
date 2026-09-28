@@ -476,7 +476,7 @@ export default function TransactionHistory({
           ))}
         </section>
 
-                <div className="grid min-w-0 items-start gap-4 lg:grid-cols-[minmax(300px,0.72fr)_minmax(0,1.28fr)]">
+                <div className="grid min-w-0 items-start gap-4 2xl:grid-cols-[minmax(300px,0.72fr)_minmax(0,1.28fr)]">
           <section ref={calendarRef} className="min-w-0 w-full rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
             <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
