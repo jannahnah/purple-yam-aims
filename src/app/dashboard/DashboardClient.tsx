@@ -271,7 +271,7 @@ export default function DashboardClient({
               </button>
 
               {isNotificationOpen && (
-                <div className="absolute right-0 mt-2 w-[min(320px,calc(100vw-1.5rem))] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl sm:mt-3 sm:w-[min(360px,calc(100vw-2rem))]"">
+                <div className="absolute right-0 mt-2 w-[min(320px,calc(100vw-1.5rem))] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl sm:mt-3 sm:w-[min(360px,calc(100vw-2rem))]">
                   <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
                     <div>
                       <h2 className="text-sm font-semibold text-gray-900 sm:text-base">
