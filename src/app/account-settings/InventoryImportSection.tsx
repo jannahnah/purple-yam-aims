@@ -191,7 +191,7 @@ export default function InventoryImportSection({
           setError("");
           setSuccess("");
         }}
-        className="flex w-full items-center justify-between p-6 text-left transition-colors hover:bg-gray-50"
+        className="flex w-full items-center justify-between rounded-xl p-6 text-left transition-colors hover:bg-gray-50"
         aria-expanded={open}
       >
         <div>
