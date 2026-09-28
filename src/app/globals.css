@@ -535,3 +535,38 @@ textarea:focus-visible {
     max-width: calc(100vw - 20px) !important;
   }
 }
+
+
+@media (max-width: 639px) and (orientation: portrait) {
+  /* Inventory summary: small square tiles instead of tall stacked cards. */
+  .inventory-summary {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .inventory-summary-card {
+    aspect-ratio: 1 / 1;
+    min-height: 0;
+    border-radius: 12px !important;
+    padding: 10px !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .inventory-summary-card > p:first-child {
+    font-size: 8px !important;
+    line-height: 1.2 !important;
+    letter-spacing: .045em !important;
+  }
+
+  .inventory-summary-card > p:nth-child(2) {
+    margin-top: 5px !important;
+    font-size: 23px !important;
+    line-height: 1 !important;
+  }
+
+  .inventory-summary-card > p:nth-child(3) {
+    display: none !important;
+  }
+}

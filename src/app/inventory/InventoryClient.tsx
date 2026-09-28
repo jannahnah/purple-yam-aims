@@ -307,8 +307,8 @@ export default function InventoryClient({
         </div>
 
         {/* Summary */}
-        <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-2xl border border-purple-200 bg-white p-5 shadow-sm">
+        <div className="inventory-summary mb-4 grid grid-cols-2 gap-2 sm:mb-6 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
+          <div className="inventory-summary-card rounded-2xl border border-purple-200 bg-white p-3 shadow-sm sm:p-5">
             <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
               Inventory Items
             </p>
@@ -324,7 +324,7 @@ export default function InventoryClient({
             </p>
           </div>
 
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="inventory-summary-card rounded-2xl border border-gray-200 bg-white p-3 shadow-sm sm:p-5">
             <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
               Branches
             </p>
@@ -340,7 +340,7 @@ export default function InventoryClient({
             </p>
           </div>
 
-          <div className="rounded-2xl border border-amber-200 bg-white p-5 shadow-sm">
+          <div className="inventory-summary-card rounded-2xl border border-amber-200 bg-white p-3 shadow-sm sm:p-5">
             <p className="text-xs font-semibold uppercase tracking-wide text-amber-600">
               Low Stock
             </p>
@@ -354,7 +354,7 @@ export default function InventoryClient({
             </p>
           </div>
 
-          <div className="rounded-2xl border border-red-200 bg-white p-5 shadow-sm">
+          <div className="inventory-summary-card rounded-2xl border border-red-200 bg-white p-3 shadow-sm sm:p-5">
             <p className="text-xs font-semibold uppercase tracking-wide text-red-600">
               Out of Stock
             </p>
