@@ -542,7 +542,7 @@ export default function ItemMasterClient() {
           </div>
         </div>
 
-        <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,1fr)] lg:items-start">
+        <div className="grid min-w-0 gap-6 2xl:grid-cols-[minmax(0,1.35fr)_minmax(300px,1fr)] 2xl:items-start">
         <section className="aims-card min-w-0 overflow-hidden">
           <div className="border-b border-gray-100 px-5 py-4">
             <h2 className="text-base font-semibold text-gray-900">
