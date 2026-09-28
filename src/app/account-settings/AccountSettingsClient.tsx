@@ -374,8 +374,6 @@ async function handleSaveName(
           </div>
         </section>
 
-          </section>
-
           <div className="min-w-0 space-y-4">
         {/* Display Name Accordion */}
         <section className="aims-card overflow-hidden">
