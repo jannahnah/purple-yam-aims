@@ -600,11 +600,11 @@ async function handleSaveName(
           )}
         </section>
 
-        {/* Import Inventory */}
-        <InventoryImportSection role={user.role} />
-
           </div>
         </div>
+
+        {/* Import Inventory */}
+        <InventoryImportSection role={user.role} />
 
         {/* Information Note */}
         <p className="pt-1 text-center text-xs text-gray-400">
