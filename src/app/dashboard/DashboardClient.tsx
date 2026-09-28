@@ -561,17 +561,17 @@ export default function DashboardClient({
         </section>
 
         <section className="rounded-2xl border border-gray-200 bg-white shadow-sm">
-          <div className="border-b border-gray-100 px-5 py-5">
-            <h2 className="text-lg font-bold text-gray-900">
+          <div className="border-b border-gray-100 px-3 py-3 sm:px-5 sm:py-5">
+            <h2 className="text-base font-bold text-gray-900 sm:text-lg">
               Inventory by Branch — Summary
             </h2>
           </div>
 
           <div className="overflow-x-auto aims-table-wrap">
-            <table className="min-w-[640px] text-left text-xs sm:text-sm">
+            <table className="min-w-full table-fixed text-left text-xs sm:text-sm">
               <thead className="bg-gray-50 text-xs uppercase text-gray-500">
                 <tr>
-                  <th className="px-3 py-2 font-semibold sm:px-5 sm:py-3">Item</th>
+                  <th className="w-[30%] px-3 py-2 font-semibold sm:px-5 sm:py-3">Item</th>
 
                   {branchNames.map((branchName) => (
                     <th
@@ -587,7 +587,7 @@ export default function DashboardClient({
               <tbody className="divide-y divide-gray-100">
                 {itemNames.map((itemName) => (
                   <tr key={itemName}>
-                    <td className="whitespace-nowrap px-3 py-3 font-semibold text-gray-900 sm:px-5 sm:py-4">
+                    <td className="whitespace-nowrap px-3 py-2.5 font-semibold text-gray-900 sm:px-5 sm:py-3.5">
                       {itemName}
                     </td>
 
@@ -597,7 +597,7 @@ export default function DashboardClient({
                       return (
                         <td
                           key={`${itemName}-${branchName}`}
-                          className="whitespace-nowrap px-3 py-3 text-gray-700 sm:px-5 sm:py-4"
+                          className="whitespace-nowrap px-3 py-2.5 text-gray-700 sm:px-5 sm:py-3.5"
                         >
                           {stock ? (
                             <>
