@@ -19,6 +19,8 @@ model User {
   passwordResetCodeHash String?
   passwordResetExpiresAt DateTime?
   passwordResetAttempts Int      @default(0)
+  passwordResetTokenHash String?
+  passwordResetTokenExpiresAt DateTime?
   branchId           String?
   businessId         String?
   lastLoginAt        DateTime?
