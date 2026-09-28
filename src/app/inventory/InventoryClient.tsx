@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import StockActionsModal from "./StockActionsModal";
 import ProductionModal from "./ProductionModal";
 import SalesModal from "./SalesModal";
@@ -134,6 +134,9 @@ export default function InventoryClient({
   );
   const [selectedSource, setSelectedSource] = useState("ALL");
   const [selectedStatus, setSelectedStatus] = useState("ALL");
+  const [inventoryPage, setInventoryPage] = useState(1);
+
+  const INVENTORY_PAGE_SIZE = 10;
 
   const canManageStock = isOwner || isManager;
 
@@ -181,6 +184,33 @@ export default function InventoryClient({
     selectedSource,
     selectedStatus,
   ]);
+
+  const inventoryPageCount = Math.max(
+    1,
+    Math.ceil(filteredRecords.length / INVENTORY_PAGE_SIZE)
+  );
+
+  const inventoryStartIndex =
+    (inventoryPage - 1) * INVENTORY_PAGE_SIZE;
+  const inventoryEndIndex = Math.min(
+    inventoryStartIndex + INVENTORY_PAGE_SIZE,
+    filteredRecords.length
+  );
+
+  const paginatedRecords = filteredRecords.slice(
+    inventoryStartIndex,
+    inventoryEndIndex
+  );
+
+  useEffect(() => {
+    setInventoryPage(1);
+  }, [search, selectedBranch, selectedSource, selectedStatus]);
+
+  useEffect(() => {
+    if (inventoryPage > inventoryPageCount) {
+      setInventoryPage(inventoryPageCount);
+    }
+  }, [inventoryPage, inventoryPageCount]);
 
   const lowStockCount = stockRecords.filter(
     (stock) =>
@@ -586,7 +616,7 @@ export default function InventoryClient({
                     </td>
                   </tr>
                 ) : (
-                  filteredRecords.map((stock) => {
+                  paginatedRecords.map((stock) => {
                     const status = getStockStatus(
                       stock.quantity,
                       stock.item.minThreshold
@@ -659,6 +689,50 @@ export default function InventoryClient({
                 )}
               </tbody>
             </table>
+          </div>
+
+          <div className="flex min-h-12 items-center justify-between border-t border-gray-100 px-4 py-2">
+            <p className="text-[11px] font-medium text-gray-600">
+              Showing {inventoryStartIndex + 1}–{inventoryEndIndex} of {filteredRecords.length} records
+            </p>
+
+            <div className="flex items-center gap-0.5">
+              <button
+                type="button"
+                onClick={() => setInventoryPage(1)}
+                disabled={inventoryPage === 1}
+                className="!h-[30px] !min-h-0 !rounded-md border border-gray-200 bg-white !px-2.5 !py-0 text-[11px] font-medium leading-none text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-45"
+              >
+                First
+              </button>
+              <button
+                type="button"
+                onClick={() => setInventoryPage((page) => page - 1)}
+                disabled={inventoryPage === 1}
+                className="!h-[30px] !min-h-0 !rounded-md border border-gray-200 bg-white !px-2.5 !py-0 text-[11px] font-medium leading-none text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-45"
+              >
+                Previous
+              </button>
+              <span className="min-w-9 px-0.5 text-center text-[10px] font-medium text-gray-600">
+                {inventoryPage} / {inventoryPageCount}
+              </span>
+              <button
+                type="button"
+                onClick={() => setInventoryPage((page) => page + 1)}
+                disabled={inventoryPage === inventoryPageCount}
+                className="!h-[30px] !min-h-0 !rounded-md border border-gray-200 bg-white !px-2.5 !py-0 text-[11px] font-medium leading-none text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-45"
+              >
+                Next
+              </button>
+              <button
+                type="button"
+                onClick={() => setInventoryPage(inventoryPageCount)}
+                disabled={inventoryPage === inventoryPageCount}
+                className="!h-[30px] !min-h-0 !rounded-md border border-gray-200 bg-white !px-2.5 !py-0 text-[11px] font-medium leading-none text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-45"
+              >
+                Last
+              </button>
+            </div>
           </div>
         </div>
 
