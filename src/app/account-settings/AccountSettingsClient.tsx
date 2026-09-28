@@ -283,8 +283,8 @@ async function handleSaveName(
       : user.branch?.name ?? "Not assigned";
 
   return (
-    <main className="aims-page px-4 py-6 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-4xl space-y-4">
+    <main className="aims-page px-[clamp(1rem,2vw,2rem)] py-6">
+      <div className="mx-auto w-full space-y-6">
 
         {/* Page Header */}
         <div className="mb-6">
@@ -297,8 +297,10 @@ async function handleSaveName(
           </p>
         </div>
 
-        {/* Account Information */}
-        <section className="aims-card p-6">
+        {/* Settings Workspace */}
+        <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(280px,0.9fr)_minmax(0,1.35fr)] lg:items-start">
+          {/* Account Information */}
+        <section className="aims-card h-full min-w-0 p-6">
           <h2 className="mb-5 text-sm font-semibold text-gray-900">
             Account Information
           </h2>
@@ -372,6 +374,9 @@ async function handleSaveName(
           </div>
         </section>
 
+          </section>
+
+          <div className="min-w-0 space-y-4">
         {/* Display Name Accordion */}
         <section className="aims-card overflow-hidden">
           <button
@@ -600,8 +605,11 @@ async function handleSaveName(
         {/* Import Inventory */}
         <InventoryImportSection role={user.role} />
 
+          </div>
+        </div>
+
         {/* Information Note */}
-        <p className="pt-2 text-center text-xs text-gray-400">
+        <p className="pt-1 text-center text-xs text-gray-400">
           Username, role, and assigned branch can only
           be changed by the Owner. Contact your
           administrator for those changes.
