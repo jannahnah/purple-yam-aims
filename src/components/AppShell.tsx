@@ -23,7 +23,7 @@ export default function AppShell({
     <div className="flex h-screen overflow-hidden bg-[#f7f7fa]">
       <AppSidebar user={user} />
 
-      <main className="min-w-0 flex-1 overflow-y-auto">
+      <main className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden">
         {children}
       </main>
     </div>
