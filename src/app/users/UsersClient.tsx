@@ -500,16 +500,16 @@ export default function UsersClient() {
   }
 
   return (
-    <div className="aims-page p-[clamp(1rem,2vw,2rem)]">
-      <div className="mx-auto w-full space-y-6">
+    <div className="aims-page users-page p-3 sm:p-[clamp(1rem,2vw,2rem)]">
+      <div className="mx-auto w-full space-y-3 sm:space-y-6">
         {/* Header */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">
               User Management
             </h1>
 
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-0.5 text-[11px] leading-4 text-gray-500 sm:mt-1 sm:text-sm sm:leading-normal">
               Create and manage staff accounts. Usernames
               and roles cannot be changed by staff.
             </p>
@@ -518,9 +518,9 @@ export default function UsersClient() {
           <button
             type="button"
             onClick={openCreateModal}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-purple-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-purple-800"
+            className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-purple-700 px-3 py-2 text-xs font-semibold sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm text-white shadow-sm transition hover:bg-purple-800"
           >
-            <span className="text-lg leading-none">
+            <span className="text-base leading-none sm:text-lg">
               +
             </span>
 
@@ -546,12 +546,12 @@ export default function UsersClient() {
           )}
 
         {/* User Table */}
-        <div className="aims-card min-w-0 overflow-hidden">
+        <div className="aims-card min-w-0 overflow-hidden rounded-xl sm:rounded-2xl">
           <div className="overflow-x-auto">
-            <table className="aims-table min-w-[980px]">
+            <table className="aims-table users-table min-w-[760px] sm:min-w-[980px]">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  <th className="px-2 py-2 text-left text-[9px] font-semibold uppercase tracking-wide text-gray-500 sm:px-5 sm:py-3 sm:text-xs">
                     Full Name
                   </th>
 
@@ -606,20 +606,20 @@ export default function UsersClient() {
                       key={user.id}
                       className="hover:bg-gray-50"
                     >
-                      <td className="whitespace-nowrap px-5 py-4">
-                        <span className="font-medium text-gray-900">
+                      <td className="whitespace-nowrap px-2 py-2.5 sm:px-5 sm:py-4">
+                        <span className="text-[11px] font-medium text-gray-900 sm:text-sm">
                           {user.name ||
                             user.username}
                         </span>
                       </td>
 
-                      <td className="whitespace-nowrap px-5 py-4 font-mono text-sm text-gray-600">
+                      <td className="whitespace-nowrap px-2 py-2.5 font-mono text-[10px] text-gray-600 sm:px-5 sm:py-4 sm:text-sm">
                         {user.username}
                       </td>
 
-                      <td className="whitespace-nowrap px-5 py-4">
+                      <td className="whitespace-nowrap px-2 py-2.5 sm:px-5 sm:py-4">
                         <span
-                          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${roleBadgeClass(
+                          className={`inline-flex rounded-full px-1.5 py-0.5 text-[8px] font-semibold leading-3 sm:px-2.5 sm:py-1 sm:text-xs ${roleBadgeClass(
                             user.role
                           )}`}
                         >
@@ -627,14 +627,14 @@ export default function UsersClient() {
                         </span>
                       </td>
 
-                      <td className="whitespace-nowrap px-5 py-4 text-sm text-gray-600">
+                      <td className="whitespace-nowrap px-2 py-2.5 text-[10px] text-gray-600 sm:px-5 sm:py-4 sm:text-sm">
                         {user.branch?.name ||
                           "—"}
                       </td>
 
-                      <td className="whitespace-nowrap px-5 py-4">
+                      <td className="whitespace-nowrap px-2 py-2.5 sm:px-5 sm:py-4">
                         <span
-                          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${statusBadgeClass(
+                          className={`inline-flex rounded-full px-1.5 py-0.5 text-[8px] font-semibold leading-3 sm:px-2.5 sm:py-1 sm:text-xs ${statusBadgeClass(
                             user.status
                           )}`}
                         >
@@ -645,14 +645,14 @@ export default function UsersClient() {
                         </span>
                       </td>
 
-                      <td className="whitespace-nowrap px-5 py-4 font-mono text-sm text-gray-400">
+                      <td className="whitespace-nowrap px-2 py-2.5 font-mono text-[10px] text-gray-400 sm:px-5 sm:py-4 sm:text-sm">
                         {formatDate(
                           user.createdAt
                         )}
                       </td>
 
                       <td className="whitespace-nowrap px-5 py-4">
-                        <div className="flex gap-2">
+                        <div className="flex gap-1 sm:gap-2">
                           <button
                             type="button"
                             onClick={() =>
@@ -660,7 +660,7 @@ export default function UsersClient() {
                                 user
                               )
                             }
-                            className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 transition hover:bg-gray-50"
+                            className="rounded-md border border-gray-300 bg-white px-2 py-1 text-[9px] font-semibold sm:px-3 sm:py-1.5 sm:text-xs text-gray-700 transition hover:bg-gray-50"
                           >
                             Reset Pwd
                           </button>
@@ -672,7 +672,7 @@ export default function UsersClient() {
                                 user
                               )
                             }
-                            className={`rounded-md px-3 py-1.5 text-xs font-semibold transition ${
+                            className={`rounded-md px-2 py-1 text-[9px] font-semibold transition sm:px-3 sm:py-1.5 sm:text-xs ${
                               user.status ===
                               "ACTIVE"
                                 ? "bg-red-50 text-red-700 hover:bg-red-100"
