@@ -524,19 +524,19 @@ export default function ItemMasterClient() {
               {activeItems.length}
             </p>
           </div>
-          <div className="aims-card p-5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+          <div className="aims-card p-2.5 sm:p-5">
+            <p className="text-[9px] font-semibold uppercase tracking-wide text-gray-500 sm:text-xs">
               Finished Products
             </p>
-            <p className="mt-2 text-3xl font-bold text-gray-900">
+            <p className="mt-1 text-xl font-bold text-gray-900 sm:mt-2 sm:text-3xl">
               {finishedProducts.length}
             </p>
           </div>
-          <div className="aims-card p-5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+          <div className="aims-card p-2.5 sm:p-5">
+            <p className="text-[9px] font-semibold uppercase tracking-wide text-gray-500 sm:text-xs">
               Configured Recipes
             </p>
-            <p className="mt-2 text-3xl font-bold text-gray-900">
+            <p className="mt-1 text-xl font-bold text-gray-900 sm:mt-2 sm:text-3xl">
               {finishedProducts.filter((item) => item.recipeAsFinished.length > 0).length}
             </p>
           </div>
