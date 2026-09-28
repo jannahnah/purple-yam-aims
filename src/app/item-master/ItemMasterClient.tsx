@@ -482,7 +482,7 @@ export default function ItemMasterClient() {
 
   return (
     <div className="aims-page p-4 sm:p-6 lg:p-8">
-      <div className="mx-auto w-full max-w-7xl space-y-6">
+      <div className="mx-auto w-full space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h1 className="mt-1 text-2xl font-bold text-gray-900">
@@ -542,8 +542,8 @@ export default function ItemMasterClient() {
           </div>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-[minmax(0,1.35fr)_minmax(360px,1fr)] md:items-start">
-        <section className="aims-card overflow-hidden">
+        <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,1fr)] lg:items-start">
+        <section className="aims-card min-w-0 overflow-hidden">
           <div className="border-b border-gray-100 px-5 py-4">
             <h2 className="text-base font-semibold text-gray-900">
               Item Master Records
@@ -669,7 +669,7 @@ export default function ItemMasterClient() {
           </div>
         </section>
 
-        <section className="aims-card p-5 sm:p-6">
+        <section className="aims-card min-w-0 p-5 sm:p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h2 className="text-base font-semibold text-gray-900">
@@ -852,7 +852,7 @@ export default function ItemMasterClient() {
         </div>
 
         {archivedItems.length > 0 && (
-          <section className="aims-card overflow-hidden">
+          <section className="aims-card min-w-0 overflow-hidden">
             <div className="border-b border-gray-100 px-5 py-4">
               <h2 className="text-base font-semibold text-gray-700">
                 Deleted Items
