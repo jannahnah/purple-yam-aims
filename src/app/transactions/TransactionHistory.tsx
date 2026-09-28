@@ -356,8 +356,8 @@ export default function TransactionHistory({
   }, [calendarMonth, viewMode, periodTransactions.length]);
 
   return (
-    <main className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
-      <div className="mx-auto max-w-7xl space-y-6">
+    <main className="min-h-screen bg-gray-50 p-[clamp(1rem,2vw,2rem)]">
+      <div className="mx-auto w-full space-y-6">
         <header className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
           <div>
             <p className="text-sm font-semibold text-purple-600">
@@ -476,8 +476,8 @@ export default function TransactionHistory({
           ))}
         </section>
 
-                <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)]">
-          <section ref={calendarRef} className="w-full rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+                <div className="grid min-w-0 items-start gap-4 lg:grid-cols-[minmax(300px,0.72fr)_minmax(0,1.28fr)]">
+          <section ref={calendarRef} className="min-w-0 w-full rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
             <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-sm font-bold text-gray-900">Activity calendar</h2>
@@ -582,7 +582,7 @@ export default function TransactionHistory({
 
 
           <section
-            className="flex min-h-0 w-full flex-col rounded-2xl border border-gray-200 bg-white shadow-sm"
+            className="min-w-0 flex min-h-0 w-full flex-col rounded-2xl border border-gray-200 bg-white shadow-sm"
             style={calendarHeight ? { height: `${calendarHeight}px` } : undefined}
           >
             <div className="border-b border-gray-100 px-5 py-3.5">
