@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/auth/password";
 import { createSessionToken, SESSION_MAX_AGE } from "@/lib/auth/session";
+import {
+  hashResetToken,
+  isResetTokenExpired,
+} from "@/lib/auth/reset-code";
 
 export async function POST(request: Request) {
   try {
@@ -19,10 +23,14 @@ export async function POST(request: Request) {
       typeof body.confirmPassword === "string"
         ? body.confirmPassword
         : "";
+    const resetToken =
+      typeof body.resetToken === "string"
+        ? body.resetToken.trim()
+        : "";
 
-    if (!email) {
+    if (!email || !resetToken) {
       return NextResponse.json(
-        { error: "Owner email is required." },
+        { error: "Password recovery session is invalid." },
         { status: 400 }
       );
     }
@@ -56,12 +64,25 @@ export async function POST(request: Request) {
         role: true,
         status: true,
         businessId: true,
+        passwordResetTokenHash: true,
+        passwordResetTokenExpiresAt: true,
       },
     });
 
     if (!user || user.role !== "OWNER" || user.status !== "ACTIVE") {
       return NextResponse.json(
         { error: "Password recovery session is invalid." },
+        { status: 400 }
+      );
+    }
+
+    if (
+      !user.passwordResetTokenHash ||
+      isResetTokenExpired(user.passwordResetTokenExpiresAt) ||
+      user.passwordResetTokenHash !== hashResetToken(resetToken)
+    ) {
+      return NextResponse.json(
+        { error: "Password recovery session is invalid or expired." },
         { status: 400 }
       );
     }
@@ -77,6 +98,8 @@ export async function POST(request: Request) {
           passwordResetCodeHash: null,
           passwordResetExpiresAt: null,
           passwordResetAttempts: 0,
+          passwordResetTokenHash: null,
+          passwordResetTokenExpiresAt: null,
         },
       });
 
