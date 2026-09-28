@@ -15,6 +15,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Purple Yam Inventory Management System",
   description: "Multi-branch inventory management system for Purple Yam",
+
+  verification: {
+    google: "ENNko8yFBwGxQAqjGYVX-cZPenwhhE04HQMLsMTMn2U",
+  },
+
   icons: {
     icon: "/purple-yam-favicon.svg",
     shortcut: "/purple-yam-favicon.svg",
