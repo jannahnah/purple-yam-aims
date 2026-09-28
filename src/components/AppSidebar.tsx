@@ -202,7 +202,7 @@ export default function AppSidebar({ user }: AppSidebarProps) {
           </div>
           <div className="min-w-0">
             <p className="truncate text-sm font-bold text-zinc-900">Purple Yam</p>
-            <p className="truncate text-[11px] text-zinc-500">Inventory Management</p>
+            <p className="truncate text-[11px] text-zinc-500">Automated Inventory Management System</p>
           </div>
         </div>
 
@@ -249,12 +249,12 @@ export default function AppSidebar({ user }: AppSidebarProps) {
 function Brand() {
   return (
     <div className="flex items-center gap-3">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/10 shadow-lg shadow-purple-950/30 ring-1 ring-white/10">
+      <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/10 shadow-lg shadow-purple-950/30 ring-1 ring-white/10">
         <Image
           src="/purple-yam-logo.jpg"
           alt="Purple Yam"
-          width={40}
-          height={40}
+          width={48}
+          height={48}
           priority
           className="h-full w-full object-cover"
         />
