@@ -81,7 +81,7 @@ export default function AppSidebar({
   }
 
   return (
-    <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 overflow-hidden bg-gradient-to-b from-purple-950 via-purple-950 to-indigo-950 text-white shadow-xl lg:flex lg:flex-col">
+    <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 lg:w-64 overflow-hidden bg-gradient-to-b from-purple-950 via-purple-950 to-indigo-950 text-white shadow-xl lg:flex lg:flex-col">
       {/* Brand */}
       <div className="border-b border-white/10 px-5 py-4">
         <div className="flex items-center gap-3">
