@@ -1187,14 +1187,15 @@ export default function ReportsClient({
 
               {!loading && reportRows.length > 0 && (
                 <div className="flex flex-col gap-1.5 border-t border-gray-100 px-3 py-1.5 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="text-[10px] text-gray-500">
-                    {reportStartIndex + 1}–{reportEndIndex} of {reportRows.length}
+                  <p className="text-[11px] text-gray-500">
+                    Showing {reportStartIndex + 1}–{reportEndIndex} of {reportRows.length} records
                   </p>
                   <div className="flex items-center gap-0.5">
-                    <button type="button" onClick={() => goToReportPage(reportPage - 1)} disabled={reportPage === 1} className="rounded border border-gray-200 bg-white px-2 py-1 text-[10px] font-medium leading-none text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40">Previous</button>
+                    <button type="button" onClick={() => goToReportPage(1)} disabled={reportPage === 1} className="rounded border border-gray-200 bg-white px-1.5 py-1 text-[9px] font-medium leading-none text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40">First</button>
+                    <button type="button" onClick={() => goToReportPage(reportPage - 1)} disabled={reportPage === 1} className="rounded border border-gray-200 bg-white px-1.5 py-1 text-[9px] font-medium leading-none text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40">Previous</button>
                     <span className="min-w-12 text-center text-[10px] font-medium text-gray-600">Page {reportPage} of {reportPageCount}</span>
-                    <button type="button" onClick={() => goToReportPage(reportPage + 1)} disabled={reportPage === reportPageCount} className="rounded border border-gray-200 bg-white px-2 py-1 text-[10px] font-medium leading-none text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40">Next</button>
-                    <button type="button" onClick={() => goToReportPage(reportPageCount)} disabled={reportPage === reportPageCount} className="rounded border border-gray-200 bg-white px-2 py-1 text-[10px] font-medium leading-none text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40">Last</button>
+                    <button type="button" onClick={() => goToReportPage(reportPage + 1)} disabled={reportPage === reportPageCount} className="rounded border border-gray-200 bg-white px-1.5 py-1 text-[9px] font-medium leading-none text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40">Next</button>
+                    <button type="button" onClick={() => goToReportPage(reportPageCount)} disabled={reportPage === reportPageCount} className="rounded border border-gray-200 bg-white px-1.5 py-1 text-[9px] font-medium leading-none text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40">Last</button>
                   </div>
                 </div>
               )}
