@@ -194,6 +194,9 @@ export default function ReportsClient({
   const [exportStartDate, setExportStartDate] = useState("");
   const [exportEndDate, setExportEndDate] = useState("");
 
+  const REPORT_PAGE_SIZE = 10;
+  const [reportPage, setReportPage] = useState(1);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -297,6 +300,51 @@ export default function ReportsClient({
   const activeReportLabel =
     REPORT_OPTIONS.find((option) => option.id === report)
       ?.label ?? "Reports";
+
+  const reportRows = useMemo(() => {
+    switch (report) {
+      case "inventory-by-branch":
+        return inventoryWithStatus;
+      case "low-stock":
+        return lowStockRows;
+      case "out-of-stock":
+        return outOfStockRows;
+      case "sales-summary":
+        return data.sales;
+      case "production-summary":
+        return data.production;
+      case "transfer-delivery-history":
+        return data.transferDeliveries;
+      case "transaction-history":
+        return data.transactions;
+      default:
+        return [];
+    }
+  }, [report, inventoryWithStatus, lowStockRows, outOfStockRows, data.sales, data.production, data.transferDeliveries, data.transactions]);
+
+  const reportPageCount = Math.max(1, Math.ceil(reportRows.length / REPORT_PAGE_SIZE));
+  const reportStartIndex = (reportPage - 1) * REPORT_PAGE_SIZE;
+  const reportEndIndex = Math.min(reportStartIndex + REPORT_PAGE_SIZE, reportRows.length);
+
+  useEffect(() => {
+    setReportPage(1);
+  }, [report]);
+
+  useEffect(() => {
+    setReportPage((page) => Math.min(Math.max(page, 1), reportPageCount));
+  }, [reportPageCount]);
+
+  const paginatedInventory = inventoryWithStatus.slice(reportStartIndex, reportEndIndex);
+  const paginatedLowStock = lowStockRows.slice(reportStartIndex, reportEndIndex);
+  const paginatedOutOfStock = outOfStockRows.slice(reportStartIndex, reportEndIndex);
+  const paginatedSales = data.sales.slice(reportStartIndex, reportEndIndex);
+  const paginatedProduction = data.production.slice(reportStartIndex, reportEndIndex);
+  const paginatedTransfers = data.transferDeliveries.slice(reportStartIndex, reportEndIndex);
+  const paginatedTransactions = data.transactions.slice(reportStartIndex, reportEndIndex);
+
+  function goToReportPage(page: number) {
+    setReportPage(Math.min(Math.max(page, 1), reportPageCount));
+  }
 
   async function exportReports(format: "xlsx" | "csv") {
     try {
@@ -544,7 +592,7 @@ export default function ReportsClient({
               <button
                 key={option.id}
                 type="button"
-                onClick={() => setReport(option.id)}
+                onClick={() => { setReport(option.id); setReportPage(1); }}
                 className={`rounded-xl border-2 p-4 text-left transition-all ${
                   selected
                     ? "border-purple-500 bg-purple-50"
@@ -720,7 +768,7 @@ export default function ReportsClient({
                       {lowStockRows.length === 0 ? (
                         <EmptyRow colSpan={5} />
                       ) : (
-                        lowStockRows.map((row) => {
+                        paginatedLowStock.map((row) => {
                           const deficit =
                             row.item.minThreshold -
                             row.quantity;
@@ -785,7 +833,7 @@ export default function ReportsClient({
                       {outOfStockRows.length === 0 ? (
                         <EmptyRow colSpan={3} />
                       ) : (
-                        outOfStockRows.map((row) => (
+                        paginatedOutOfStock.map((row) => (
                           <tr
                             key={row.id}
                             className="transition hover:bg-red-50"
@@ -839,7 +887,7 @@ export default function ReportsClient({
                       {data.sales.length === 0 ? (
                         <EmptyRow colSpan={5} />
                       ) : (
-                        data.sales.map((sale) => (
+                        paginatedSales.map((sale) => (
                           <tr
                             key={sale.id}
                             className="transition hover:bg-gray-50"
@@ -904,7 +952,7 @@ export default function ReportsClient({
                       {data.production.length === 0 ? (
                         <EmptyRow colSpan={5} />
                       ) : (
-                        data.production.map((production) => (
+                        paginatedProduction.map((production) => (
                           <tr
                             key={production.id}
                             className="transition hover:bg-gray-50"
@@ -961,7 +1009,7 @@ export default function ReportsClient({
                       {data.transferDeliveries.length === 0 ? (
                         <EmptyRow colSpan={8} />
                       ) : (
-                        data.transferDeliveries.map((transfer) => (
+                        paginatedTransfers.map((transfer) => (
                           <tr key={transfer.id} className="transition hover:bg-gray-50">
                             <td className="whitespace-nowrap px-5 py-4">
                               <div className="font-medium text-gray-900">
@@ -1034,7 +1082,7 @@ export default function ReportsClient({
                       {data.transactions.length === 0 ? (
                         <EmptyRow colSpan={9} />
                       ) : (
-                        data.transactions.map(
+                        paginatedTransactions.map(
                           (transaction) => {
                             const isIncrease =
                               transaction.quantityDelta > 0;
@@ -1134,6 +1182,20 @@ export default function ReportsClient({
                       )}
                     </tbody>
                   </table>
+                </div>
+              )}
+
+              {!loading && reportRows.length > 0 && (
+                <div className="flex flex-col gap-3 border-t border-gray-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-xs text-gray-500">
+                    Showing {reportStartIndex + 1}–{reportEndIndex} of {reportRows.length} records
+                  </p>
+                  <div className="flex items-center gap-1.5">
+                    <button type="button" onClick={() => goToReportPage(reportPage - 1)} disabled={reportPage === 1} className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40">Previous</button>
+                    <span className="min-w-16 text-center text-xs font-semibold text-gray-600">Page {reportPage} of {reportPageCount}</span>
+                    <button type="button" onClick={() => goToReportPage(reportPage + 1)} disabled={reportPage === reportPageCount} className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40">Next</button>
+                    <button type="button" onClick={() => goToReportPage(reportPageCount)} disabled={reportPage === reportPageCount} className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40">Last</button>
+                  </div>
                 </div>
               )}
             </>
