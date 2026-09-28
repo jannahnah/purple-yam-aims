@@ -694,7 +694,7 @@ export default function ReportsClient({
                       {inventoryWithStatus.length === 0 ? (
                         <EmptyRow colSpan={9} />
                       ) : (
-                        inventoryWithStatus.map((row) => (
+                        paginatedInventory.map((row) => (
                           <tr
                             key={row.id}
                             className="transition hover:bg-gray-50"
