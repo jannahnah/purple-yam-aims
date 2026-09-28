@@ -168,7 +168,9 @@ export default function AppSidebar({ user }: AppSidebarProps) {
   return (
     <>
       <aside className="hidden h-dvh w-64 shrink-0 overflow-hidden bg-gradient-to-b from-purple-950 via-purple-950 to-indigo-950 text-white shadow-xl lg:flex lg:flex-col">
-        <Brand />
+        <div className="shrink-0 px-4 py-4">
+          <Brand />
+        </div>
         <UserCard user={user} />
         <nav className="flex-1 overflow-y-auto px-3 py-4">{navigation}</nav>
         {account}
