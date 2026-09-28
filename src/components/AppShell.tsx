@@ -15,15 +15,12 @@ type AppShellProps = {
   children: ReactNode;
 };
 
-export default function AppShell({
-  user,
-  children,
-}: AppShellProps) {
+export default function AppShell({ user, children }: AppShellProps) {
   return (
-    <div className="flex h-screen overflow-hidden bg-[#f7f7fa]">
+    <div className="aims-shell flex h-screen min-h-0 overflow-hidden bg-[#f7f7fa]">
       <AppSidebar user={user} />
 
-      <main className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden">
+      <main className="aims-main min-w-0 flex-1 overflow-y-auto overflow-x-hidden">
         {children}
       </main>
     </div>
