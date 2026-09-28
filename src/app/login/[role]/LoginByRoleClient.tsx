@@ -18,9 +18,14 @@ export default function LoginByRoleClient({ role, roleLabel }: Props) {
   const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showForgotNotice, setShowForgotNotice] = useState(false);
   const router = useRouter();
+
   useEffect(() => {
-    if (typeof window !== "undefined" && window.location.search.includes("registered=1")) {
+    if (
+      typeof window !== "undefined" &&
+      window.location.search.includes("registered=1")
+    ) {
       setNotice("Owner account created successfully. You can now sign in.");
     }
   }, []);
@@ -28,6 +33,7 @@ export default function LoginByRoleClient({ role, roleLabel }: Props) {
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
+    setNotice("");
     setLoading(true);
 
     try {
@@ -64,6 +70,50 @@ export default function LoginByRoleClient({ role, roleLabel }: Props) {
     }
   }
 
+  async function handleForgotPassword() {
+    setError("");
+    setNotice("");
+    setShowForgotNotice(false);
+
+    if (role !== "OWNER") {
+      setShowForgotNotice(true);
+      return;
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail) {
+      setError("Enter your registered owner email first.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: normalizedEmail }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || "Unable to start password recovery.");
+        return;
+      }
+
+      router.push(
+        `/forgot-password?email=${encodeURIComponent(normalizedEmail)}`
+      );
+    } catch (requestError) {
+      console.error("Forgot password request failed:", requestError);
+      setError("Unable to connect to the server. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#16052b] px-4 py-8">
       <div className="pointer-events-none absolute inset-0">
@@ -72,8 +122,9 @@ export default function LoginByRoleClient({ role, roleLabel }: Props) {
       </div>
 
       <div className="relative z-10 w-full max-w-[430px]">
-        <div className="mb-6 text-center"><PurpleYamLogo size="md" />
-          <div className="mt-4"></div>
+        <div className="mb-6 text-center">
+          <PurpleYamLogo size="md" />
+          <div className="mt-4" />
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-purple-300/70">
             Sign In As
           </p>
@@ -90,9 +141,21 @@ export default function LoginByRoleClient({ role, roleLabel }: Props) {
             </div>
           )}
 
+          {showForgotNotice && (
+            <div className="mb-4 rounded-xl border border-amber-300/20 bg-amber-500/10 px-3.5 py-3 text-xs leading-5 text-amber-100">
+              Forgot your password? Please ask the Owner to reset your
+              password. The Owner will provide a temporary password. Use that
+              temporary password to sign in, then you will be required to
+              create a new password before entering the dashboard.
+            </div>
+          )}
+
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label htmlFor="email" className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-purple-200">
+              <label
+                htmlFor="email"
+                className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-purple-200"
+              >
                 Email
               </label>
               <input
@@ -109,7 +172,10 @@ export default function LoginByRoleClient({ role, roleLabel }: Props) {
             </div>
 
             <div>
-              <label htmlFor="password" className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-purple-200">
+              <label
+                htmlFor="password"
+                className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-purple-200"
+              >
                 Password
               </label>
               <div className="relative">
@@ -136,7 +202,10 @@ export default function LoginByRoleClient({ role, roleLabel }: Props) {
             </div>
 
             {error && (
-              <div role="alert" className="rounded-xl border border-red-400/20 bg-red-500/10 px-3.5 py-2.5 text-xs text-red-300">
+              <div
+                role="alert"
+                className="rounded-xl border border-red-400/20 bg-red-500/10 px-3.5 py-2.5 text-xs text-red-300"
+              >
                 {error}
               </div>
             )}
@@ -150,11 +219,20 @@ export default function LoginByRoleClient({ role, roleLabel }: Props) {
             </button>
           </form>
 
+          <button
+            type="button"
+            onClick={handleForgotPassword}
+            disabled={loading}
+            className="mt-4 w-full text-center text-xs font-semibold text-purple-300/75 transition hover:text-purple-100 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Forgot Password?
+          </button>
+
           {role !== "OWNER" && (
             <p className="mt-4 rounded-xl border border-purple-300/10 bg-purple-900/20 px-3 py-2.5 text-xs leading-5 text-purple-100/55">
-              New {roleLabel} accounts are created by the Owner. Use the temporary
-              credentials provided to you, then change your password before
-              entering the dashboard.
+              New {roleLabel} accounts are created by the Owner. Use the
+              temporary credentials provided to you, then change your password
+              before entering the dashboard.
             </p>
           )}
         </div>
