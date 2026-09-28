@@ -281,3 +281,51 @@ textarea:focus-visible {
     animation-iteration-count: 1 !important;
   }
 }
+
+/* Responsive application shell */
+.mobile-shell-header,
+.mobile-drawer,
+.mobile-drawer-backdrop { display: none; }
+
+@media (max-width: 1023px) and (orientation: portrait) {
+  .aims-shell { height: 100dvh; }
+  .mobile-shell-header {
+    position: fixed; inset: 0 0 auto 0; z-index: 40;
+    display: flex; height: 60px; align-items: center; gap: 10px;
+    padding: 8px 12px; border-bottom: 1px solid #e4e4e7;
+    background: rgb(255 255 255 / .96); box-shadow: 0 4px 18px rgb(24 24 27 / .06);
+    backdrop-filter: blur(14px);
+  }
+  .mobile-menu-button {
+    display: inline-flex; width: 40px; height: 40px; flex-shrink: 0;
+    flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+    border: 1px solid #e4e4e7; border-radius: 10px; background: #fff; color: #3f3f46;
+    box-shadow: 0 1px 2px rgb(0 0 0 / .04);
+  }
+  .mobile-menu-button span { display: block; width: 17px; height: 2px; border-radius: 999px; background: currentColor; }
+  .mobile-brand { display: flex; min-width: 0; flex: 1; align-items: center; gap: 8px; }
+  .mobile-brand-logo { width: 32px; height: 32px; flex-shrink: 0; overflow: hidden; border-radius: 999px; box-shadow: 0 1px 3px rgb(0 0 0 / .1); }
+  .mobile-role-pill { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-radius: 999px; background: #faf5ff; padding: 6px 9px; color: #7e22ce; font-size: 10px; font-weight: 700; }
+  .aims-main { width: 100%; padding-top: 60px; }
+  .mobile-drawer-backdrop { position: fixed; inset: 0; z-index: 50; display: block; background: rgb(24 24 27 / .38); opacity: 0; pointer-events: none; transition: opacity .2s ease; }
+  .mobile-drawer-backdrop.is-open { opacity: 1; pointer-events: auto; }
+  .mobile-drawer { position: fixed; inset: 0 auto 0 0; z-index: 60; display: flex; width: min(82vw, 320px); flex-direction: column; overflow: hidden; background: linear-gradient(to bottom, #3b0764, #2e1065 60%, #1e1b4b); color: #fff; box-shadow: 18px 0 35px rgb(24 24 27 / .18); transform: translateX(-100%); transition: transform .22s ease; }
+  .mobile-drawer.is-open { transform: translateX(0); }
+  .mobile-drawer-close { position: relative; width: 38px; height: 38px; flex-shrink: 0; border-radius: 10px; background: rgb(255 255 255 / .08); }
+  .mobile-drawer-close span { position: absolute; inset: 50% auto auto 50%; width: 18px; height: 2px; border-radius: 999px; background: #fff; transform: translate(-50%, -50%) rotate(45deg); }
+  .mobile-drawer-close span:last-child { transform: translate(-50%, -50%) rotate(-45deg); }
+  .mobile-drawer [class*="border-b"] { border-color: rgb(255 255 255 / .10); }
+}
+
+@media (max-width: 1023px) and (orientation: landscape) {
+  .aims-container { padding: 18px 20px; }
+}
+
+@media (max-width: 639px) and (orientation: portrait) {
+  .aims-container { padding: 14px; }
+  .mobile-role-pill { max-width: 92px; }
+}
+
+@media (min-width: 1024px), (max-width: 1023px) and (orientation: landscape) {
+  .aims-main { padding-top: 0; }
+}
