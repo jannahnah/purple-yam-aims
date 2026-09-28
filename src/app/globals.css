@@ -60,17 +60,17 @@ textarea:focus-visible {
 
 .aims-container {
   width: 100%;
-  max-width: 1440px;
+  max-width: none;
   margin-inline: auto;
-  padding: 24px;
+  padding: clamp(20px, 2vw, 32px);
 }
 
 .aims-page-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 24px;
+  gap: clamp(16px, 2vw, 28px);
+  margin-bottom: clamp(20px, 2vw, 28px);
 }
 
 .aims-eyebrow {
@@ -99,6 +99,7 @@ textarea:focus-visible {
 }
 
 .aims-card {
+  min-width: 0;
   border: 1px solid var(--border);
   border-radius: 16px;
   background: var(--surface);
@@ -166,6 +167,8 @@ textarea:focus-visible {
 }
 
 .aims-table-wrap {
+  width: 100%;
+  min-width: 0;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
@@ -226,9 +229,27 @@ textarea:focus-visible {
   font-size: 12px;
 }
 
+@media (min-width: 1536px) {
+  .aims-container {
+    padding-inline: clamp(32px, 3vw, 56px);
+  }
+}
+
 @media (max-width: 1023px) {
   .aims-container {
     padding: 20px;
+  }
+}
+
+@media (max-width: 1279px) {
+  .aims-page-header {
+    gap: 20px;
+  }
+}
+
+@media (max-width: 1023px) {
+  .aims-table {
+    min-width: 680px;
   }
 }
 
