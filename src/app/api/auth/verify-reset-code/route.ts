@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { hashResetCode, isResetCodeExpired } from "@/lib/auth/reset-code";
+import {
+  createResetToken,
+  hashResetCode,
+  isResetCodeExpired,
+} from "@/lib/auth/reset-code";
 
 const MAX_ATTEMPTS = 5;
 
@@ -72,18 +76,23 @@ export async function POST(request: Request) {
       );
     }
 
+    const resetToken = createResetToken();
+
     await prisma.user.update({
       where: { id: user.id },
       data: {
         passwordResetCodeHash: null,
         passwordResetExpiresAt: null,
         passwordResetAttempts: 0,
+        passwordResetTokenHash: resetToken.tokenHash,
+        passwordResetTokenExpiresAt: resetToken.expiresAt,
       },
     });
 
     return NextResponse.json({
       success: true,
       verified: true,
+      resetToken: resetToken.token,
     });
   } catch (error) {
     console.error("POST /api/auth/verify-reset-code error:", error);
