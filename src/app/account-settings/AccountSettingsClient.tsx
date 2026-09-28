@@ -493,7 +493,7 @@ async function handleSaveName(
           </button>
 
           {openSection === "password" && (
-            <div className="absolute left-0 right-0 top-full z-30 border-x border-b border-gray-100 bg-white px-6 pb-6 pt-5 shadow-lg">
+            <div className="border-t border-gray-100 px-6 pb-6 pt-5">
               <form
                 onSubmit={handleChangePassword}
                 className="space-y-4"
