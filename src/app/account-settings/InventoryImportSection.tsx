@@ -183,7 +183,7 @@ export default function InventoryImportSection({
     ).length ?? 0;
 
   return (
-    <section className="aims-card relative overflow-hidden rounded-xl">
+    <section className="aims-card relative overflow-visible rounded-xl">
       <button
         type="button"
         onClick={() => {
@@ -191,7 +191,7 @@ export default function InventoryImportSection({
           setError("");
           setSuccess("");
         }}
-        className="flex w-full items-center justify-between rounded-xl p-6 text-left transition-colors hover:bg-gray-50"
+        className="relative z-10 flex w-full items-center justify-between rounded-xl bg-white p-6 text-left transition-colors hover:bg-gray-50"
         aria-expanded={open}
       >
         <div>
@@ -215,7 +215,7 @@ export default function InventoryImportSection({
       </button>
 
       {open && (
-        <div className="border-t border-gray-100 bg-white px-6 pb-6 pt-5">
+        <div className="relative z-0 border-t border-gray-100 bg-white px-6 pb-6 pt-5">
           <div className="space-y-5">
             <div className="rounded-lg border border-purple-100 bg-purple-50 p-4">
               <p className="text-sm font-medium text-purple-900">
