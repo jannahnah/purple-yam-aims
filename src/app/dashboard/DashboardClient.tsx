@@ -244,7 +244,7 @@ export default function DashboardClient({
                 onClick={() =>
                   setIsNotificationOpen((currentValue) => !currentValue)
                 }
-                className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg sm:h-11 sm:w-11 sm:rounded-xl border border-gray-200 bg-white text-gray-600 transition hover:border-purple-300 hover:bg-purple-50 hover:text-purple-700"
+                className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border sm:h-11 sm:w-11 sm:rounded-xl border-gray-200 bg-white text-gray-600 transition hover:border-purple-300 hover:bg-purple-50 hover:text-purple-700"
                 aria-label="Open stock notifications"
                 aria-expanded={isNotificationOpen}
               >
@@ -264,14 +264,14 @@ export default function DashboardClient({
                 </svg>
 
                 {activeAlertCount > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-4 min-w-4 sm:h-5 sm:min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
+                  <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center sm:h-5 sm:min-w-5 justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
                     {activeAlertCount > 99 ? "99+" : activeAlertCount}
                   </span>
                 )}
               </button>
 
               {isNotificationOpen && (
-                <div className="absolute right-0 mt-2 w-[min(320px,calc(100vw-1.5rem))] sm:mt-3 sm:w-[min(360px,calc(100vw-2rem))]" overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl">
+                <div className="absolute right-0 mt-2 w-[min(320px,calc(100vw-1.5rem))] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl sm:mt-3 sm:w-[min(360px,calc(100vw-2rem))]"">
                   <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
                     <div>
                       <h2 className="text-sm font-semibold text-gray-900 sm:text-base">
