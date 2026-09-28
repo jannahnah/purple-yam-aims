@@ -212,11 +212,11 @@ export default function DashboardClient({
   const activeAlertCount = alerts.length;
 
   return (
-    <div className="aims-page">
-      <header className="sticky top-0 z-30 border-b border-gray-200 bg-white/95 px-4 py-4 backdrop-blur sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between gap-4">
+    <div className="aims-page owner-dashboard-page">
+      <header className="relative z-30 border-b border-gray-200 bg-white/95 px-3 py-3 backdrop-blur sm:sticky sm:px-6 sm:py-4 lg:px-8">
+        <div className="flex items-start justify-between gap-3 sm:items-center sm:gap-4">
           <div>
-            <p className="text-sm text-gray-500">
+            <p className="text-xs leading-4 text-gray-500 sm:text-sm sm:leading-normal">
               Business-wide inventory overview —{" "}
               {new Date().toLocaleDateString("en-US", {
                 month: "long",
@@ -225,11 +225,11 @@ export default function DashboardClient({
               })}
             </p>
 
-            <h1 className="mt-1 aims-title">
+            <h1 className="mt-1 text-xl font-bold leading-tight tracking-tight text-zinc-900 sm:text-2xl lg:text-3xl">
               Owner Dashboard
             </h1>
 
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-xs leading-4 text-gray-500 sm:text-sm sm:leading-normal">
               Signed in as{" "}
               <span className="font-semibold text-gray-700">
                 {user.name?.trim() || user.username}
@@ -244,7 +244,7 @@ export default function DashboardClient({
                 onClick={() =>
                   setIsNotificationOpen((currentValue) => !currentValue)
                 }
-                className="relative flex h-11 w-11 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 transition hover:border-purple-300 hover:bg-purple-50 hover:text-purple-700"
+                className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border sm:h-11 sm:w-11 sm:rounded-xl border-gray-200 bg-white text-gray-600 transition hover:border-purple-300 hover:bg-purple-50 hover:text-purple-700"
                 aria-label="Open stock notifications"
                 aria-expanded={isNotificationOpen}
               >
@@ -264,21 +264,21 @@ export default function DashboardClient({
                 </svg>
 
                 {activeAlertCount > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
+                  <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center sm:h-5 sm:min-w-5 justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
                     {activeAlertCount > 99 ? "99+" : activeAlertCount}
                   </span>
                 )}
               </button>
 
               {isNotificationOpen && (
-                <div className="absolute right-0 mt-3 w-[min(360px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl">
+                <div className="absolute right-0 mt-2 w-[min(320px,calc(100vw-1.5rem))] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl sm:mt-3 sm:w-[min(360px,calc(100vw-2rem))]"">
                   <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
                     <div>
-                      <h2 className="font-semibold text-gray-900">
+                      <h2 className="text-sm font-semibold text-gray-900 sm:text-base">
                         Stock Alerts
                       </h2>
 
-                      <p className="text-xs text-gray-500">
+                      <p className="text-[11px] text-gray-500 sm:text-xs">
                         {activeAlertCount} active{" "}
                         {activeAlertCount === 1 ? "alert" : "alerts"}
                       </p>
@@ -307,9 +307,9 @@ export default function DashboardClient({
                             key={alert.id}
                             href="/reorder-alerts"
                             onClick={() => setIsNotificationOpen(false)}
-                            className="block border-b border-gray-100 px-4 py-4 transition hover:bg-purple-50"
+                            className="block border-b border-gray-100 px-3 py-3 transition hover:bg-purple-50 sm:px-4 sm:py-4"
                           >
-                            <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-start justify-between gap-2 sm:gap-3">
                               <div className="min-w-0">
                                 <p className="truncate font-semibold text-gray-900">
                                   {alert.item.name}
@@ -333,7 +333,7 @@ export default function DashboardClient({
                               </span>
                             </div>
 
-                            <div className="mt-3 flex items-center justify-between text-xs">
+                            <div className="mt-2 flex items-center justify-between text-[11px] sm:mt-3 sm:text-xs">
                               <span className="text-gray-500">
                                 Current stock
                               </span>
@@ -345,7 +345,7 @@ export default function DashboardClient({
                               </span>
                             </div>
 
-                            <p className="mt-3 text-xs font-semibold text-purple-700">
+                            <p className="mt-2 text-[11px] font-semibold text-purple-700 sm:mt-3 sm:text-xs">
                               Click to view reorder alerts →
                             </p>
                           </Link>
@@ -357,7 +357,7 @@ export default function DashboardClient({
                   <Link
                     href="/reorder-alerts"
                     onClick={() => setIsNotificationOpen(false)}
-                    className="block bg-gray-50 px-4 py-3 text-center text-sm font-semibold text-purple-700 transition hover:bg-purple-100"
+                    className="block bg-gray-50 px-3 py-2.5 text-center text-xs font-semibold text-purple-700 transition hover:bg-purple-100 sm:px-4 sm:py-3 sm:text-sm"
                   >
                     View all alerts →
                   </Link>
@@ -369,18 +369,18 @@ export default function DashboardClient({
         </div>
       </header>
 
-      <main className="space-y-8 p-4 sm:p-6 lg:p-8">
-        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-            <p className="text-sm font-medium text-gray-500">
+      <main className="space-y-5 p-3 sm:space-y-8 sm:p-6 lg:p-8">
+        <section className="grid gap-2.5 sm:gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm sm:rounded-2xl sm:p-5">
+            <p className="text-xs font-medium text-gray-500 sm:text-sm">
               Inventory Items
             </p>
 
-            <p className="mt-3 text-3xl font-bold text-gray-900">
+            <p className="mt-1.5 text-2xl font-bold text-gray-900 sm:mt-3 sm:text-3xl">
               {totalItems}
             </p>
 
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-0.5 text-[11px] leading-4 text-gray-500 sm:mt-1 sm:text-xs">
               Across all branches
             </p>
           </div>
@@ -404,7 +404,7 @@ export default function DashboardClient({
               Low Stock
             </p>
 
-            <p className="mt-3 text-3xl font-bold text-amber-600">
+            <p className="mt-1.5 text-2xl font-bold text-amber-600 sm:mt-3 sm:text-3xl">
               {lowStock}
             </p>
 
@@ -418,7 +418,7 @@ export default function DashboardClient({
               Out of Stock
             </p>
 
-            <p className="mt-3 text-3xl font-bold text-red-600">
+            <p className="mt-1.5 text-2xl font-bold text-red-600 sm:mt-3 sm:text-3xl">
               {outOfStock}
             </p>
 
@@ -428,14 +428,14 @@ export default function DashboardClient({
           </div>
         </section>
 
-        <section className="rounded-2xl border border-gray-200 bg-white shadow-sm">
-          <div className="flex flex-col gap-3 border-b border-gray-100 px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
+        <section className="rounded-xl border border-gray-200 bg-white shadow-sm sm:rounded-2xl">
+          <div className="flex flex-col gap-2 border-b border-gray-100 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-5">
             <div>
-              <h2 className="text-lg font-bold text-gray-900">
+              <h2 className="text-base font-bold text-gray-900 sm:text-lg">
                 Stock Notifications
               </h2>
 
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-0.5 text-xs text-gray-500 sm:mt-1 sm:text-sm">
                 Items requiring replenishment review
               </p>
             </div>
@@ -474,7 +474,7 @@ export default function DashboardClient({
                     </div>
 
                     <div className="flex items-center gap-4">
-                      <p className="text-sm font-semibold text-gray-800">
+                      <p className="text-xs font-semibold text-gray-800 sm:text-sm">
                         {formatQuantity(alert.currentQuantity)} /{" "}
                         {formatQuantity(alert.item.minThreshold)}{" "}
                         {alert.item.unit}
@@ -507,7 +507,7 @@ export default function DashboardClient({
         </section>
 
         <section className="rounded-2xl border border-gray-200 bg-white shadow-sm">
-          <div className="border-b border-gray-100 px-5 py-5">
+          <div className="border-b border-gray-100 px-3 py-3 sm:px-5 sm:py-5">
             <h2 className="text-lg font-bold text-gray-900">
               Recent Transactions
             </h2>
@@ -526,9 +526,9 @@ export default function DashboardClient({
               recentTransactions.map((transaction) => (
                 <div
                   key={transaction.id}
-                  className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
+                  className="flex flex-col gap-2 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4"
                 >
-                  <div className="flex items-start gap-3">
+                  <div className="flex items-start gap-2 sm:gap-3">
                     <span className="rounded-lg bg-gray-100 px-2 py-1 text-[10px] font-bold uppercase text-gray-600">
                       {formatTransactionType(transaction.type)}
                     </span>
@@ -567,16 +567,16 @@ export default function DashboardClient({
             </h2>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
+          <div className="overflow-x-auto aims-table-wrap">
+            <table className="min-w-[640px] text-left text-xs sm:text-sm">
               <thead className="bg-gray-50 text-xs uppercase text-gray-500">
                 <tr>
-                  <th className="px-5 py-3 font-semibold">Item</th>
+                  <th className="px-3 py-2 font-semibold sm:px-5 sm:py-3">Item</th>
 
                   {branchNames.map((branchName) => (
                     <th
                       key={branchName}
-                      className="whitespace-nowrap px-5 py-3 font-semibold"
+                      className="whitespace-nowrap px-3 py-2 font-semibold sm:px-5 sm:py-3"
                     >
                       {branchName}
                     </th>
@@ -587,7 +587,7 @@ export default function DashboardClient({
               <tbody className="divide-y divide-gray-100">
                 {itemNames.map((itemName) => (
                   <tr key={itemName}>
-                    <td className="whitespace-nowrap px-5 py-4 font-semibold text-gray-900">
+                    <td className="whitespace-nowrap px-3 py-3 font-semibold text-gray-900 sm:px-5 sm:py-4">
                       {itemName}
                     </td>
 
@@ -597,7 +597,7 @@ export default function DashboardClient({
                       return (
                         <td
                           key={`${itemName}-${branchName}`}
-                          className="whitespace-nowrap px-5 py-4 text-gray-700"
+                          className="whitespace-nowrap px-3 py-3 text-gray-700 sm:px-5 sm:py-4"
                         >
                           {stock ? (
                             <>
