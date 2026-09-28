@@ -376,7 +376,7 @@ async function handleSaveName(
 
           <div className="min-w-0 space-y-4">
         {/* Display Name Accordion */}
-        <section className="aims-card overflow-hidden">
+        <section className="aims-card relative">
           <button
             type="button"
             onClick={() => toggleSection("name")}
@@ -405,7 +405,7 @@ async function handleSaveName(
           </button>
 
           {openSection === "name" && (
-            <div className="border-t border-gray-100 px-6 pb-6 pt-5">
+            <div className="absolute left-0 right-0 top-full z-30 border-x border-b border-gray-100 bg-white px-6 pb-6 pt-5 shadow-lg">
               <form
                 onSubmit={handleSaveName}
                 className="space-y-4"
