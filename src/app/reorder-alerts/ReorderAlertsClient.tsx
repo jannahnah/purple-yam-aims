@@ -167,7 +167,7 @@ export default function ReorderAlertsClient({
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 p-6">
+    <div className="mx-auto w-full space-y-6 p-[clamp(1rem,2vw,2rem)]">
       {/* Page Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">
@@ -237,7 +237,7 @@ export default function ReorderAlertsClient({
       )}
 
       {/* Active Alerts */}
-      <div className="aims-card overflow-hidden">
+      <div className="aims-card min-w-0 overflow-hidden">
         <div className="flex items-center gap-2 border-b border-gray-100 px-5 py-4">
           <h2 className="text-sm font-semibold text-gray-900">
             Active Alerts
