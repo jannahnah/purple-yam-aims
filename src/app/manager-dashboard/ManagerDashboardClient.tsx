@@ -502,7 +502,7 @@ export default function ManagerDashboard({
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <div className="dashboard-summary-grid grid grid-cols-2 gap-4 lg:grid-cols-4">
 
           <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
             <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
