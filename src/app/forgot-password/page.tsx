@@ -13,6 +13,7 @@ export default function ForgotPasswordPage() {
 
   const [step, setStep] = useState<Step>("CODE");
   const [code, setCode] = useState("");
+  const [resetToken, setResetToken] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
@@ -51,6 +52,12 @@ export default function ForgotPasswordPage() {
         return;
       }
 
+      if (!data.resetToken) {
+        setError("Verification succeeded, but the reset session could not be created. Please request a new code.");
+        return;
+      }
+
+      setResetToken(data.resetToken);
       setStep("PASSWORD");
       setNotice("Code verified. Create your new password.");
     } catch (requestError) {
@@ -84,6 +91,7 @@ export default function ForgotPasswordPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email,
+          resetToken,
           newPassword,
           confirmPassword,
         }),
