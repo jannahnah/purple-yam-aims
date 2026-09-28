@@ -329,3 +329,209 @@ textarea:focus-visible {
 @media (min-width: 1024px), (max-width: 1023px) and (orientation: landscape) {
   .aims-main { padding-top: 0; }
 }
+
+
+/* Smartphone portrait density mode
+   Keep desktop/tablet presentation unchanged.
+   The goal is a compact, information-dense mobile UI with comfortable touch targets. */
+@media (max-width: 639px) and (orientation: portrait) {
+  :root {
+    --mobile-page-pad: 10px;
+    --mobile-card-radius: 12px;
+    --mobile-control-height: 36px;
+  }
+
+  .aims-main {
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
+  .aims-main .aims-page {
+    padding: var(--mobile-page-pad) !important;
+  }
+
+  .aims-main .aims-container {
+    padding: 10px !important;
+  }
+
+  /* Compact page rhythm */
+  .aims-main .aims-page > div,
+  .aims-main .aims-container > div {
+    gap: 10px !important;
+  }
+
+  .aims-main .aims-page-header {
+    gap: 8px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .aims-main .aims-title,
+  .aims-main h1 {
+    font-size: 19px !important;
+    line-height: 1.2 !important;
+    letter-spacing: -.02em;
+  }
+
+  .aims-main .aims-subtitle,
+  .aims-main h1 + p,
+  .aims-main h1 ~ p {
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+  }
+
+  .aims-main h2 {
+    font-size: 14px !important;
+    line-height: 1.25 !important;
+  }
+
+  .aims-main h3 {
+    font-size: 12px !important;
+    line-height: 1.25 !important;
+  }
+
+  .aims-main p,
+  .aims-main label {
+    line-height: 1.35;
+  }
+
+  /* Compact cards and sections */
+  .aims-main .aims-card {
+    border-radius: var(--mobile-card-radius);
+  }
+
+  .aims-main .aims-card-header {
+    padding: 10px 12px !important;
+  }
+
+  .aims-main .aims-section-help,
+  .aims-main .aims-section-help,
+  .aims-main .text-xs {
+    font-size: 10px !important;
+  }
+
+  /* Compact controls while preserving usable touch targets */
+  .aims-main input:not([type="checkbox"]):not([type="radio"]),
+  .aims-main select,
+  .aims-main textarea,
+  .aims-main .aims-control {
+    min-height: var(--mobile-control-height) !important;
+    height: var(--mobile-control-height);
+    border-radius: 8px !important;
+    padding: 7px 9px !important;
+    font-size: 12px !important;
+  }
+
+  .aims-main textarea {
+    height: auto;
+    min-height: 72px !important;
+  }
+
+  .aims-main button.aims-primary,
+  .aims-main .aims-primary {
+    min-height: var(--mobile-control-height) !important;
+    height: var(--mobile-control-height);
+    border-radius: 8px !important;
+    padding-inline: 11px !important;
+    font-size: 12px !important;
+  }
+
+  .aims-main button {
+    border-radius: 8px;
+  }
+
+  /* Make generic action buttons compact, but not tiny. */
+  .aims-main button:not([aria-hidden="true"]) {
+    font-size: 11px;
+  }
+
+  /* Dense tables: retain all columns and allow horizontal swipe. */
+  .aims-main .aims-table-wrap,
+  .aims-main .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  .aims-main .aims-table {
+    min-width: 620px;
+    font-size: 11px !important;
+  }
+
+  .aims-main .aims-table th {
+    padding: 7px 9px !important;
+    font-size: 8px !important;
+    letter-spacing: .045em;
+  }
+
+  .aims-main .aims-table td {
+    padding: 8px 9px !important;
+    font-size: 10px !important;
+  }
+
+  .aims-main table th,
+  .aims-main table td {
+    line-height: 1.25;
+  }
+
+  /* Common card/table variants that do not use .aims-table. */
+  .aims-main table[class*="min-w-"] th {
+    padding: 7px 9px !important;
+    font-size: 8px !important;
+  }
+
+  .aims-main table[class*="min-w-"] td {
+    padding: 8px 9px !important;
+    font-size: 10px !important;
+  }
+
+  /* Compact pills/badges without removing their meaning. */
+  .aims-main [class*="rounded-full"] {
+    line-height: 1.2;
+  }
+
+  /* Reduce large empty-state whitespace on phones. */
+  .aims-main .aims-empty {
+    padding: 28px 12px !important;
+  }
+
+  /* Compact the mobile shell itself. */
+  .mobile-shell-header {
+    height: 56px;
+    gap: 8px;
+    padding: 7px 10px;
+  }
+
+  .mobile-menu-button {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+  }
+
+  .mobile-menu-button span {
+    width: 16px;
+  }
+
+  .mobile-brand {
+    gap: 7px;
+  }
+
+  .mobile-brand-logo {
+    width: 28px;
+    height: 28px;
+  }
+
+  .mobile-role-pill {
+    max-width: 92px;
+    padding: 5px 8px;
+    font-size: 9px;
+  }
+
+  .aims-main {
+    padding-top: 56px;
+  }
+
+  /* Keep common modal surfaces compact on phones. */
+  .aims-main [class*="max-w-lg"],
+  .aims-main [class*="max-w-md"] {
+    max-width: calc(100vw - 20px) !important;
+  }
+}
