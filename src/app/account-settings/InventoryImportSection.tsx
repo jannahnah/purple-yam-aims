@@ -183,7 +183,7 @@ export default function InventoryImportSection({
     ).length ?? 0;
 
   return (
-    <section className="relative z-10 overflow-visible rounded-xl border border-gray-100 bg-white shadow-sm">
+    <section className="aims-card relative overflow-hidden rounded-xl">
       <button
         type="button"
         onClick={() => {
@@ -215,7 +215,7 @@ export default function InventoryImportSection({
       </button>
 
       {open && (
-        <div className="absolute left-0 right-0 top-[calc(100%-1px)] z-40 max-h-[calc(100vh-180px)] overflow-y-auto overscroll-contain rounded-b-xl border-x border-b border-gray-100 bg-white px-6 pb-6 pt-5 shadow-lg">
+        <div className="border-t border-gray-100 bg-white px-6 pb-6 pt-5">
           <div className="space-y-5">
             <div className="rounded-lg border border-purple-100 bg-purple-50 p-4">
               <p className="text-sm font-medium text-purple-900">
