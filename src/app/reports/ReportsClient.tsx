@@ -442,8 +442,8 @@ export default function ReportsClient({
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 p-6">
-      <div className="mx-auto w-full max-w-7xl space-y-6">
+    <main className="min-h-screen bg-gray-50 p-[clamp(1rem,2vw,2rem)]">
+      <div className="mx-auto w-full space-y-6">
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
@@ -536,7 +536,7 @@ export default function ReportsClient({
         )}
 
         {/* Report Selector */}
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {REPORT_OPTIONS.map((option) => {
             const selected = report === option.id;
 
@@ -591,7 +591,7 @@ export default function ReportsClient({
         )}
 
         {/* Report Output */}
-        <div className="aims-card overflow-hidden">
+        <div className="aims-card min-w-0 overflow-hidden">
           <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
             <h2 className="text-sm font-semibold text-gray-900">
               {activeReportLabel}
