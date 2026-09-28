@@ -16,6 +16,9 @@ model User {
   role               Role       @default(CASHIER)
   status             UserStatus @default(ACTIVE)
   mustChangePassword Boolean    @default(false)
+  passwordResetCodeHash String?
+  passwordResetExpiresAt DateTime?
+  passwordResetAttempts Int      @default(0)
   branchId           String?
   businessId         String?
   lastLoginAt        DateTime?
@@ -155,7 +158,7 @@ model ItemAuditLog {
 
   item        Item @relation(fields: [itemId], references: [id])
   performedBy User @relation("ItemAuditPerformedBy", fields: [performedById], references: [id])
-
+  
   @@index([itemId])
   @@index([performedById])
   @@index([createdAt])
