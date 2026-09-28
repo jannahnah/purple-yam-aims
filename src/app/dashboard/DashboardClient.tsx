@@ -370,7 +370,7 @@ export default function DashboardClient({
       </header>
 
       <main className="space-y-5 p-3 sm:space-y-8 sm:p-6 lg:p-8">
-        <section className="grid gap-2.5 sm:gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <section className="dashboard-summary-grid grid gap-2.5 sm:gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm sm:rounded-2xl sm:p-5">
             <p className="text-xs font-medium text-gray-500 sm:text-sm">
               Inventory Items
