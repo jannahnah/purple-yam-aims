@@ -334,15 +334,56 @@ This is especially important for manual adjustments, sales, production, stock re
 
 ---
 
-## 8. Development and Planning Approach
+## 8. Development Methodology and Planning Approach
 
-The project is developed from defined business requirements and a technical product requirements document.
+The Purple Yam AIMS project follows the **Agile Software Development Methodology**, using an **iterative and incremental development approach**.
+
+The project is not based on a strict Waterfall process because requirements, design, implementation, testing, and refinement are not performed as one-way sequential phases. Instead, the system is developed progressively, with completed features being reviewed, tested, corrected, and improved as development continues.
+
+The project also does **not** claim strict Scrum implementation. While Agile principles guide the development process, the team does not rely on formal Scrum requirements such as fixed sprint cycles, defined Scrum roles, daily Scrum meetings, sprint reviews, or sprint retrospectives.
+
+### Why Agile fits the project
+
+The development process involves repeated cycles of:
+
+1. **Requirements Analysis** — Identify the business need and understand the relevant PRD requirements.
+2. **Planning** — Determine the feature, data, UI, and technical changes required.
+3. **Design** — Plan the database structure, application flow, and user interface.
+4. **Implementation** — Develop the backend logic, database changes, APIs, and UI.
+5. **Testing** — Verify functionality, data behavior, permissions, and responsive layouts.
+6. **Evaluation and Feedback** — Review the implemented feature against the intended workflow and visual reference.
+7. **Refinement** — Correct issues, improve usability, and adjust the implementation when requirements or findings require changes.
+8. **Integration and Deployment** — Commit changes through Git, integrate completed work, and verify the deployed application.
+
+This cycle is repeated for different system modules rather than completing the entire system in one uninterrupted sequence.
+
+### Iterative and incremental development
+
+The system is developed **incrementally**, with functionality added module by module, such as:
+
+- Authentication and role-aware access
+- Dashboard functionality
+- Inventory management
+- Inventory transaction history
+- Sales
+- Production
+- Transfers
+- Reorder alerts
+- Reports
+- User management
+- Audit logging
+- Responsive desktop and mobile interfaces
+
+Each increment can be tested and refined before additional functionality is built around it.
+
+The approach also allows feedback from development and system evaluation to influence subsequent iterations. For example, inventory history requirements led to clearer **Previous Quantity -> Change / Adjustment -> New Quantity** information, while responsive testing led to refinements in dashboard cards, spacing, controls, and mobile layouts.
 
 ### Source of truth
 
 The **FINAL_Purple_Yam_AIMS_Technical_PRD.docx (v1.0, September 2026)** is the primary technical source of truth for the system.
 
 The PRD governs:
+
 - Business rules
 - Roles and permissions
 - Backend behavior
@@ -350,21 +391,15 @@ The PRD governs:
 - Acceptance criteria
 - Operational workflows
 
-Design prototypes and Figma screens are treated as **UI/visual references**, not as the authority for backend or business logic.
+The Figma prototype is used as a **UI and visual reference**. It does not override the approved backend behavior, business rules, permissions, data model, or acceptance criteria defined by the PRD.
 
-### Development flow
+### Methodology summary
 
-The development process generally follows:
+In capstone documentation, the methodology can be described as:
 
-1. Define the business requirement.
-2. Convert the requirement into system behavior and acceptance criteria.
-3. Update the data model when needed.
-4. Implement the server/application logic.
-5. Implement the UI and interaction flow.
-6. Test against the intended workflow.
-7. Review responsive behavior on desktop and mobile.
-8. Commit changes using Git.
-9. Deploy and verify the application.
+> **Agile Software Development Methodology using an iterative and incremental development approach.**
+
+This description reflects the actual development process without incorrectly labeling the project as a formal Scrum implementation.
 
 ---
 
