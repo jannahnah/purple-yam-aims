@@ -1,0 +1,20 @@
+
+{
+  "id": "/",
+  "name": "Purple Yam Automated Inventory Management System",
+  "short_name": "Purple Yam AIMS",
+  "description": "Multi-branch inventory management system for Purple Yam.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#6b21a8",
+  "icons": [
+    {
+      "src": "/purple-yam-favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

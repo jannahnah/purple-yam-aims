@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import ServiceWorkerRegister from "./ServiceWorkerRegister";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -16,6 +17,8 @@ export const metadata: Metadata = {
   title: "Purple Yam Inventory Management System",
   description: "Multi-branch inventory management system for Purple Yam",
 
+  manifest: "/manifest.webmanifest",
+
   verification: {
     google: "ENNko8yFBwGxQAqjGYVX-cZPenwhhE04HQMLsMTMn2U",
   },
@@ -24,6 +27,13 @@ export const metadata: Metadata = {
     icon: "/purple-yam-favicon.svg",
     shortcut: "/purple-yam-favicon.svg",
     apple: "/purple-yam-logo.jpg",
+  },
+
+  applicationName: "Purple Yam AIMS",
+  appleWebApp: {
+    capable: true,
+    title: "Purple Yam AIMS",
+    statusBarStyle: "default",
   },
 };
 
@@ -37,7 +47,10 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <ServiceWorkerRegister />
+        {children}
+        </body>
     </html>
   );
 }
