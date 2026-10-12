@@ -121,6 +121,8 @@ export default function DashboardClient({
 
   useEffect(() => {
     let isMounted = true;
+    let isInitialLoad = true;
+    let knownAlertIds = new Set<string>();
 
     async function loadAlerts() {
       try {
@@ -135,15 +137,47 @@ export default function DashboardClient({
 
         const data: AlertItem[] = await response.json();
 
-        if (isMounted) {
-          setAlerts(data);
+        if (!isMounted) {
+          return;
+        }
+
+        // Do not notify for alerts that already existed when the dashboard opened.
+        // Only newly created pending alerts trigger desktop notifications.
+        const newAlerts = isInitialLoad
+          ? []
+          : data.filter((alert) => !knownAlertIds.has(alert.id));
+
+        knownAlertIds = new Set(data.map((alert) => alert.id));
+        isInitialLoad = false;
+        setAlerts(data);
+
+        if (
+          newAlerts.length > 0 &&
+          "Notification" in window &&
+          Notification.permission === "granted" &&
+          "serviceWorker" in navigator
+        ) {
+          try {
+            const registration = await navigator.serviceWorker.ready;
+
+            for (const alert of newAlerts) {
+              await registration.showNotification("Purple Yam AIMS — Low stock", {
+                body: `${alert.item.name} at ${alert.branch.name}: ${alert.currentQuantity} ${alert.item.unit} remaining (threshold ${alert.item.minThreshold}).`,
+                icon: "/purple-yam-favicon.svg",
+                badge: "/purple-yam-favicon.svg",
+                tag: `reorder-alert-${alert.id}`,
+                data: { url: "/reorder-alerts" },
+              });
+            }
+          } catch (notificationError) {
+            console.error(
+              "Failed to display low-stock desktop notification:",
+              notificationError
+            );
+          }
         }
       } catch (error) {
         console.error("Failed to load dashboard alerts:", error);
-
-        if (isMounted) {
-          setAlerts([]);
-        }
       } finally {
         if (isMounted) {
           setLoadingAlerts(false);
@@ -151,10 +185,14 @@ export default function DashboardClient({
       }
     }
 
-    loadAlerts();
+    void loadAlerts();
+    const pollId = window.setInterval(() => {
+      void loadAlerts();
+    }, 15000);
 
     return () => {
       isMounted = false;
+      window.clearInterval(pollId);
     };
   }, []);
 
