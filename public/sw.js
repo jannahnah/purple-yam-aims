@@ -13,8 +13,6 @@ self.addEventListener("push", (event) => {
     if (event.data) {
       const raw = event.data.text();
 
-      console.log("[Purple Yam AIMS] Push payload:", raw);
-
       try {
         data = JSON.parse(raw);
       } catch {
@@ -46,35 +44,14 @@ self.addEventListener("push", (event) => {
     },
   };
 
-  console.log("[Purple Yam AIMS] Showing notification:", title, options);
+  event.waitUntil(
+    self.registration.showNotification(title, options)
+  );
+});
 
-event.waitUntil(
-  self.registration
-    .showNotification(title, options)
-    .then(async () => {
-      console.log("[Purple Yam AIMS] Notification created successfully.");
-
-      const notifications =
-        await self.registration.getNotifications();
-
-      console.log(
-        "[Purple Yam AIMS] Notifications currently available:",
-        notifications.map((notification) => ({
-          title: notification.title,
-          body: notification.body,
-          tag: notification.tag,
-        }))
-      );
-    })
-    .catch((error) => {
-      console.error(
-        "[Purple Yam AIMS] showNotification failed:",
-        error
-      );
-      throw error;
-    })
-);
-
+// This listener must be registered at the service-worker top level,
+// not inside the push event, because dashboard notifications are shown
+// directly with registration.showNotification() and do not dispatch "push".
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
@@ -103,5 +80,3 @@ self.addEventListener("notificationclick", (event) => {
     })
   );
 });
-
-})
