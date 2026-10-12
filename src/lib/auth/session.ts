@@ -9,7 +9,9 @@ if (process.env.NODE_ENV === "production" && !configuredSessionSecret) {
 const SESSION_SECRET =
   configuredSessionSecret || "development-session-secret-change-later";
 
-const SESSION_MAX_AGE = 60 * 60 * 8; // 8 hours
+// Keep users signed in across tab/browser restarts for up to 30 days.
+// The browser cookie and signed token share the same lifetime.
+const SESSION_MAX_AGE = 60 * 60 * 24 * 30;
 
 type SessionData = {
   userId: string;
