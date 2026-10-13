@@ -1,10 +1,26 @@
-"use client";
-
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { redirect } from "next/navigation";
 import PurpleYamLogo from "@/components/PurpleYamLogo";
+import { getCurrentUser } from "@/lib/auth/current-user";
 
-export default function Home() {
-  const router = useRouter();
+export default async function Home() {
+  const user = await getCurrentUser({ allowPasswordChange: true });
+
+  if (user?.mustChangePassword) {
+    redirect("/change-password");
+  }
+
+  if (user?.role === "OWNER") {
+    redirect("/dashboard");
+  }
+
+  if (user?.role === "BRANCH_MANAGER") {
+    redirect("/manager-dashboard");
+  }
+
+  if (user?.role === "CASHIER") {
+    redirect("/cashier-dashboard");
+  }
 
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#16052b] px-4 py-8">
@@ -28,8 +44,8 @@ export default function Home() {
             <p className="mt-2 text-sm leading-6 text-purple-100/60">Choose how you would like to access the Purple Yam AIMS.</p>
           </div>
           <div className="space-y-3">
-            <button type="button" onClick={() => router.push("/login")} className="flex h-12 w-full items-center justify-center rounded-xl bg-gradient-to-r from-purple-600 via-purple-600 to-violet-700 text-sm font-bold uppercase tracking-wide text-white shadow-[0_8px_22px_rgba(124,58,237,0.25)] transition hover:from-purple-500 hover:via-purple-600 hover:to-violet-600">Log In</button>
-            <button type="button" onClick={() => router.push("/signup")} className="flex h-12 w-full items-center justify-center rounded-xl border border-purple-300/25 bg-purple-900/30 text-sm font-bold uppercase tracking-wide text-purple-100 transition hover:border-purple-300/40 hover:bg-purple-900/50">Sign Up</button>
+            <Link href="/login" className="flex h-12 w-full items-center justify-center rounded-xl bg-gradient-to-r from-purple-600 via-purple-600 to-violet-700 text-sm font-bold uppercase tracking-wide text-white shadow-[0_8px_22px_rgba(124,58,237,0.25)] transition hover:from-purple-500 hover:via-purple-600 hover:to-violet-600">Log In</Link>
+            <Link href="/signup" className="flex h-12 w-full items-center justify-center rounded-xl border border-purple-300/25 bg-purple-900/30 text-sm font-bold uppercase tracking-wide text-purple-100 transition hover:border-purple-300/40 hover:bg-purple-900/50">Sign Up</Link>
           </div>
           <p className="mt-6 text-[10px] tracking-wide text-purple-300/35">Authorized personnel only</p>
         </div>
