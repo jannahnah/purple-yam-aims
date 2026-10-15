@@ -1,21 +1,24 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { getPendingSales, syncPendingSales } from "@/lib/offline-sales-queue";
+import { getPendingSales, getPendingOperations, syncPendingSales, syncPendingOperations } from "@/lib/offline-sales-queue";
 
 export default function OfflineStatus() {
   const [isOnline, setIsOnline] = useState(true);
   const [pendingCount, setPendingCount] = useState(0);
   const [pendingSales, setPendingSales] = useState<Awaited<ReturnType<typeof getPendingSales>>>([]);
+  const [pendingOperations, setPendingOperations] = useState<Awaited<ReturnType<typeof getPendingOperations>>>([]);
   const [syncMessage, setSyncMessage] = useState("");
 
   const refreshPendingCount = useCallback(async () => {
     try {
-      const pending = await getPendingSales();
+      const [pending, operations] = await Promise.all([getPendingSales(), getPendingOperations()]);
       setPendingSales(pending);
-      setPendingCount(pending.length);
-      const failed = pending.find((sale) => sale.lastError);
-      setSyncMessage(failed?.lastError ? `A queued sale needs attention: ${failed.lastError}` : "");
+      setPendingOperations(operations);
+      setPendingCount(pending.length + operations.length);
+      const failedSale = pending.find((sale) => sale.lastError);
+      const failedOperation = operations.find((operation) => operation.lastError);
+      setSyncMessage(failedSale?.lastError ? `A queued sale needs attention: ${failedSale.lastError}` : failedOperation?.lastError ? `A queued operation needs attention: ${failedOperation.lastError}` : "");
     } catch {
       // Browsers without IndexedDB still get connection status; queueing itself reports errors.
     }
@@ -29,10 +32,11 @@ export default function OfflineStatus() {
     }
 
     try {
-      const result = await syncPendingSales();
+      const [salesResult, operationsResult] = await Promise.all([syncPendingSales(), syncPendingOperations()]);
       await refreshPendingCount();
-      if (result.synced > 0) {
-        setSyncMessage(`${result.synced} queued sale(s) synchronized.`);
+      const syncedTotal = salesResult.synced + operationsResult.synced;
+      if (syncedTotal > 0) {
+        setSyncMessage(`${syncedTotal} queued operation(s) synchronized.`);
         window.dispatchEvent(new Event("offline-sales-synced"));
       }
     } catch {
@@ -48,11 +52,13 @@ export default function OfflineStatus() {
     window.addEventListener("online", handleConnectionChange);
     window.addEventListener("offline", handleConnectionChange);
     window.addEventListener("offline-sales-updated", handleQueueChange);
+    window.addEventListener("offline-operations-updated", handleQueueChange);
 
     return () => {
       window.removeEventListener("online", handleConnectionChange);
       window.removeEventListener("offline", handleConnectionChange);
       window.removeEventListener("offline-sales-updated", handleQueueChange);
+      window.removeEventListener("offline-operations-updated", handleQueueChange);
     };
   }, [refreshPendingCount, synchronize]);
 
@@ -77,8 +83,8 @@ export default function OfflineStatus() {
       {pendingCount > 0 && (
         <div className="mx-auto mt-2 max-w-2xl text-left">
           <p className="text-center">
-            {pendingCount} sale(s) waiting to sync. Keep this browser profile and
-            its site data; queued sales are not yet confirmed in central inventory.
+            {pendingCount} queued operation(s) waiting to sync. Keep this browser profile and
+            its site data; queued work is not yet confirmed in central inventory.
           </p>
           <ul className="mt-2 space-y-1 text-xs">
             {pendingSales.map((sale) => (
@@ -89,6 +95,17 @@ export default function OfflineStatus() {
               </li>
             ))}
           </ul>
+          {pendingOperations.length > 0 && (
+            <ul className="mt-2 space-y-1 text-xs">
+              {pendingOperations.map((operation) => (
+                <li key={operation.requestId} className="rounded border border-current/15 px-2 py-1">
+                  <span className="font-semibold">{operation.label}</span>
+                  { ` · ${new Date(operation.createdAt).toLocaleString()}` }
+                  {operation.lastError && <span className="block font-medium">Needs attention: {operation.lastError}</span>}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
       {isOnline && pendingCount === 0 && syncMessage && (
