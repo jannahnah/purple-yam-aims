@@ -1,6 +1,6 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
+import { runSerializableTransaction } from "@/lib/serializable-transaction";
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { canAccessBranch } from "@/lib/auth/authorization";
@@ -55,7 +55,7 @@ export async function logProductionRun({
     );
   }
 
-  await prisma.$transaction(async (tx) => {
+  await runSerializableTransaction(async (tx) => {
     const operationPayload = { branchId, finishedItemId, producedQuantity };
     if (requestId) {
       const existing = await tx.offlineOperation.findUnique({ where: { requestId } });
