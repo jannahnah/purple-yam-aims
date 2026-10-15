@@ -71,7 +71,12 @@ export async function adjustStock({
       const existing = await tx.offlineOperation.findUnique({ where: { requestId } });
       if (existing) {
         const existingPayload = existing.payload as Record<string, unknown>;
-        const payloadMismatch = Object.keys(operationPayload).some((key) => existingPayload[key] !== operationPayload[key]);
+        const payloadMismatch =
+          existingPayload.branchId !== operationPayload.branchId ||
+          existingPayload.itemId !== operationPayload.itemId ||
+          existingPayload.type !== operationPayload.type ||
+          existingPayload.quantity !== operationPayload.quantity ||
+          existingPayload.physicalCount !== operationPayload.physicalCount;
         if (existing.operationType !== type || existing.userId !== currentUser.id || payloadMismatch) {
           throw new Error("This request ID was already used for a different operation.");
         }
@@ -257,7 +262,12 @@ export async function transferStock({
       const existing = await tx.offlineOperation.findUnique({ where: { requestId } });
       if (existing) {
         const existingPayload = existing.payload as Record<string, unknown>;
-        const payloadMismatch = Object.keys(operationPayload).some((key) => existingPayload[key] !== operationPayload[key]);
+        const payloadMismatch =
+          existingPayload.sourceBranchId !== operationPayload.sourceBranchId ||
+          existingPayload.destinationBranchId !==
+            operationPayload.destinationBranchId ||
+          existingPayload.itemId !== operationPayload.itemId ||
+          existingPayload.quantity !== operationPayload.quantity;
         if (existing.operationType !== "TRANSFER" || existing.userId !== currentUser.id || payloadMismatch) {
           throw new Error("This request ID was already used for a different operation.");
         }

@@ -1,34 +1,55 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { getPendingSales, getPendingOperations, syncAllPendingWork } from "@/lib/offline-sales-queue";
+import {
+  getPendingSales,
+  getPendingOperations,
+  syncAllPendingWork,
+} from "@/lib/offline-sales-queue";
 
 export default function OfflineStatus() {
-  const [isOnline, setIsOnline] = useState(true);
+  const [isOnline, setIsOnline] = useState(() =>
+    typeof navigator === "undefined" ? true : navigator.onLine
+  );
   const [pendingCount, setPendingCount] = useState(0);
-  const [pendingSales, setPendingSales] = useState<Awaited<ReturnType<typeof getPendingSales>>>([]);
-  const [pendingOperations, setPendingOperations] = useState<Awaited<ReturnType<typeof getPendingOperations>>>([]);
+  const [pendingSales, setPendingSales] = useState<
+    Awaited<ReturnType<typeof getPendingSales>>
+  >([]);
+  const [pendingOperations, setPendingOperations] = useState<
+    Awaited<ReturnType<typeof getPendingOperations>>
+  >([]);
   const [syncMessage, setSyncMessage] = useState("");
 
   const refreshPendingCount = useCallback(async () => {
     try {
-      const [pending, operations] = await Promise.all([getPendingSales(), getPendingOperations()]);
+      const [pending, operations] = await Promise.all([
+        getPendingSales(),
+        getPendingOperations(),
+      ]);
+
       setPendingSales(pending);
       setPendingOperations(operations);
       setPendingCount(pending.length + operations.length);
+
       const failedSale = pending.find((sale) => sale.lastError);
-      const failedOperation = operations.find((operation) => operation.lastError);
-      setSyncMessage(failedSale?.lastError ? `A queued sale needs attention: ${failedSale.lastError}` : failedOperation?.lastError ? `A queued operation needs attention: ${failedOperation.lastError}` : "");
+      const failedOperation = operations.find(
+        (operation) => operation.lastError
+      );
+
+      setSyncMessage(
+        failedSale?.lastError
+          ? `A queued sale needs attention: ${failedSale.lastError}`
+          : failedOperation?.lastError
+            ? `A queued operation needs attention: ${failedOperation.lastError}`
+            : ""
+      );
     } catch {
-      // Browsers without IndexedDB still get connection status; queueing itself reports errors.
+      // Browsers without IndexedDB still get connection status;
+      // queueing itself reports errors.
     }
   }, []);
 
   const synchronize = useCallback(async () => {
-    // This callback is also invoked by the initial effect; keeping the connection
-    // state update here ensures status stays correct during manual/automatic sync.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsOnline(navigator.onLine);
     if (!navigator.onLine) {
       await refreshPendingCount();
       return;
@@ -37,35 +58,56 @@ export default function OfflineStatus() {
     try {
       const result = await syncAllPendingWork();
       await refreshPendingCount();
+
       const syncedTotal = result.synced;
+
       if (syncedTotal > 0) {
-        setSyncMessage(`${syncedTotal} queued operation(s) synchronized.`);
+        setSyncMessage(
+          `${syncedTotal} queued operation(s) synchronized.`
+        );
         window.dispatchEvent(new Event("offline-sales-synced"));
       }
     } catch {
-      setSyncMessage("Could not check queued sales. They remain stored on this device.");
+      setSyncMessage(
+        "Could not check queued sales. They remain stored on this device."
+      );
     }
   }, [refreshPendingCount]);
 
-  useEffect(() => {
-    const handleConnectionChange = () => void synchronize();
-    const handleQueueChange = () => void refreshPendingCount();
-
+useEffect(() => {
+  const initialSyncTimer = window.setTimeout(() => {
     void synchronize();
-    window.addEventListener("online", handleConnectionChange);
-    window.addEventListener("offline", handleConnectionChange);
-    window.addEventListener("offline-sales-updated", handleQueueChange);
-    window.addEventListener("offline-operations-updated", handleQueueChange);
+  }, 0);
 
-    return () => {
-      window.removeEventListener("online", handleConnectionChange);
-      window.removeEventListener("offline", handleConnectionChange);
-      window.removeEventListener("offline-sales-updated", handleQueueChange);
-      window.removeEventListener("offline-operations-updated", handleQueueChange);
-    };
-  }, [refreshPendingCount, synchronize]);
+  const handleConnectionChange = () => {
+    setIsOnline(navigator.onLine);
+    void synchronize();
+  };
 
-  if (isOnline && pendingCount === 0 && !syncMessage) return null;
+  const handleQueueChange = () => {
+    void refreshPendingCount();
+  };
+
+  window.addEventListener("online", handleConnectionChange);
+  window.addEventListener("offline", handleConnectionChange);
+  window.addEventListener("offline-sales-updated", handleQueueChange);
+  window.addEventListener("offline-operations-updated", handleQueueChange);
+
+  return () => {
+    window.clearTimeout(initialSyncTimer);
+    window.removeEventListener("online", handleConnectionChange);
+    window.removeEventListener("offline", handleConnectionChange);
+    window.removeEventListener("offline-sales-updated", handleQueueChange);
+    window.removeEventListener(
+      "offline-operations-updated",
+      handleQueueChange
+    );
+  };
+}, [refreshPendingCount, synchronize]);
+
+  if (isOnline && pendingCount === 0 && !syncMessage) {
+    return null;
+  }
 
   return (
     <div
@@ -80,43 +122,73 @@ export default function OfflineStatus() {
       {!isOnline && (
         <p>
           You are offline. Inventory data may be out of date. A sale can be
-          queued from the sales form, but it is not confirmed in central inventory until sync succeeds.
+          queued from the sales form, but it is not confirmed in central
+          inventory until sync succeeds.
         </p>
       )}
+
       {pendingCount > 0 && (
         <div className="mx-auto mt-2 max-w-2xl text-left">
           <p className="text-center">
-            {pendingCount} queued operation(s) waiting to sync. Keep this browser profile and
-            its site data; queued work is not yet confirmed in central inventory.
+            {pendingCount} queued operation(s) waiting to sync. Keep this
+            browser profile and its site data; queued work is not yet confirmed
+            in central inventory.
           </p>
+
           <ul className="mt-2 space-y-1 text-xs">
             {pendingSales.map((sale) => (
-              <li key={sale.requestId} className="rounded border border-current/15 px-2 py-1">
-                <span className="font-semibold">{sale.productLabel ?? sale.finishedItemId}</span>
-                {` — ${sale.soldQuantity} ${sale.unit ?? "units"} · Sale time: ${new Date(sale.occurredAt ?? sale.createdAt).toLocaleString()}`}
-                {sale.lastError && <span className="block font-medium">Needs attention: {sale.lastError}</span>}
+              <li
+                key={sale.requestId}
+                className="rounded border border-current/15 px-2 py-1"
+              >
+                <span className="font-semibold">
+                  {sale.productLabel ?? sale.finishedItemId}
+                </span>
+                {` — ${sale.soldQuantity} ${
+                  sale.unit ?? "units"
+                } · Sale time: ${new Date(
+                  sale.occurredAt ?? sale.createdAt
+                ).toLocaleString()}`}
+                {sale.lastError && (
+                  <span className="block font-medium">
+                    Needs attention: {sale.lastError}
+                  </span>
+                )}
               </li>
             ))}
           </ul>
+
           {pendingOperations.length > 0 && (
             <ul className="mt-2 space-y-1 text-xs">
               {pendingOperations.map((operation) => (
-                <li key={operation.requestId} className="rounded border border-current/15 px-2 py-1">
+                <li
+                  key={operation.requestId}
+                  className="rounded border border-current/15 px-2 py-1"
+                >
                   <span className="font-semibold">{operation.label}</span>
-                  { ` · ${new Date(operation.createdAt).toLocaleString()}` }
-                  {operation.lastError && <span className="block font-medium">Needs attention: {operation.lastError}</span>}
+                  {` · ${new Date(
+                    operation.createdAt
+                  ).toLocaleString()}`}
+                  {operation.lastError && (
+                    <span className="block font-medium">
+                      Needs attention: {operation.lastError}
+                    </span>
+                  )}
                 </li>
               ))}
             </ul>
           )}
         </div>
       )}
+
       {isOnline && pendingCount === 0 && syncMessage && (
         <p>{syncMessage}</p>
       )}
+
       {syncMessage && pendingCount > 0 && (
         <p className="mt-1">{syncMessage}</p>
       )}
+
       {isOnline && pendingCount > 0 && (
         <button
           type="button"

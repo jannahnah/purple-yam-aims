@@ -61,7 +61,10 @@ export async function logProductionRun({
       const existing = await tx.offlineOperation.findUnique({ where: { requestId } });
       if (existing) {
         const existingPayload = existing.payload as Record<string, unknown>;
-        const payloadMismatch = Object.keys(operationPayload).some((key) => existingPayload[key] !== operationPayload[key]);
+        const payloadMismatch =
+          existingPayload.branchId !== operationPayload.branchId ||
+          existingPayload.finishedItemId !== operationPayload.finishedItemId ||
+          existingPayload.producedQuantity !== operationPayload.producedQuantity;
         if (existing.operationType !== "PRODUCTION" || existing.userId !== currentUser.id || payloadMismatch) {
           throw new Error("This request ID was already used for a different operation.");
         }

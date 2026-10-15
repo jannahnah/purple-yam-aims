@@ -157,13 +157,19 @@ export default function ItemMasterClient() {
       throw new Error(data.error || "Failed to load Item Master.");
     }
 
-    setItems(data);
+    return data;
   }
 
-  useEffect(() => {
-    let active = true;
+useEffect(() => {
+  let active = true;
 
-    loadItems()
+  const loadTimer = window.setTimeout(() => {
+    void loadItems()
+      .then((data) => {
+        if (active) {
+          setItems(data);
+        }
+      })
       .catch((err) => {
         if (active) {
           setError(
@@ -174,13 +180,17 @@ export default function ItemMasterClient() {
         }
       })
       .finally(() => {
-        if (active) setLoading(false);
+        if (active) {
+          setLoading(false);
+        }
       });
+  }, 0);
 
-    return () => {
-      active = false;
-    };
-  }, []);
+  return () => {
+    active = false;
+    window.clearTimeout(loadTimer);
+  };
+}, []);
 
   useEffect(() => {
     if (!selectedFinishedId) {
