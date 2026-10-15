@@ -78,7 +78,6 @@ export async function getPendingSales(): Promise<PendingOfflineSale[]> {
     });
   } finally {
     database.close();
-    notifyQueueChanged();
   }
 }
 
@@ -204,7 +203,6 @@ export async function getPendingOperations(): Promise<PendingOfflineOperation[]>
     });
   } finally {
     database.close();
-    notifyQueueChanged();
   }
 }
 
