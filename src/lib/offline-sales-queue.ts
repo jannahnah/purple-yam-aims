@@ -159,7 +159,14 @@ export async function syncPendingSales(): Promise<{ synced: number; pending: num
       await removePendingSale(sale.requestId);
       synced += 1;
     } catch {
-      // Keep the sale for the next connection attempt.
+      try {
+        await setPendingSaleError(
+          sale.requestId,
+          "Connection interrupted during synchronization. The sale remains saved on this device and will retry."
+        );
+      } catch {
+        // Preserve the queued sale even if its status cannot be updated.
+      }
       break;
     }
   }
@@ -279,6 +286,14 @@ export async function syncPendingOperations(): Promise<{ synced: number; pending
       await removePendingOperation(operation.requestId);
       synced += 1;
     } catch {
+      try {
+        await updatePendingOperationError(
+          operation.requestId,
+          "Connection interrupted during synchronization. The operation remains saved on this device and will retry."
+        );
+      } catch {
+        // Preserve the queued operation even if its status cannot be updated.
+      }
       break;
     }
   }
@@ -346,7 +361,23 @@ async function performSyncAllPendingWork(): Promise<{ synced: number; pending: n
       else await removePendingOperation(entry.record.requestId);
       synced += 1;
     } catch {
-      // Leave the current and later entries in the outbox for a safe retry.
+      // A lost response may mean the server committed. Keep the same request ID
+      // so a retry can be safely deduplicated by the server.
+      try {
+        if (entry.kind === "SALE") {
+          await setPendingSaleError(
+            entry.record.requestId,
+            "Connection interrupted during synchronization. The sale remains saved on this device and will retry."
+          );
+        } else {
+          await updatePendingOperationError(
+            entry.record.requestId,
+            "Connection interrupted during synchronization. The operation remains saved on this device and will retry."
+          );
+        }
+      } catch {
+        // Preserve queued work even if its status cannot be updated.
+      }
       break;
     }
   }
