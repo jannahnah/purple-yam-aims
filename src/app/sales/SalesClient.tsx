@@ -51,6 +51,12 @@ export default function SalesClient({
 }: SalesClientProps) {
   const router = useRouter();
 
+  useEffect(() => {
+    const handleOfflineSalesSynced = () => router.refresh();
+    window.addEventListener("offline-sales-synced", handleOfflineSalesSynced);
+    return () => window.removeEventListener("offline-sales-synced", handleOfflineSalesSynced);
+  }, [router]);
+
   const [activeTab, setActiveTab] = useState<
     "quick-record" | "sales-history"
   >("quick-record");
