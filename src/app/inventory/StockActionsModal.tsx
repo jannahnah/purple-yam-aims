@@ -229,7 +229,8 @@ export default function StockActionsModal({
      */
     if (
       actionType === "ADJUSTMENT" &&
-      quantityDelta === 0
+      quantityDelta === 0 &&
+      navigator.onLine
     ) {
       setError(
         "The physical quantity is the same as the current stock. No adjustment is needed."
@@ -395,7 +396,7 @@ export default function StockActionsModal({
      * Never allow more stock to be transferred
      * than what exists at the source branch.
      */
-    if (quantity > sourceQuantity) {
+    if (quantity > sourceQuantity && navigator.onLine) {
       setError(
         `Insufficient stock. Available: ${formatQuantity(
           sourceQuantity
