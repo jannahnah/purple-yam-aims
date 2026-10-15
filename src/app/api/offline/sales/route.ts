@@ -16,11 +16,13 @@ export async function POST(request: Request) {
     const soldQuantity =
       typeof body.soldQuantity === "number" ? body.soldQuantity : Number.NaN;
     const requestId = typeof body.requestId === "string" ? body.requestId : "";
+    const userId = typeof body.userId === "string" ? body.userId : "";
 
     if (
       !branchId ||
       !finishedItemId ||
       !requestId ||
+      !userId ||
       !Number.isInteger(soldQuantity) ||
       soldQuantity <= 0
     ) {
@@ -35,6 +37,7 @@ export async function POST(request: Request) {
       finishedItemId,
       soldQuantity,
       requestId,
+      expectedUserId: userId,
     });
 
     return NextResponse.json({
