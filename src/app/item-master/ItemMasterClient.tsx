@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type SourceType =
   | "COMMISSARY_SUPPLIED"
@@ -100,6 +100,7 @@ export default function ItemMasterClient() {
   const [toasts, setToasts] = useState<
     Array<{ id: number; type: "success" | "error"; message: string }>
   >([]);
+  const nextToastId = useRef(0);
 
   const activeItems = useMemo(
     () => items.filter((item) => item.isActive),
@@ -131,7 +132,8 @@ export default function ItemMasterClient() {
     type: "success" | "error",
     message: string
   ) {
-    const id = Date.now() + Math.floor(Math.random() * 1000);
+    // Generate stable unique IDs from a ref rather than impure clock/random calls.
+    const id = ++nextToastId.current;
 
     setToasts((current) => [
       ...current,
@@ -182,6 +184,8 @@ export default function ItemMasterClient() {
 
   useEffect(() => {
     if (!selectedFinishedId) {
+      // Clear the editable recipe when the selection is cleared.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setRecipeRows([]);
       return;
     }
@@ -190,12 +194,15 @@ export default function ItemMasterClient() {
       (item) => item.id === selectedFinishedId
     );
 
+    // Load the selected product's recipe into the editable form.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setRecipeRows(
       finished?.recipeAsFinished.map((entry) => ({
         itemId: entry.ingredientItem.id,
         requiredQuantity: String(entry.requiredQuantity),
       })) ?? []
     );
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setRecipeMessage("");
   }, [selectedFinishedId, finishedProducts]);
 
