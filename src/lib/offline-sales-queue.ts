@@ -4,6 +4,8 @@ export type PendingOfflineSale = {
   branchId: string;
   finishedItemId: string;
   soldQuantity: number;
+  productLabel?: string;
+  unit?: string;
   createdAt: string;
   lastError?: string;
 };
