@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { getPendingSales, getPendingOperations, syncPendingSales, syncPendingOperations } from "@/lib/offline-sales-queue";
+import { getPendingSales, getPendingOperations, syncAllPendingWork } from "@/lib/offline-sales-queue";
 
 export default function OfflineStatus() {
   const [isOnline, setIsOnline] = useState(true);
@@ -32,9 +32,9 @@ export default function OfflineStatus() {
     }
 
     try {
-      const [salesResult, operationsResult] = await Promise.all([syncPendingSales(), syncPendingOperations()]);
+      const result = await syncAllPendingWork();
       await refreshPendingCount();
-      const syncedTotal = salesResult.synced + operationsResult.synced;
+      const syncedTotal = result.synced;
       if (syncedTotal > 0) {
         setSyncMessage(`${syncedTotal} queued operation(s) synchronized.`);
         window.dispatchEvent(new Event("offline-sales-synced"));
