@@ -1,6 +1,6 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
+import { runSerializableTransaction } from "@/lib/serializable-transaction";
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { canAccessBranch } from "@/lib/auth/authorization";
@@ -64,7 +64,7 @@ export async function recordSale({
     throw new Error("Invalid sale occurrence timestamp.");
   }
 
-  await prisma.$transaction(async (tx) => {
+  await runSerializableTransaction(async (tx) => {
     // Replays of a queued offline sale must not decrement stock twice.
     if (requestId) {
       const existingTransaction = await tx.stockTransaction.findUnique({
