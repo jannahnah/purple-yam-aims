@@ -63,3 +63,5 @@ jobs:
         run: npx tsc --noEmit
       - name: Run production build
         run: npm run build
+        env:
+          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
