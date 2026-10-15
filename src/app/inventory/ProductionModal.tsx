@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { logProductionRun } from "@/app/actions/production";
 import { formatItemLabel } from "@/lib/item-label";
-import { savePendingOperation, syncAllPendingWork } from "@/lib/offline-sales-queue";
+import { isLikelyNetworkFailure, savePendingOperation, syncAllPendingWork } from "@/lib/offline-sales-queue";
 
 interface Branch {
   id: string;
@@ -249,7 +249,7 @@ export default function ProductionModal({
       try {
         await logProductionRun({ ...operationPayload, requestId, expectedUserId: userId });
       } catch (err) {
-        if (!navigator.onLine) {
+        if (!navigator.onLine || isLikelyNetworkFailure(err)) {
           await savePendingOperation({ requestId, userId, type: "PRODUCTION", payload: operationPayload, label: `Production · ${productLabel}` });
           alert("Connection was lost. Production run queued on this device; it is not confirmed until synchronization succeeds.");
           setIsOpen(false);
