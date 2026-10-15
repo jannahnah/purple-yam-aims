@@ -10,6 +10,7 @@ This branch adds an offline outbox for **sales, stock adjustments, stock receipt
 - Queued sales are displayed with product, quantity, timestamp, and any synchronization error.
 - When connectivity returns, the app submits queued sales in order.
 - Every queued action has a unique request ID. Sales use the stock transaction request ID; adjustments, receipts, transfers, and production use an idempotency record written atomically with the inventory changes.
+- Sale, stock adjustment, transfer, and production mutations run at serializable database isolation and retry serialization conflicts up to three times, reducing the risk of concurrent operations overwriting each other's stock changes.
 - The server re-checks the current session, original user, role/branch access, item status, and current stock before committing.
 - All queued work is synchronized in chronological order through one guarded outbox runner. A rejected operation blocks later work until the queue is retried or reconciled.
 - When a transaction request fails because of a likely network interruption, the client saves the same request ID and payload for retry; the server idempotency record handles the case where the first request committed but its response was lost.
