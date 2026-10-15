@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { adjustStock, transferStock } from "@/app/actions/inventory";
 import { formatItemLabel } from "@/lib/item-label";
-import { savePendingOperation, syncAllPendingWork } from "@/lib/offline-sales-queue";
+import { isLikelyNetworkFailure, savePendingOperation, syncAllPendingWork } from "@/lib/offline-sales-queue";
 
 type Role = "OWNER" | "BRANCH_MANAGER" | "CASHIER";
 
@@ -286,7 +286,7 @@ export default function StockActionsModal({
           expectedUserId: user.id,
         });
       } catch (err) {
-        if (!navigator.onLine) {
+        if (!navigator.onLine || isLikelyNetworkFailure(err)) {
           await savePendingOperation({
             requestId,
             userId: user.id,
@@ -422,7 +422,7 @@ export default function StockActionsModal({
       try {
         await transferStock({ sourceBranchId, destinationBranchId, itemId: transferItemId, quantity, requestId, expectedUserId: user.id });
       } catch (err) {
-        if (!navigator.onLine) {
+        if (!navigator.onLine || isLikelyNetworkFailure(err)) {
           await savePendingOperation({ requestId, userId: user.id, type: "TRANSFER", payload: operationPayload, label: operationLabel });
           setTransferQuantity("");
           setIsOpen(false);
