@@ -281,7 +281,7 @@ export async function syncPendingOperations(): Promise<{ synced: number; pending
  * One serial outbox across sales and inventory operations. Keeping a single
  * chronological order avoids replaying later inventory work ahead of earlier work.
  */
-export async function syncAllPendingWork(): Promise<{ synced: number; pending: number }> {
+async function performSyncAllPendingWork(): Promise<{ synced: number; pending: number }> {
   if (typeof navigator === "undefined" || !navigator.onLine) {
     const [sales, operations] = await Promise.all([getPendingSales(), getPendingOperations()]);
     return { synced: 0, pending: sales.length + operations.length };
@@ -343,4 +343,16 @@ export async function syncAllPendingWork(): Promise<{ synced: number; pending: n
 
   const [remainingSales, remainingOperations] = await Promise.all([getPendingSales(), getPendingOperations()]);
   return { synced, pending: remainingSales.length + remainingOperations.length };
+}
+
+
+let syncAllPromise: Promise<{ synced: number; pending: number }> | null = null;
+
+/** Prevent overlapping online-event, status-banner, and form-triggered sync runs. */
+export function syncAllPendingWork(): Promise<{ synced: number; pending: number }> {
+  if (syncAllPromise) return syncAllPromise;
+  syncAllPromise = performSyncAllPendingWork().finally(() => {
+    syncAllPromise = null;
+  });
+  return syncAllPromise;
 }
