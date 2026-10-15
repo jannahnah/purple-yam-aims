@@ -7,6 +7,7 @@ import { savePendingSale } from "@/lib/offline-sales-queue";
 import { formatItemLabel } from "@/lib/item-label";
 
 type SalesUser = {
+  id: string;
   username: string;
   name?: string | null;
   branchId: string;
@@ -152,6 +153,7 @@ export default function SalesClient({
     const requestId = crypto.randomUUID();
     const sale = {
       requestId,
+      userId: user.id,
       branchId: user.branchId,
       finishedItemId: selectedProduct.id,
       soldQuantity: parsedQuantity,
