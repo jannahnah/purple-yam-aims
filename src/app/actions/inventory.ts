@@ -1,6 +1,6 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
+import { runSerializableTransaction } from "@/lib/serializable-transaction";
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { canAccessBranch } from "@/lib/auth/authorization";
@@ -65,7 +65,7 @@ export async function adjustStock({
     );
   }
 
-  await prisma.$transaction(async (tx) => {
+  await runSerializableTransaction(async (tx) => {
     const operationPayload = { branchId, itemId, type, quantity, physicalCount: physicalCount ?? null };
     if (requestId) {
       const existing = await tx.offlineOperation.findUnique({ where: { requestId } });
@@ -251,7 +251,7 @@ export async function transferStock({
 
   const transferId = crypto.randomUUID();
 
-  await prisma.$transaction(async (tx) => {
+  await runSerializableTransaction(async (tx) => {
     const operationPayload = { sourceBranchId, destinationBranchId, itemId, quantity };
     if (requestId) {
       const existing = await tx.offlineOperation.findUnique({ where: { requestId } });
