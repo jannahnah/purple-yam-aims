@@ -4,7 +4,7 @@
 
 This branch adds an offline outbox for **sales, stock adjustments, stock receipts, transfers, and production runs**:
 
-- The service worker serves an offline fallback page when a navigation cannot reach the server.
+- The service worker serves an offline fallback page when a navigation cannot reach the server; the fallback can show a count of saved pending work without caching authenticated pages.
 - The app shows a connection-status banner.
 - If the Sales form is already open when connectivity is lost, a cashier can save a sale draft in IndexedDB.
 - Queued sales are displayed with product, quantity, timestamp, and any synchronization error.
