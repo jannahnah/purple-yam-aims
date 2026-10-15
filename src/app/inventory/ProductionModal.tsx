@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { logProductionRun } from "@/app/actions/production";
 import { formatItemLabel } from "@/lib/item-label";
+import { savePendingOperation, syncPendingOperations } from "@/lib/offline-sales-queue";
 
 interface Branch {
   id: string;
@@ -40,9 +41,11 @@ interface RecipeResponse {
 export default function ProductionModal({
   branches,
   items,
+  userId,
 }: {
   branches: Branch[];
   items: Item[];
+  userId: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -227,27 +230,43 @@ export default function ProductionModal({
     }
 
     setLoading(true);
+    const requestId = crypto.randomUUID();
+    const operationPayload = {
+      branchId: selectedBranch,
+      finishedItemId: selectedFinishedItem,
+      producedQuantity: Number(producedQuantity),
+    };
+    const productLabel = formatItemLabel(selectedProduct ?? { name: selectedFinishedItem });
 
     try {
-      await logProductionRun({
-        branchId: selectedBranch,
-        finishedItemId: selectedFinishedItem,
-        producedQuantity: Number(producedQuantity),
-      });
-
+      if (!navigator.onLine) {
+        await savePendingOperation({ requestId, userId, type: "PRODUCTION", payload: operationPayload, label: `Production · ${productLabel}` });
+        alert("Production run queued on this device. It is not confirmed in central inventory until synchronization succeeds.");
+        setIsOpen(false);
+        setProducedQuantity(1);
+        return;
+      }
+      try {
+        await logProductionRun({ ...operationPayload, requestId, expectedUserId: userId });
+      } catch (err) {
+        if (!navigator.onLine) {
+          await savePendingOperation({ requestId, userId, type: "PRODUCTION", payload: operationPayload, label: `Production · ${productLabel}` });
+          alert("Connection was lost. Production run queued on this device; it is not confirmed until synchronization succeeds.");
+          setIsOpen(false);
+          setProducedQuantity(1);
+          return;
+        }
+        throw err;
+      }
       alert("Production recorded successfully.");
-
       setIsOpen(false);
       setProducedQuantity(1);
     } catch (err) {
-      const message =
-        err instanceof Error
-          ? err.message
-          : "Failed to log production run.";
-
+      const message = err instanceof Error ? err.message : "Failed to log production run.";
       alert(message);
     } finally {
       setLoading(false);
+      if (navigator.onLine) void syncPendingOperations();
     }
   }
 
