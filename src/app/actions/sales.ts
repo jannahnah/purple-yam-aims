@@ -11,11 +11,13 @@ export async function recordSale({
   finishedItemId,
   soldQuantity,
   requestId,
+  expectedUserId,
 }: {
   branchId: string;
   finishedItemId: string;
   soldQuantity: number;
   requestId?: string;
+  expectedUserId?: string;
 }) {
   if (
     !Number.isInteger(soldQuantity) ||
@@ -40,6 +42,10 @@ export async function recordSale({
     throw new Error(
       "You do not have permission to record sales."
     );
+  }
+
+  if (expectedUserId && currentUser.id !== expectedUserId) {
+    throw new Error("This queued sale belongs to a different user. Sign in with the original account to synchronize it.");
   }
 
   if (!canAccessBranch(currentUser, branchId)) {
