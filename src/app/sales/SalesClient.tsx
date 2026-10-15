@@ -157,6 +157,8 @@ export default function SalesClient({
       branchId: user.branchId,
       finishedItemId: selectedProduct.id,
       soldQuantity: parsedQuantity,
+      productLabel: formatItemLabel(selectedProduct),
+      unit: selectedProduct.unit,
     };
 
     try {
