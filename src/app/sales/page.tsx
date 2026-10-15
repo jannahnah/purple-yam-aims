@@ -101,6 +101,7 @@ export default async function SalesPage() {
           unit: sale.item.unit,
           quantity: Math.abs(Number(sale.quantityDelta)),
           createdAt: (sale.occurredAt ?? sale.createdAt).toISOString(),
+          syncedAt: sale.createdAt.toISOString(),
         }))}
       />
     </AppShell>
