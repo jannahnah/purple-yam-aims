@@ -1,4 +1,4 @@
-const OFFLINE_CACHE = "purple-yam-offline-v1";
+const OFFLINE_CACHE = "purple-yam-offline-v2";
 const OFFLINE_FALLBACK_URL = "/offline.html";
 
 self.addEventListener("install", (event) => {
