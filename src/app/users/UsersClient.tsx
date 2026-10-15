@@ -909,7 +909,7 @@ export default function UsersClient() {
                         </p>
 
                         <p className="mt-0.5 text-sm font-semibold text-purple-900">
-                          "{branchName.trim()}"
+                          &quot;{branchName.trim()}&quot;
                         </p>
 
                         <p className="mt-1 text-xs text-purple-700">
