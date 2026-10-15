@@ -11,12 +11,14 @@ export async function recordSale({
   finishedItemId,
   soldQuantity,
   requestId,
+  occurredAt,
   expectedUserId,
 }: {
   branchId: string;
   finishedItemId: string;
   soldQuantity: number;
   requestId?: string;
+  occurredAt?: string;
   expectedUserId?: string;
 }) {
   if (
@@ -57,6 +59,10 @@ export async function recordSale({
   if (requestId !== undefined && (requestId.length < 8 || requestId.length > 128)) {
     throw new Error("Invalid sale request ID.");
   }
+  const saleOccurredAt = occurredAt ? new Date(occurredAt) : new Date();
+  if (!Number.isFinite(saleOccurredAt.getTime())) {
+    throw new Error("Invalid sale occurrence timestamp.");
+  }
 
   await prisma.$transaction(async (tx) => {
     // Replays of a queued offline sale must not decrement stock twice.
@@ -71,7 +77,8 @@ export async function recordSale({
           existingTransaction.branchId === branchId &&
           existingTransaction.itemId === finishedItemId &&
           existingTransaction.quantityDelta === -soldQuantity &&
-          existingTransaction.userId === currentUser.id;
+          existingTransaction.userId === currentUser.id &&
+          existingTransaction.occurredAt?.getTime() === saleOccurredAt.getTime();
 
         if (!sameSale) {
           throw new Error("This sale request ID was already used for a different transaction.");
@@ -183,6 +190,7 @@ export async function recordSale({
         branchId,
         itemId: finishedItemId,
         userId: currentUser.id,
+        occurredAt: saleOccurredAt,
         ...(requestId ? { requestId } : {}),
       },
     });
