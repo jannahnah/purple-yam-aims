@@ -43,6 +43,7 @@ The migrations add a nullable unique requestId to StockTransaction and create th
 2. Run lint and a production build.
 3. Verify online and offline sales, stock adjustments, stock receipts, transfers, and production runs.
 4. Verify each offline form saves a pending item and clearly indicates it is not yet confirmed centrally.
+5. Record a sale offline, wait before reconnecting, and verify Sales History keeps the original **Sale time** while **Synced to system** reflects when the server accepted it. Also verify online sales and older records display sensibly.
 5. Restore connectivity and verify the queue drains in chronological order and each inventory change is applied exactly once.
 6. Simulate a lost response / retry for every operation type and verify idempotency prevents duplicate stock changes.
 7. Verify stale stock, insufficient stock, inactive items, invalid recipe/production stock, wrong branch, and a different signed-in user are rejected and remain visible as pending errors.
