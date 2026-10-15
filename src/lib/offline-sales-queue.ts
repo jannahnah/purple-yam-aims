@@ -11,6 +11,12 @@ const DATABASE_NAME = "purple-yam-aims-offline";
 const DATABASE_VERSION = 1;
 const STORE_NAME = "pending-sales";
 
+function notifyQueueChanged() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("offline-sales-updated"));
+  }
+}
+
 function openDatabase(): Promise<IDBDatabase> {
   if (typeof window === "undefined" || !("indexedDB" in window)) {
     return Promise.reject(new Error("Offline storage is not available in this browser."));
@@ -48,6 +54,7 @@ export async function savePendingSale(
     });
   } finally {
     database.close();
+    notifyQueueChanged();
   }
 }
 
