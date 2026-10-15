@@ -222,7 +222,7 @@ export default function ProductionModal({
       return;
     }
 
-    if (hasInsufficientStock) {
+    if (hasInsufficientStock && navigator.onLine) {
       alert(
         "Production cannot be recorded because one or more ingredients have insufficient stock."
       );
