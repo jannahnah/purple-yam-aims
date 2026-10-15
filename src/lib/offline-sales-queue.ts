@@ -11,12 +11,14 @@ export type PendingOfflineSale = {
 };
 
 const DATABASE_NAME = "purple-yam-aims-offline";
-const DATABASE_VERSION = 1;
+const DATABASE_VERSION = 2;
 const STORE_NAME = "pending-sales";
+const OPERATIONS_STORE_NAME = "pending-operations";
 
 function notifyQueueChanged() {
   if (typeof window !== "undefined") {
     window.dispatchEvent(new Event("offline-sales-updated"));
+    window.dispatchEvent(new Event("offline-operations-updated"));
   }
 }
 
@@ -32,6 +34,9 @@ function openDatabase(): Promise<IDBDatabase> {
       const database = request.result;
       if (!database.objectStoreNames.contains(STORE_NAME)) {
         database.createObjectStore(STORE_NAME, { keyPath: "requestId" });
+      }
+      if (!database.objectStoreNames.contains(OPERATIONS_STORE_NAME)) {
+        database.createObjectStore(OPERATIONS_STORE_NAME, { keyPath: "requestId" });
       }
     };
 
@@ -152,4 +157,123 @@ export async function syncPendingSales(): Promise<{ synced: number; pending: num
   }
 
   return { synced, pending: (await getPendingSales()).length };
+}
+
+
+export type OfflineOperationType = "ADJUSTMENT" | "STOCK_RECEIPT" | "TRANSFER" | "PRODUCTION";
+
+export type PendingOfflineOperation = {
+  requestId: string;
+  userId: string;
+  type: OfflineOperationType;
+  payload: Record<string, string | number>;
+  label: string;
+  createdAt: string;
+  lastError?: string;
+};
+
+export async function savePendingOperation(
+  operation: Omit<PendingOfflineOperation, "createdAt">
+): Promise<void> {
+  const database = await openDatabase();
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const transaction = database.transaction(OPERATIONS_STORE_NAME, "readwrite");
+      transaction.objectStore(OPERATIONS_STORE_NAME).put({
+        ...operation,
+        createdAt: new Date().toISOString(),
+      } satisfies PendingOfflineOperation);
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error ?? new Error("Could not save the offline operation."));
+      transaction.onabort = () => reject(transaction.error ?? new Error("Offline operation save was cancelled."));
+    });
+  } finally {
+    database.close();
+    notifyQueueChanged();
+  }
+}
+
+export async function getPendingOperations(): Promise<PendingOfflineOperation[]> {
+  const database = await openDatabase();
+  try {
+    return await new Promise((resolve, reject) => {
+      const transaction = database.transaction(OPERATIONS_STORE_NAME, "readonly");
+      const request = transaction.objectStore(OPERATIONS_STORE_NAME).getAll();
+      request.onsuccess = () => resolve((request.result as PendingOfflineOperation[]).sort((a, b) => a.createdAt.localeCompare(b.createdAt)));
+      request.onerror = () => reject(request.error ?? new Error("Could not read queued operations."));
+    });
+  } finally {
+    database.close();
+    notifyQueueChanged();
+  }
+}
+
+async function updatePendingOperationError(requestId: string, lastError: string): Promise<void> {
+  const database = await openDatabase();
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const transaction = database.transaction(OPERATIONS_STORE_NAME, "readwrite");
+      const store = transaction.objectStore(OPERATIONS_STORE_NAME);
+      const request = store.get(requestId);
+      request.onsuccess = () => {
+        if (request.result) store.put({ ...request.result, lastError });
+      };
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error ?? new Error("Could not update queued operation status."));
+    });
+  } finally {
+    database.close();
+    notifyQueueChanged();
+  }
+}
+
+async function removePendingOperation(requestId: string): Promise<void> {
+  const database = await openDatabase();
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const transaction = database.transaction(OPERATIONS_STORE_NAME, "readwrite");
+      transaction.objectStore(OPERATIONS_STORE_NAME).delete(requestId);
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error ?? new Error("Could not remove synchronized operation."));
+    });
+  } finally {
+    database.close();
+    notifyQueueChanged();
+  }
+}
+
+/** Sync inventory operations in order; the server validates permissions and deduplicates every request. */
+export async function syncPendingOperations(): Promise<{ synced: number; pending: number }> {
+  if (typeof navigator === "undefined" || !navigator.onLine) {
+    return { synced: 0, pending: (await getPendingOperations()).length };
+  }
+
+  const pending = await getPendingOperations();
+  let synced = 0;
+  for (const operation of pending) {
+    try {
+      const response = await fetch("/api/offline/operations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({
+          requestId: operation.requestId,
+          userId: operation.userId,
+          type: operation.type,
+          payload: operation.payload,
+        }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const reason = typeof result.error === "string" ? result.error : "Operation could not be synchronized.";
+        await updatePendingOperationError(operation.requestId, reason);
+        break;
+      }
+      await removePendingOperation(operation.requestId);
+      synced += 1;
+    } catch {
+      break;
+    }
+  }
+  return { synced, pending: (await getPendingOperations()).length };
 }
