@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { recordSale } from "@/app/actions/sales";
+import { savePendingSale, syncPendingSales } from "@/lib/offline-sales-queue";
 import { formatItemLabel } from "@/lib/item-label";
 
 type SalesUser = {
@@ -148,24 +149,56 @@ export default function SalesClient({
     setIsSubmitting(true);
     setMessage("");
 
+    const requestId = crypto.randomUUID();
+    const sale = {
+      requestId,
+      branchId: user.branchId,
+      finishedItemId: selectedProduct.id,
+      soldQuantity: parsedQuantity,
+    };
+
     try {
-      await recordSale({
-        branchId: user.branchId,
-        finishedItemId: selectedProduct.id,
-        soldQuantity: parsedQuantity,
-      });
+      if (!navigator.onLine) {
+        await savePendingSale(sale);
+        setMessage(
+          "Sale saved on this device and waiting to sync. It is not yet confirmed in the central inventory. Keep this browser data and reconnect as soon as possible."
+        );
+        setSoldQuantity("");
+        setIsReviewing(false);
+        return;
+      }
+
+      await recordSale(sale);
 
       setMessage("Sale recorded successfully.");
       setSoldQuantity("");
       setIsReviewing(false);
-
       router.refresh();
     } catch (error) {
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : "Failed to record sale."
-      );
+      // If the connection dropped while submitting, retain the same request ID.
+      // The server's unique request ID makes a retry safe if the first request committed.
+      if (!navigator.onLine) {
+        try {
+          await savePendingSale(sale);
+          setMessage(
+            "Connection lost during submission. The sale is saved on this device for synchronization, but central inventory is not yet confirmed."
+          );
+          setSoldQuantity("");
+          setIsReviewing(false);
+        } catch (storageError) {
+          setMessage(
+            storageError instanceof Error
+              ? storageError.message
+              : "Connection lost and this browser could not save the sale offline."
+          );
+        }
+      } else {
+        setMessage(
+          error instanceof Error
+            ? error.message
+            : "Failed to record sale."
+        );
+      }
     } finally {
       setIsSubmitting(false);
     }
