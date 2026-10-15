@@ -291,6 +291,7 @@ export default function InventoryClient({
                 <ProductionModal
                   branches={branches}
                   items={items}
+                  userId={user.id}
                 />
               </>
             )}
