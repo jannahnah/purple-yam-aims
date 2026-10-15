@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { recordSale } from "@/app/actions/sales";
 import { isLikelyNetworkFailure, savePendingSale, syncAllPendingWork } from "@/lib/offline-sales-queue";
