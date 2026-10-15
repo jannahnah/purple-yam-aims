@@ -1,38 +1,89 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { getPendingSales, syncPendingSales } from "@/lib/offline-sales-queue";
 
-/**
- * Shows connection state only. It does not claim that offline inventory
- * changes are saved or synchronized; transaction queuing is a separate layer.
- */
 export default function OfflineStatus() {
   const [isOnline, setIsOnline] = useState(true);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [syncMessage, setSyncMessage] = useState("");
 
-  useEffect(() => {
-    const updateConnection = () => setIsOnline(navigator.onLine);
-
-    updateConnection();
-    window.addEventListener("online", updateConnection);
-    window.addEventListener("offline", updateConnection);
-
-    return () => {
-      window.removeEventListener("online", updateConnection);
-      window.removeEventListener("offline", updateConnection);
-    };
+  const refreshPendingCount = useCallback(async () => {
+    try {
+      const pending = await getPendingSales();
+      setPendingCount(pending.length);
+      const failed = pending.find((sale) => sale.lastError);
+      setSyncMessage(failed?.lastError ? `A queued sale needs attention: ${failed.lastError}` : "");
+    } catch {
+      // Browsers without IndexedDB still get connection status; queueing itself reports errors.
+    }
   }, []);
 
-  if (isOnline) return null;
+  const synchronize = useCallback(async () => {
+    setIsOnline(navigator.onLine);
+    if (!navigator.onLine) {
+      await refreshPendingCount();
+      return;
+    }
+
+    try {
+      const result = await syncPendingSales();
+      await refreshPendingCount();
+      if (result.synced > 0) {
+        setSyncMessage(`${result.synced} queued sale(s) synchronized.`);
+        window.dispatchEvent(new Event("offline-sales-synced"));
+      }
+    } catch {
+      setSyncMessage("Could not check queued sales. They remain stored on this device.");
+    }
+  }, [refreshPendingCount]);
+
+  useEffect(() => {
+    const handleConnectionChange = () => void synchronize();
+    const handleQueueChange = () => void refreshPendingCount();
+
+    void synchronize();
+    window.addEventListener("online", handleConnectionChange);
+    window.addEventListener("offline", handleConnectionChange);
+    window.addEventListener("offline-sales-updated", handleQueueChange);
+
+    return () => {
+      window.removeEventListener("online", handleConnectionChange);
+      window.removeEventListener("offline", handleConnectionChange);
+      window.removeEventListener("offline-sales-updated", handleQueueChange);
+    };
+  }, [refreshPendingCount, synchronize]);
+
+  if (isOnline && pendingCount === 0 && !syncMessage) return null;
 
   return (
     <div
       role="status"
       aria-live="polite"
-      className="sticky top-0 z-[100] border-b border-amber-300 bg-amber-50 px-4 py-3 text-center text-sm font-medium text-amber-950"
+      className={`sticky top-0 z-[100] border-b px-4 py-3 text-center text-sm font-medium ${
+        isOnline
+          ? "border-blue-200 bg-blue-50 text-blue-950"
+          : "border-amber-300 bg-amber-50 text-amber-950"
+      }`}
     >
-      You are offline. Inventory and transactions may be out of date. Do not
-      record or change stock until the connection returns; offline transaction
-      saving is not enabled yet.
+      {!isOnline && (
+        <p>
+          You are offline. Inventory data may be out of date. Offline sales are
+          saved locally only when the sale form confirms they were stored.
+        </p>
+      )}
+      {pendingCount > 0 && (
+        <p className="mt-1">
+          {pendingCount} sale(s) waiting to sync. Keep this browser profile and
+          its site data; queued sales are not yet confirmed in central inventory.
+        </p>
+      )}
+      {isOnline && pendingCount === 0 && syncMessage && (
+        <p>{syncMessage}</p>
+      )}
+      {syncMessage && pendingCount > 0 && (
+        <p className="mt-1">{syncMessage}</p>
+      )}
     </div>
   );
 }
