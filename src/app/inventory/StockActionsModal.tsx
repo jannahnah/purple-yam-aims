@@ -278,7 +278,7 @@ export default function StockActionsModal({
         await adjustStock({
           branchId,
           itemId,
-          quantity: actionType === "ADJUSTMENT" ? quantityDelta : quantityDelta,
+          quantity: actionType === "ADJUSTMENT" ? 0 : quantityDelta,
           type: actionType,
           ...(actionType === "ADJUSTMENT" ? { physicalCount: enteredQuantity } : {}),
           requestId,
