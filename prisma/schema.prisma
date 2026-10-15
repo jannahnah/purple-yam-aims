@@ -123,6 +123,7 @@ model StockTransaction {
   transferId       String?
   transferBranchId String?
   requestId        String?         @unique
+  occurredAt       DateTime?
   createdAt        DateTime        @default(now())
 
   branch Branch @relation(fields: [branchId], references: [id])
