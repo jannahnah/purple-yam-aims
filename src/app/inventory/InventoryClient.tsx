@@ -204,11 +204,15 @@ export default function InventoryClient({
   );
 
   useEffect(() => {
+    // Reset pagination when the active filter set changes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setInventoryPage(1);
   }, [search, selectedBranch, selectedSource, selectedStatus]);
 
   useEffect(() => {
     if (inventoryPage > inventoryPageCount) {
+      // Keep the current page within the newly filtered result range.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setInventoryPage(inventoryPageCount);
     }
   }, [inventoryPage, inventoryPageCount]);
