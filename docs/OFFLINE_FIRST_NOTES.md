@@ -26,6 +26,13 @@ This branch adds an offline outbox for **sales, stock adjustments, stock receipt
 - If stock has changed elsewhere, or the original account cannot be authenticated, the queued sale remains pending and displays the error. It must be reconciled rather than blindly discarded.
 - Do not merge or deploy this branch until the database migration and build have been verified.
 
+## Sale occurrence and synchronization timestamps
+
+- New sales capture `occurredAt` from the cashier's device when the cashier confirms the sale. Offline sales carry that same ISO timestamp in the IndexedDB outbox and submit it unchanged during synchronization.
+- `StockTransaction.createdAt` remains the server-side record creation time. Sales History labels these separately as **Sale time** and **Synced to system**.
+- Older transactions may have no `occurredAt`; the UI falls back to `createdAt` for their displayed sale time. Older queued sales without an explicit occurrence timestamp fall back to their queue timestamp.
+- The occurrence time relies on the device clock and is not independent proof of when the sale happened. Retaining both timestamps makes delays and clock-related limitations more transparent.
+
 ## Database change
 
 The migrations add a nullable unique requestId to StockTransaction and create the OfflineOperation idempotency table. Apply migrations through the normal Prisma deployment workflow before enabling the new sync endpoints in a deployed environment.
