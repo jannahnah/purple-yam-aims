@@ -327,10 +327,14 @@ export default function ReportsClient({
   const reportEndIndex = Math.min(reportStartIndex + REPORT_PAGE_SIZE, reportRows.length);
 
   useEffect(() => {
+    // Start each selected report at its first page.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setReportPage(1);
   }, [report]);
 
   useEffect(() => {
+    // Clamp pagination when a report's row count changes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setReportPage((page) => Math.min(Math.max(page, 1), reportPageCount));
   }, [reportPageCount]);
 
