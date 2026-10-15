@@ -246,6 +246,21 @@ export default function ProductionModal({
         setProducedQuantity(1);
         return;
       }
+      const syncResult = await syncAllPendingWork();
+      if (syncResult.pending > 0) {
+        await savePendingOperation({
+          requestId,
+          userId,
+          type: "PRODUCTION",
+          payload: operationPayload,
+          label: `Production · ${productLabel}`,
+        });
+        alert("Production run queued behind earlier offline work. It is not confirmed until synchronization succeeds.");
+        setIsOpen(false);
+        setProducedQuantity(1);
+        return;
+      }
+
       try {
         await logProductionRun({ ...operationPayload, requestId, expectedUserId: userId });
       } catch (err) {
