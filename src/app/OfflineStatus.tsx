@@ -68,8 +68,8 @@ export default function OfflineStatus() {
     >
       {!isOnline && (
         <p>
-          You are offline. Inventory data may be out of date. Offline sales are
-          saved locally only when the sale form confirms they were stored.
+          You are offline. Inventory data may be out of date. A sale can be
+          queued from the sales form, but it is not confirmed in central inventory until sync succeeds.
         </p>
       )}
       {pendingCount > 0 && (
@@ -83,6 +83,15 @@ export default function OfflineStatus() {
       )}
       {syncMessage && pendingCount > 0 && (
         <p className="mt-1">{syncMessage}</p>
+      )}
+      {isOnline && pendingCount > 0 && (
+        <button
+          type="button"
+          onClick={() => void synchronize()}
+          className="mt-2 rounded-md border border-current px-3 py-1 text-xs font-semibold hover:bg-white/60"
+        >
+          Retry synchronization
+        </button>
       )}
     </div>
   );
