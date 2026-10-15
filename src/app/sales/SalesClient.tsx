@@ -125,7 +125,7 @@ export default function SalesClient({
       return;
     }
 
-    if (parsedQuantity > availableStock) {
+    if (parsedQuantity > availableStock && navigator.onLine) {
       setMessage(
         `Insufficient stock. Available stock is ${availableStock} ${
           selectedProduct?.unit ?? "units"
