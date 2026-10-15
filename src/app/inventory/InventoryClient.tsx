@@ -33,6 +33,7 @@ type StockRecord = {
 };
 
 type UserInfo = {
+  id: string;
   role: Role;
   username: string;
   branchId: string | null;
