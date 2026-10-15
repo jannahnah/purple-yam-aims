@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { recordSale } from "@/app/actions/sales";
-import { savePendingSale, syncAllPendingWork } from "@/lib/offline-sales-queue";
+import { isLikelyNetworkFailure, savePendingSale, syncAllPendingWork } from "@/lib/offline-sales-queue";
 import { formatItemLabel } from "@/lib/item-label";
 
 type SalesUser = {
@@ -192,7 +192,7 @@ export default function SalesClient({
     } catch (error) {
       // If the connection dropped while submitting, retain the same request ID.
       // The server's unique request ID makes a retry safe if the first request committed.
-      if (!navigator.onLine) {
+      if (!navigator.onLine || isLikelyNetworkFailure(error)) {
         try {
           await savePendingSale(sale);
           setMessage(
