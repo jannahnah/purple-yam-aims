@@ -23,6 +23,10 @@ export async function adjustStock({
   requestId?: string;
   expectedUserId?: string;
 }) {
+  if (!Number.isFinite(quantity)) {
+    throw new Error("Stock quantity must be a finite number.");
+  }
+
   // Zero quantities are never valid.
   if (physicalCount === undefined && quantity === 0) {
     throw new Error("Stock adjustment quantity cannot be zero.");
@@ -201,8 +205,8 @@ export async function transferStock({
   requestId?: string;
   expectedUserId?: string;
 }) {
-  if (quantity <= 0) {
-    throw new Error("Transfer quantity must be greater than zero.");
+  if (!Number.isFinite(quantity) || quantity <= 0) {
+    throw new Error("Transfer quantity must be a finite number greater than zero.");
   }
   if (requestId !== undefined && (requestId.length < 8 || requestId.length > 128)) {
     throw new Error("Invalid offline operation request ID.");
@@ -282,6 +286,9 @@ export async function transferStock({
 
     if (!item) {
       throw new Error("Item not found.");
+    }
+    if (!item.isActive) {
+      throw new Error("This item is deleted or inactive.");
     }
 
     /*
