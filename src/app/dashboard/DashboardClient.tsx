@@ -251,10 +251,10 @@ export default function DashboardClient({
 
   return (
     <div className="aims-page owner-dashboard-page">
-      <header className="relative z-30 border-b border-gray-200 bg-white/95 px-3 py-3 backdrop-blur sm:sticky sm:px-6 sm:py-4 lg:px-8">
+      <header className="dashboard-topbar relative z-30 border-b border-purple-900/30 px-3 py-3 backdrop-blur sm:sticky sm:px-6 sm:py-4 lg:px-8">
         <div className="flex items-start justify-between gap-3 sm:items-center sm:gap-4">
           <div>
-            <p className="text-xs leading-4 text-gray-500 sm:text-sm sm:leading-normal">
+            <p className="text-xs leading-4 text-purple-100/75 sm:text-sm sm:leading-normal">
               Business-wide inventory overview —{" "}
               {new Date().toLocaleDateString("en-US", {
                 month: "long",
@@ -263,13 +263,13 @@ export default function DashboardClient({
               })}
             </p>
 
-            <h1 className="mt-1 text-xl font-bold leading-tight tracking-tight text-zinc-900 sm:text-2xl lg:text-3xl">
-              Owner Dashboard
+            <h1 className="mt-1 text-xl font-bold leading-tight tracking-tight text-white sm:text-2xl lg:text-3xl">
+              Purple Yam AIMS
             </h1>
 
-            <p className="mt-1 text-xs leading-4 text-gray-500 sm:text-sm sm:leading-normal">
+            <p className="mt-1 text-xs leading-4 text-purple-100/75 sm:text-sm sm:leading-normal">
               Signed in as{" "}
-              <span className="font-semibold text-gray-700">
+              <span className="font-semibold text-white">
                 {user.name?.trim() || user.username}
               </span>
             </p>
@@ -282,7 +282,7 @@ export default function DashboardClient({
                 onClick={() =>
                   setIsNotificationOpen((currentValue) => !currentValue)
                 }
-                className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border sm:h-11 sm:w-11 sm:rounded-xl border-gray-200 bg-white text-gray-600 transition hover:border-purple-300 hover:bg-purple-50 hover:text-purple-700"
+                className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/15 bg-white/10 text-white transition hover:bg-white/20 sm:h-11 sm:w-11 sm:rounded-xl"
                 aria-label="Open stock notifications"
                 aria-expanded={isNotificationOpen}
               >
@@ -407,12 +407,36 @@ export default function DashboardClient({
         </div>
       </header>
 
-      <main className="space-y-5 p-3 sm:space-y-8 sm:p-6 lg:p-8">
-        <section className="dashboard-summary-grid grid gap-2.5 sm:gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm sm:rounded-2xl sm:p-5">
-            <p className="text-xs font-medium text-gray-500 sm:text-sm">
-              Inventory Items
+      <main className="aims-container space-y-5 sm:space-y-8">
+        <section className="dashboard-welcome flex flex-col gap-4 rounded-2xl p-4 text-white shadow-lg sm:flex-row sm:items-center sm:justify-between sm:p-6">
+          <div className="min-w-0">
+            <span className="inline-flex rounded-full bg-white/15 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-purple-100">
+              Owner Role
+            </span>
+            <h2 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">
+              Welcome back, {user.name?.trim() || "Owner"}! <span aria-hidden="true">👋</span>
+            </h2>
+            <p className="mt-1 max-w-xl text-xs leading-5 text-purple-100/80 sm:text-sm">
+              Here&apos;s your real-time stock summary across your central commissary and satellite branches.
             </p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:shrink-0">
+            <Link href="/inventory" className="dashboard-hero-action">
+              View Inventory
+            </Link>
+            <Link href="/inventory" className="dashboard-hero-action dashboard-hero-action-light">
+              Quick Transfer
+            </Link>
+          </div>
+        </section>
+
+        <section className="dashboard-summary-grid grid gap-2.5 sm:gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="dashboard-kpi rounded-xl border border-gray-200 bg-white p-3 shadow-sm sm:rounded-2xl sm:p-5">
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-500 sm:text-xs">
+              Inventory Items
+              </p>
+            </div>
 
             <p className="mt-1.5 text-2xl font-bold text-gray-900 sm:mt-3 sm:text-3xl">
               {totalItems}
@@ -423,10 +447,12 @@ export default function DashboardClient({
             </p>
           </div>
 
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-            <p className="text-sm font-medium text-gray-500">
+          <div className="dashboard-kpi rounded-2xl border border-gray-200 bg-white p-3 shadow-sm sm:p-5">
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-500 sm:text-xs">
               Active Branches
-            </p>
+              </p>
+            </div>
 
             <p className="mt-3 text-3xl font-bold text-gray-900">
               {activeBranches}
@@ -437,10 +463,12 @@ export default function DashboardClient({
             </p>
           </div>
 
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-            <p className="text-sm font-medium text-gray-500">
+          <div className="dashboard-kpi rounded-2xl border border-gray-200 bg-white p-3 shadow-sm sm:p-5">
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-500 sm:text-xs">
               Low Stock
-            </p>
+              </p>
+            </div>
 
             <p className="mt-1.5 text-2xl font-bold text-amber-600 sm:mt-3 sm:text-3xl">
               {lowStock}
@@ -451,10 +479,12 @@ export default function DashboardClient({
             </p>
           </div>
 
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-            <p className="text-sm font-medium text-gray-500">
+          <div className="dashboard-kpi rounded-2xl border border-gray-200 bg-white p-3 shadow-sm sm:p-5">
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-500 sm:text-xs">
               Out of Stock
-            </p>
+              </p>
+            </div>
 
             <p className="mt-1.5 text-2xl font-bold text-red-600 sm:mt-3 sm:text-3xl">
               {outOfStock}

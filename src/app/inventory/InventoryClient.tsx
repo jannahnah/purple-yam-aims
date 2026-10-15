@@ -5,6 +5,7 @@ import StockActionsModal from "./StockActionsModal";
 import ProductionModal from "./ProductionModal";
 import SalesModal from "./SalesModal";
 import { formatItemLabel } from "@/lib/item-label";
+import { PageContainer } from "@/components/PageContainer";
 
 type Role = "OWNER" | "BRANCH_MANAGER" | "CASHIER";
 
@@ -238,8 +239,7 @@ export default function InventoryClient({
     (isOwner && selectedBranch !== "ALL");
 
   return (
-    <div className="aims-page">
-      <div className="aims-container">
+    <PageContainer>
         {/* Header */}
         <div className="aims-page-header">
           <div>
@@ -271,7 +271,7 @@ export default function InventoryClient({
           </div>
 
           {/* Actions */}
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
             {canManageStock && (
               <>
                 <StockActionsModal
@@ -307,9 +307,9 @@ export default function InventoryClient({
         </div>
 
         {/* Summary */}
-        <div className="inventory-summary mb-4 grid grid-cols-2 gap-2 sm:mb-6 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
+        <div className="inventory-summary mb-4 grid grid-cols-2 gap-3 sm:mb-6 lg:grid-cols-4">
           <div className="inventory-summary-card rounded-2xl border border-purple-200 bg-white p-3 shadow-sm sm:p-5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+            <p className="min-h-8 text-xs font-semibold uppercase tracking-wide text-gray-500">
               Inventory Items
             </p>
 
@@ -325,7 +325,7 @@ export default function InventoryClient({
           </div>
 
           <div className="inventory-summary-card rounded-2xl border border-gray-200 bg-white p-3 shadow-sm sm:p-5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+            <p className="min-h-8 text-xs font-semibold uppercase tracking-wide text-gray-500">
               Branches
             </p>
 
@@ -341,7 +341,7 @@ export default function InventoryClient({
           </div>
 
           <div className="inventory-summary-card rounded-2xl border border-amber-200 bg-white p-3 shadow-sm sm:p-5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-amber-600">
+            <p className="min-h-8 text-xs font-semibold uppercase tracking-wide text-amber-600">
               Low Stock
             </p>
 
@@ -355,7 +355,7 @@ export default function InventoryClient({
           </div>
 
           <div className="inventory-summary-card rounded-2xl border border-red-200 bg-white p-3 shadow-sm sm:p-5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-red-600">
+            <p className="min-h-8 text-xs font-semibold uppercase tracking-wide text-red-600">
               Out of Stock
             </p>
 
@@ -545,7 +545,7 @@ export default function InventoryClient({
             </div>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="hidden overflow-x-auto md:block">
             <table className="min-w-[1050px] w-full text-left text-sm">
               <thead className="border-b border-gray-200 bg-gray-50">
                 <tr className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
@@ -691,6 +691,58 @@ export default function InventoryClient({
             </table>
           </div>
 
+          <div className="space-y-3 p-3 md:hidden">
+            {filteredRecords.length === 0 ? (
+              <div className="py-10 text-center text-sm text-gray-500">
+                No inventory found. Try changing your search or filters.
+              </div>
+            ) : (
+              paginatedRecords.map((stock) => {
+                const status = getStockStatus(stock.quantity, stock.item.minThreshold);
+
+                return (
+                  <article key={stock.id} className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h3 className="truncate font-semibold text-gray-900">
+                          {formatItemLabel(stock.item)}
+                        </h3>
+                        <p className="mt-1 truncate text-xs text-gray-500">{stock.branch.name}</p>
+                      </div>
+                      <span className={`shrink-0 rounded-full border px-2 py-1 text-[10px] font-bold ${getSourceBadgeClass(stock.item.sourceType)}`}>
+                        {formatSourceType(stock.item.sourceType)}
+                      </span>
+                    </div>
+                    <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 text-xs">
+                      <div>
+                        <p className="text-gray-500">Stock</p>
+                        <p className="mt-0.5 text-right text-base font-bold tabular-nums text-gray-900">
+                          {formatQuantity(stock.quantity)} {stock.item.unit}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">Status</p>
+                        <span className={`mt-1 inline-flex rounded-full border px-2 py-1 text-[10px] font-bold ${getStatusBadgeClass(status)}`}>
+                          {status}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">Reorder threshold</p>
+                        <p className="mt-0.5 font-medium text-gray-800">
+                          {formatQuantity(stock.item.minThreshold)} {stock.item.unit}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">Last updated</p>
+                        <p className="mt-0.5 font-medium text-gray-800">{formatDate(stock.updatedAt)}</p>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })
+            )}
+          </div>
+
           <div className="flex min-h-12 items-center justify-between border-t border-gray-100 px-4 py-2">
             <p className="text-[11px] font-medium text-gray-600">
               Showing {inventoryStartIndex + 1}–{inventoryEndIndex} of {filteredRecords.length} records
@@ -768,7 +820,6 @@ export default function InventoryClient({
             </div>
           </div>
         </div>
-      </div>
-    </div>
+    </PageContainer>
   );
 }

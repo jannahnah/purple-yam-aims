@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { logProductionRun } from "@/app/actions/production";
 import { formatItemLabel } from "@/lib/item-label";
+import Button from "@/components/Button";
 
 interface Branch {
   id: string;
@@ -260,13 +261,13 @@ export default function ProductionModal({
   return (
     <>
       {/* Open Button */}
-      <button
+      <Button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="aims-primary shadow-sm"
+        className="w-full shadow-sm sm:w-auto"
       >
         + Log Production Run
-      </button>
+      </Button>
 
       {isOpen && (
         <div

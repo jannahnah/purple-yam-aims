@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { recordSale } from "@/app/actions/sales";
 import { formatItemLabel } from "@/lib/item-label";
+import Button from "@/components/Button";
 
 interface Branch {
   id: string;
@@ -142,13 +143,13 @@ export default function SalesModal({
 
   return (
     <>
-      <button
+      <Button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="aims-primary shadow-sm"
+        className="w-full shadow-sm sm:w-auto"
       >
         + Record Sale
-      </button>
+      </Button>
 
       {isOpen && (
         <div

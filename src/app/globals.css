@@ -9,6 +9,8 @@
   --brand: #7e22ce;
   --brand-dark: #6b21a8;
   --brand-soft: #faf5ff;
+  --radius-card: 16px;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / .04);
 }
 
 @theme inline {
@@ -60,9 +62,9 @@ textarea:focus-visible {
 
 .aims-container {
   width: 100%;
-  max-width: none;
+  max-width: 1440px;
   margin-inline: auto;
-  padding: clamp(20px, 2vw, 32px);
+  padding: 24px;
 }
 
 .aims-page-header {
@@ -101,9 +103,9 @@ textarea:focus-visible {
 .aims-card {
   min-width: 0;
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: var(--radius-card);
   background: var(--surface);
-  box-shadow: 0 1px 2px rgb(0 0 0 / .04);
+  box-shadow: var(--shadow-card);
 }
 
 .aims-card-header {
@@ -164,6 +166,78 @@ textarea:focus-visible {
 .aims-primary:disabled {
   cursor: not-allowed;
   opacity: .55;
+}
+
+.aims-button {
+  min-height: 42px;
+  border-radius: 10px;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 650;
+  transition: background-color .15s, border-color .15s, transform .05s;
+}
+
+.aims-button:active {
+  transform: translateY(1px);
+}
+
+.aims-button-primary {
+  background: var(--brand);
+  color: #fff;
+}
+
+.aims-button-primary:hover {
+  background: var(--brand-dark);
+}
+
+.aims-button-secondary {
+  border: 1px solid #d8b4fe;
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+}
+
+.aims-button-secondary:hover {
+  background: #f3e8ff;
+}
+
+.dashboard-topbar {
+  background: linear-gradient(110deg, #2e1065, #4c1d95 72%, #5b21b6);
+}
+
+.dashboard-welcome {
+  background: linear-gradient(115deg, #4c1d95, #6d28d9 70%, #7c3aed);
+}
+
+.dashboard-hero-action {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-radius: 10px;
+  background: rgb(255 255 255 / .16);
+  padding: 0 14px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  transition: background-color .15s;
+}
+
+.dashboard-hero-action:hover {
+  background: rgb(255 255 255 / .25);
+}
+
+.dashboard-hero-action-light {
+  background: #fff;
+  color: #5b21b6;
+}
+
+.dashboard-hero-action-light:hover {
+  background: #f5f3ff;
+}
+
+.dashboard-kpi {
+  min-width: 0;
 }
 
 .aims-table-wrap {
@@ -336,9 +410,9 @@ textarea:focus-visible {
    The goal is a compact, information-dense mobile UI with comfortable touch targets. */
 @media (max-width: 639px) and (orientation: portrait) {
   :root {
-    --mobile-page-pad: 10px;
-    --mobile-card-radius: 12px;
-    --mobile-control-height: 36px;
+    --mobile-page-pad: 0px;
+    --mobile-card-radius: var(--radius-card);
+    --mobile-control-height: 44px;
   }
 
   .aims-main {
@@ -346,12 +420,8 @@ textarea:focus-visible {
     overflow-x: hidden;
   }
 
-  .aims-main .aims-page {
-    padding: var(--mobile-page-pad) !important;
-  }
-
   .aims-main .aims-container {
-    padding: 10px !important;
+    padding: 16px !important;
   }
 
   /* Compact page rhythm */
@@ -361,13 +431,13 @@ textarea:focus-visible {
   }
 
   .aims-main .aims-page-header {
-    gap: 8px !important;
-    margin-bottom: 10px !important;
+    gap: 16px !important;
+    margin-bottom: 24px !important;
   }
 
   .aims-main .aims-title,
   .aims-main h1 {
-    font-size: 19px !important;
+    font-size: 24px !important;
     line-height: 1.2 !important;
     letter-spacing: -.02em;
   }
@@ -375,8 +445,8 @@ textarea:focus-visible {
   .aims-main .aims-subtitle,
   .aims-main h1 + p,
   .aims-main h1 ~ p {
-    font-size: 11px !important;
-    line-height: 1.35 !important;
+    font-size: 14px !important;
+    line-height: 1.5 !important;
   }
 
   .aims-main h2 {
@@ -391,7 +461,7 @@ textarea:focus-visible {
 
   .aims-main p,
   .aims-main label {
-    line-height: 1.35;
+    line-height: 1.4;
   }
 
   /* Compact cards and sections */
@@ -417,8 +487,8 @@ textarea:focus-visible {
     min-height: var(--mobile-control-height) !important;
     height: var(--mobile-control-height);
     border-radius: 8px !important;
-    padding: 7px 9px !important;
-    font-size: 12px !important;
+    padding: 9px 12px !important;
+    font-size: 16px !important;
   }
 
   .aims-main textarea {
@@ -427,12 +497,36 @@ textarea:focus-visible {
   }
 
   .aims-main button.aims-primary,
-  .aims-main .aims-primary {
+  .aims-main .aims-primary,
+  .aims-main .aims-button {
     min-height: var(--mobile-control-height) !important;
     height: var(--mobile-control-height);
     border-radius: 8px !important;
-    padding-inline: 11px !important;
-    font-size: 12px !important;
+    padding-inline: 14px !important;
+    font-size: 14px !important;
+  }
+
+  .aims-page-header .aims-primary,
+  .aims-page-header .aims-button,
+  .aims-page-header button {
+    width: 100%;
+  }
+
+  .aims-page-header .aims-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .aims-page-header .aims-primary,
+  .aims-page-header button {
+    width: 100%;
+  }
+
+  .aims-page-header .aims-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .aims-main button {
@@ -441,7 +535,7 @@ textarea:focus-visible {
 
   /* Make generic action buttons compact, but not tiny. */
   .aims-main button:not([aria-hidden="true"]) {
-    font-size: 11px;
+    font-size: 14px;
   }
 
   /* Dense tables: retain all columns and allow horizontal swipe. */
