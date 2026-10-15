@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { adjustStock, transferStock } from "@/app/actions/inventory";
 import { formatItemLabel } from "@/lib/item-label";
+import Button from "@/components/Button";
 
 type Role = "OWNER" | "BRANCH_MANAGER" | "CASHIER";
 
@@ -425,13 +426,13 @@ export default function StockActionsModal({
   return (
     <>
       {/* Open Modal Button */}
-      <button
+      <Button
         type="button"
         onClick={openModal}
-        className="rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700"
+        className="w-full sm:w-auto"
       >
         Stock Actions
-      </button>
+      </Button>
 
       {/* Modal */}
       {isOpen && (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { PageContainer } from "@/components/PageContainer";
 
 type UserRole = "OWNER" | "BRANCH_MANAGER" | "CASHIER";
 
@@ -167,14 +168,15 @@ export default function ReorderAlertsClient({
   }
 
   return (
-    <div className="mx-auto w-full space-y-6 p-[clamp(1rem,2vw,2rem)]">
+    <PageContainer className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">
+        <p className="aims-eyebrow">Inventory Monitoring</p>
+        <h1 className="aims-title">
           Reorder Alerts
         </h1>
 
-        <p className="mt-1 text-sm text-gray-500">
+        <p className="aims-subtitle">
           Items at or below their minimum stock threshold that
           require replenishment review.
         </p>
@@ -518,6 +520,6 @@ export default function ReorderAlertsClient({
           </div>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

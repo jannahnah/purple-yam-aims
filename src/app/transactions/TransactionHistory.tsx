@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { PageContainer } from "@/components/PageContainer";
 import { formatItemLabel } from "@/lib/item-label";
 
 type Transaction = {
@@ -356,23 +357,22 @@ export default function TransactionHistory({
   }, [calendarMonth, viewMode, periodTransactions.length]);
 
   return (
-    <main className="min-h-screen bg-gray-50 p-[clamp(1rem,2vw,2rem)]">
-      <div className="mx-auto w-full space-y-6">
+    <PageContainer className="space-y-6">
         <header className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
           <div>
-            <p className="text-sm font-semibold text-purple-600">
+            <p className="aims-eyebrow">
               History & Analytics
             </p>
-            <h1 className="mt-1 text-3xl font-bold text-gray-900">
+            <h1 className="aims-title">
               Transaction History
             </h1>
-            <p className="mt-1 max-w-3xl text-sm text-gray-500">
+            <p className="aims-subtitle">
               Review sales, production, consumption, stock receipts, and
               inventory movements by day, week, or month.
             </p>
           </div>
 
-          <div className="rounded-xl border border-gray-200 bg-white px-5 py-3 shadow-sm">
+          <div className="aims-card px-5 py-3">
             <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
               Records
             </p>
@@ -385,23 +385,24 @@ export default function TransactionHistory({
 
         <section className="rounded-2xl border border-gray-200 bg-white p-3 shadow-sm">
           <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-            <div className="flex flex-wrap gap-1.5">
+            <div
+              className="grid w-full grid-cols-3 rounded-lg border border-purple-200 bg-purple-50 p-1 sm:w-auto"
+              aria-label="View mode"
+              role="group"
+            >
               {(["DAY", "WEEK", "MONTH"] as ViewMode[]).map((mode) => (
                 <button
                   key={mode}
                   type="button"
                   onClick={() => setViewMode(mode)}
-                  className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition ${
+                  aria-pressed={viewMode === mode}
+                  className={`min-h-9 rounded-md px-3 text-xs font-semibold transition sm:min-w-20 sm:text-sm ${
                     viewMode === mode
-                      ? "bg-purple-600 text-white"
-                      : "border border-gray-200 bg-white text-gray-700 hover:bg-purple-50"
+                      ? "bg-purple-700 text-white shadow-sm"
+                      : "text-purple-700 hover:bg-white"
                   }`}
                 >
-                  {mode === "DAY"
-                    ? "Day"
-                    : mode === "WEEK"
-                      ? "Week"
-                      : "Month"}
+                  {mode === "DAY" ? "Day" : mode === "WEEK" ? "Week" : "Month"}
                 </button>
               ))}
             </div>
@@ -710,7 +711,6 @@ export default function TransactionHistory({
           </section>
         )}
 
-      </div>
-    </main>
+    </PageContainer>
   );
 }

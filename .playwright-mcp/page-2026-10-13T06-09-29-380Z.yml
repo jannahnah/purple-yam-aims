@@ -1,0 +1,18 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - img "Purple Yam" [ref=e6]
+        - heading "Purple Yam" [level=1] [ref=e7]
+        - paragraph [ref=e8]: Automated Inventory Management System
+      - generic [ref=e9]:
+        - generic [ref=e10]:
+          - paragraph [ref=e11]: Secure System Access
+          - heading "Welcome" [level=2] [ref=e12]
+          - paragraph [ref=e13]: Choose how you would like to access the Purple Yam AIMS.
+        - generic [ref=e14]:
+          - button "Log In" [ref=e15]
+          - button "Sign Up" [ref=e16]
+        - paragraph [ref=e17]: Authorized personnel only
+  - button "Open Next.js Dev Tools" [ref=e23] [cursor=pointer]
+  - alert [ref=e27]
