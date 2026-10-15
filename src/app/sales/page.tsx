@@ -60,9 +60,10 @@ export default async function SalesPage() {
             },
           },
         },
-        orderBy: {
-          createdAt: "desc",
-        },
+        orderBy: [
+          { occurredAt: { sort: "desc", nulls: "last" } },
+          { createdAt: "desc" },
+        ],
       }),
     ]);
 
@@ -99,7 +100,7 @@ export default async function SalesPage() {
           size: sale.item.size,
           unit: sale.item.unit,
           quantity: Math.abs(Number(sale.quantityDelta)),
-          createdAt: sale.createdAt.toISOString(),
+          createdAt: (sale.occurredAt ?? sale.createdAt).toISOString(),
         }))}
       />
     </AppShell>
