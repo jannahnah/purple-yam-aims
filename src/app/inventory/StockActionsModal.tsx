@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { adjustStock, transferStock } from "@/app/actions/inventory";
 import { formatItemLabel } from "@/lib/item-label";
-import { savePendingOperation, syncPendingOperations } from "@/lib/offline-sales-queue";
+import { savePendingOperation, syncAllPendingWork } from "@/lib/offline-sales-queue";
 
 type Role = "OWNER" | "BRANCH_MANAGER" | "CASHIER";
 
@@ -307,7 +307,7 @@ export default function StockActionsModal({
       setError(err instanceof Error ? err.message : "Failed to update stock.");
     } finally {
       setLoading(false);
-      if (navigator.onLine) void syncPendingOperations();
+      if (navigator.onLine) void syncAllPendingWork();
     }
   };
 
@@ -436,7 +436,7 @@ export default function StockActionsModal({
       setError(err instanceof Error ? err.message : "Failed to transfer stock.");
     } finally {
       setLoading(false);
-      if (navigator.onLine) void syncPendingOperations();
+      if (navigator.onLine) void syncAllPendingWork();
     }
   };
 
