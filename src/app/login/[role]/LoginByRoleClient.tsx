@@ -21,6 +21,8 @@ export default function LoginByRoleClient({ role, roleLabel }: Props) {
   const router = useRouter();
   useEffect(() => {
     if (typeof window !== "undefined" && window.location.search.includes("registered=1")) {
+      // Show a one-time success notice when redirected after registration.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setNotice("Owner account created successfully. You can now sign in.");
     }
   }, []);
