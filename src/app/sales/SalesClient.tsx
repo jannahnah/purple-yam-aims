@@ -181,7 +181,7 @@ export default function SalesClient({
         return;
       }
 
-      await recordSale(sale);
+      await recordSale({ ...sale, expectedUserId: user.id });
 
       setMessage("Sale recorded successfully.");
       setSoldQuantity("");
