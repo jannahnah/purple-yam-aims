@@ -4,6 +4,7 @@ export type PendingOfflineSale = {
   branchId: string;
   finishedItemId: string;
   soldQuantity: number;
+  occurredAt?: string;
   productLabel?: string;
   unit?: string;
   createdAt: string;
@@ -307,6 +308,7 @@ async function performSyncAllPendingWork(): Promise<{ synced: number; pending: n
           branchId: sale.branchId,
           finishedItemId: sale.finishedItemId,
           soldQuantity: sale.soldQuantity,
+          occurredAt: sale.occurredAt ?? sale.createdAt,
         };
       } else {
         const operation = entry.record;
