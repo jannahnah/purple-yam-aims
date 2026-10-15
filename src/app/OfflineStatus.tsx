@@ -6,11 +6,13 @@ import { getPendingSales, syncPendingSales } from "@/lib/offline-sales-queue";
 export default function OfflineStatus() {
   const [isOnline, setIsOnline] = useState(true);
   const [pendingCount, setPendingCount] = useState(0);
+  const [pendingSales, setPendingSales] = useState<Awaited<ReturnType<typeof getPendingSales>>>([]);
   const [syncMessage, setSyncMessage] = useState("");
 
   const refreshPendingCount = useCallback(async () => {
     try {
       const pending = await getPendingSales();
+      setPendingSales(pending);
       setPendingCount(pending.length);
       const failed = pending.find((sale) => sale.lastError);
       setSyncMessage(failed?.lastError ? `A queued sale needs attention: ${failed.lastError}` : "");
@@ -73,10 +75,21 @@ export default function OfflineStatus() {
         </p>
       )}
       {pendingCount > 0 && (
-        <p className="mt-1">
-          {pendingCount} sale(s) waiting to sync. Keep this browser profile and
-          its site data; queued sales are not yet confirmed in central inventory.
-        </p>
+        <div className="mx-auto mt-2 max-w-2xl text-left">
+          <p className="text-center">
+            {pendingCount} sale(s) waiting to sync. Keep this browser profile and
+            its site data; queued sales are not yet confirmed in central inventory.
+          </p>
+          <ul className="mt-2 space-y-1 text-xs">
+            {pendingSales.map((sale) => (
+              <li key={sale.requestId} className="rounded border border-current/15 px-2 py-1">
+                <span className="font-semibold">{sale.productLabel ?? sale.finishedItemId}</span>
+                {` — ${sale.soldQuantity} ${sale.unit ?? "units"} · ${new Date(sale.createdAt).toLocaleString()}`}
+                {sale.lastError && <span className="block font-medium">Needs attention: {sale.lastError}</span>}
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
       {isOnline && pendingCount === 0 && syncMessage && (
         <p>{syncMessage}</p>
