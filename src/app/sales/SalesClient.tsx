@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { recordSale } from "@/app/actions/sales";
-import { savePendingSale } from "@/lib/offline-sales-queue";
+import { savePendingSale, syncAllPendingWork } from "@/lib/offline-sales-queue";
 import { formatItemLabel } from "@/lib/item-label";
 
 type SalesUser = {
