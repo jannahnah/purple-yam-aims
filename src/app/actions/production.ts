@@ -10,10 +10,14 @@ export async function logProductionRun({
   branchId,
   finishedItemId,
   producedQuantity,
+  requestId,
+  expectedUserId,
 }: {
   branchId: string;
   finishedItemId: string;
   producedQuantity: number;
+  requestId?: string;
+  expectedUserId?: string;
 }) {
   if (
     !Number.isInteger(producedQuantity) ||
@@ -24,10 +28,16 @@ export async function logProductionRun({
     );
   }
 
+  if (requestId !== undefined && (requestId.length < 8 || requestId.length > 128)) {
+    throw new Error("Invalid offline operation request ID.");
+  }
   const currentUser = await getCurrentUser();
 
   if (!currentUser) {
     throw new Error("You must be logged in.");
+  }
+  if (expectedUserId && currentUser.id !== expectedUserId) {
+    throw new Error("This queued operation belongs to a different user. Sign in with the original account to synchronize it.");
   }
 
   if (
@@ -46,6 +56,18 @@ export async function logProductionRun({
   }
 
   await prisma.$transaction(async (tx) => {
+    const operationPayload = { branchId, finishedItemId, producedQuantity };
+    if (requestId) {
+      const existing = await tx.offlineOperation.findUnique({ where: { requestId } });
+      if (existing) {
+        const existingPayload = existing.payload as Record<string, unknown>;
+        const payloadMismatch = Object.keys(operationPayload).some((key) => existingPayload[key] !== operationPayload[key]);
+        if (existing.operationType !== "PRODUCTION" || existing.userId !== currentUser.id || payloadMismatch) {
+          throw new Error("This request ID was already used for a different operation.");
+        }
+        return;
+      }
+    }
     const branch = await tx.branch.findUnique({
       where: { id: branchId },
     });
@@ -306,6 +328,9 @@ export async function logProductionRun({
         userId: currentUser.id,
       },
     });
+    if (requestId) {
+      await tx.offlineOperation.create({ data: { requestId, operationType: "PRODUCTION", userId: currentUser.id, payload: operationPayload } });
+    }
   });
 
   revalidatePath("/inventory");
