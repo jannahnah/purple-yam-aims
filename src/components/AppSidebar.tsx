@@ -73,6 +73,8 @@ export default function AppSidebar({ user }: AppSidebarProps) {
   }
 
   useEffect(() => {
+    // Close the mobile sidebar when navigation changes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setOpen(false);
   }, [pathname]);
 
