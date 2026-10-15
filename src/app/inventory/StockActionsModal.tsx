@@ -433,6 +433,20 @@ export default function StockActionsModal({
         setIsOpen(false);
         return;
       }
+      const syncResult = await syncAllPendingWork();
+      if (syncResult.pending > 0) {
+        await savePendingOperation({
+          requestId,
+          userId: user.id,
+          type: "TRANSFER",
+          payload: operationPayload,
+          label: operationLabel,
+        });
+        setTransferQuantity("");
+        setIsOpen(false);
+        return;
+      }
+
       try {
         await transferStock({ sourceBranchId, destinationBranchId, itemId: transferItemId, quantity, requestId, expectedUserId: user.id });
       } catch (err) {
