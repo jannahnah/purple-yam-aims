@@ -10,10 +10,12 @@ export async function recordSale({
   branchId,
   finishedItemId,
   soldQuantity,
+  requestId,
 }: {
   branchId: string;
   finishedItemId: string;
   soldQuantity: number;
+  requestId?: string;
 }) {
   if (
     !Number.isInteger(soldQuantity) ||
@@ -46,7 +48,33 @@ export async function recordSale({
     );
   }
 
+  if (requestId !== undefined && (requestId.length < 8 || requestId.length > 128)) {
+    throw new Error("Invalid sale request ID.");
+  }
+
   await prisma.$transaction(async (tx) => {
+    // Replays of a queued offline sale must not decrement stock twice.
+    if (requestId) {
+      const existingTransaction = await tx.stockTransaction.findUnique({
+        where: { requestId },
+      });
+
+      if (existingTransaction) {
+        const sameSale =
+          existingTransaction.type === "SALE" &&
+          existingTransaction.branchId === branchId &&
+          existingTransaction.itemId === finishedItemId &&
+          existingTransaction.quantityDelta === -soldQuantity &&
+          existingTransaction.userId === currentUser.id;
+
+        if (!sameSale) {
+          throw new Error("This sale request ID was already used for a different transaction.");
+        }
+
+        return;
+      }
+    }
+
     const branch = await tx.branch.findUnique({
       where: { id: branchId },
     });
@@ -149,6 +177,7 @@ export async function recordSale({
         branchId,
         itemId: finishedItemId,
         userId: currentUser.id,
+        ...(requestId ? { requestId } : {}),
       },
     });
   });
