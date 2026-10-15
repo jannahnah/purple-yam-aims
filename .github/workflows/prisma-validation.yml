@@ -1,0 +1,57 @@
+name: Prisma Schema and Migration Validation
+
+on:
+  push:
+    branches:
+      - feature/offline-first-foundation
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "prisma/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/prisma-validation.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  prisma-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: purple_yam_aims
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d purple_yam_aims"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/purple_yam_aims?schema=public
+    steps:
+      - name: Check out feature branch
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Validate Prisma schema
+        run: npx prisma validate
+      - name: Generate Prisma Client
+        run: npx prisma generate
+      - name: Apply every migration to a clean PostgreSQL database
+        run: npx prisma migrate deploy
+      - name: Verify migration history
+        run: npx prisma migrate status
