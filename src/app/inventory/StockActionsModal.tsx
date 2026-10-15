@@ -3,10 +3,12 @@
 import { useState } from "react";
 import { adjustStock, transferStock } from "@/app/actions/inventory";
 import { formatItemLabel } from "@/lib/item-label";
+import { savePendingOperation, syncPendingOperations } from "@/lib/offline-sales-queue";
 
 type Role = "OWNER" | "BRANCH_MANAGER" | "CASHIER";
 
 interface UserInfo {
+  id: string;
   role: Role;
   username: string;
   branchId: string | null;
@@ -249,27 +251,63 @@ export default function StockActionsModal({
     }
 
     setLoading(true);
+    const requestId = crypto.randomUUID();
+    const operationPayload: Record<string, string | number> = {
+      branchId,
+      itemId,
+      quantity: actionType === "ADJUSTMENT" ? 0 : quantityDelta,
+      ...(actionType === "ADJUSTMENT" ? { physicalCount: enteredQuantity } : {}),
+    };
 
     try {
-      await adjustStock({
-        branchId,
-        itemId,
-        quantity: quantityDelta,
-        type: actionType,
-      });
+      if (!navigator.onLine) {
+        await savePendingOperation({
+          requestId,
+          userId: user.id,
+          type: actionType,
+          payload: operationPayload,
+          label: `${actionType === "ADJUSTMENT" ? "Physical count" : "Stock receipt"} · ${formatItemLabel(items.find((item) => item.id === itemId) ?? { name: itemId })}`,
+        });
+        setNewTotalQuantity("");
+        setIsOpen(false);
+        setError(null);
+        return;
+      }
+
+      try {
+        await adjustStock({
+          branchId,
+          itemId,
+          quantity: actionType === "ADJUSTMENT" ? quantityDelta : quantityDelta,
+          type: actionType,
+          ...(actionType === "ADJUSTMENT" ? { physicalCount: enteredQuantity } : {}),
+          requestId,
+          expectedUserId: user.id,
+        });
+      } catch (err) {
+        if (!navigator.onLine) {
+          await savePendingOperation({
+            requestId,
+            userId: user.id,
+            type: actionType,
+            payload: operationPayload,
+            label: `${actionType === "ADJUSTMENT" ? "Physical count" : "Stock receipt"} · ${formatItemLabel(items.find((item) => item.id === itemId) ?? { name: itemId })}`,
+          });
+          setNewTotalQuantity("");
+          setIsOpen(false);
+          return;
+        }
+        throw err;
+      }
 
       setNewTotalQuantity("");
       setIsOpen(false);
-
       window.location.reload();
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to update stock."
-      );
+      setError(err instanceof Error ? err.message : "Failed to update stock.");
     } finally {
       setLoading(false);
+      if (navigator.onLine) void syncPendingOperations();
     }
   };
 
@@ -369,39 +407,36 @@ export default function StockActionsModal({
     }
 
     setLoading(true);
-
-    console.log(
-      "[TRANSFER DEBUG] Sending transfer:",
-      {
-        transferQuantity,
-        parsedQuantity: quantity,
-        sourceQuantity,
-        sourceBranchId,
-        destinationBranchId,
-        transferItemId,
-      }
-    );
+    const requestId = crypto.randomUUID();
+    const operationPayload = { sourceBranchId, destinationBranchId, itemId: transferItemId, quantity };
+    const operationLabel = `Transfer · ${formatItemLabel(selectedTransferItem ?? { name: transferItemId })}`;
 
     try {
-      await transferStock({
-        sourceBranchId,
-        destinationBranchId,
-        itemId: transferItemId,
-        quantity,
-      });
-
+      if (!navigator.onLine) {
+        await savePendingOperation({ requestId, userId: user.id, type: "TRANSFER", payload: operationPayload, label: operationLabel });
+        setTransferQuantity("");
+        setIsOpen(false);
+        return;
+      }
+      try {
+        await transferStock({ sourceBranchId, destinationBranchId, itemId: transferItemId, quantity, requestId, expectedUserId: user.id });
+      } catch (err) {
+        if (!navigator.onLine) {
+          await savePendingOperation({ requestId, userId: user.id, type: "TRANSFER", payload: operationPayload, label: operationLabel });
+          setTransferQuantity("");
+          setIsOpen(false);
+          return;
+        }
+        throw err;
+      }
       setTransferQuantity("");
       setIsOpen(false);
-
       window.location.reload();
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to transfer stock."
-      );
+      setError(err instanceof Error ? err.message : "Failed to transfer stock.");
     } finally {
       setLoading(false);
+      if (navigator.onLine) void syncPendingOperations();
     }
   };
 
