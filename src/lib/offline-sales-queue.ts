@@ -281,8 +281,7 @@ export async function syncPendingOperations(): Promise<{ synced: number; pending
 
 /**
  * One serial outbox across sales and inventory operations. Keeping a single
- * chronological order avoids replaying a later transfer/adjustment ahead of
- * an earlier sale (or vice versa).
+ * chronological order avoids replaying later inventory work ahead of earlier work.
  */
 export async function syncAllPendingWork(): Promise<{ synced: number; pending: number }> {
   if (typeof navigator === "undefined" || !navigator.onLine) {
@@ -292,43 +291,51 @@ export async function syncAllPendingWork(): Promise<{ synced: number; pending: n
 
   const [sales, operations] = await Promise.all([getPendingSales(), getPendingOperations()]);
   const queue = [
-    ...sales.map((sale) => ({ kind: "SALE" as const, createdAt: sale.createdAt, requestId: sale.requestId, record: sale })),
-    ...operations.map((operation) => ({ kind: "OPERATION" as const, createdAt: operation.createdAt, requestId: operation.requestId, record: operation })),
+    ...sales.map((record) => ({ kind: "SALE" as const, createdAt: record.createdAt, record })),
+    ...operations.map((record) => ({ kind: "OPERATION" as const, createdAt: record.createdAt, record })),
   ].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 
   let synced = 0;
   for (const entry of queue) {
     try {
-      const isSale = entry.kind === "SALE";
-      const record = entry.record;
-      const response = await fetch(isSale ? "/api/offline/sales" : "/api/offline/operations", {
+      let endpoint: string;
+      let body: Record<string, unknown>;
+      if (entry.kind === "SALE") {
+        const sale = entry.record;
+        endpoint = "/api/offline/sales";
+        body = {
+          requestId: sale.requestId,
+          userId: sale.userId,
+          branchId: sale.branchId,
+          finishedItemId: sale.finishedItemId,
+          soldQuantity: sale.soldQuantity,
+        };
+      } else {
+        const operation = entry.record;
+        endpoint = "/api/offline/operations";
+        body = {
+          requestId: operation.requestId,
+          userId: operation.userId,
+          type: operation.type,
+          payload: operation.payload,
+        };
+      }
+
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "same-origin",
-        body: JSON.stringify(isSale
-          ? {
-              requestId: record.requestId,
-              userId: record.userId,
-              branchId: record.branchId,
-              finishedItemId: record.finishedItemId,
-              soldQuantity: record.soldQuantity,
-            }
-          : {
-              requestId: record.requestId,
-              userId: record.userId,
-              type: record.type,
-              payload: record.payload,
-            }),
+        body: JSON.stringify(body),
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) {
         const reason = typeof result.error === "string" ? result.error : "Operation could not be synchronized.";
-        if (isSale) await setPendingSaleError(record.requestId, reason);
-        else await updatePendingOperationError(record.requestId, reason);
+        if (entry.kind === "SALE") await setPendingSaleError(entry.record.requestId, reason);
+        else await updatePendingOperationError(entry.record.requestId, reason);
         break;
       }
-      if (isSale) await removePendingSale(record.requestId);
-      else await removePendingOperation(record.requestId);
+      if (entry.kind === "SALE") await removePendingSale(entry.record.requestId);
+      else await removePendingOperation(entry.record.requestId);
       synced += 1;
     } catch {
       // Leave the current and later entries in the outbox for a safe retry.
