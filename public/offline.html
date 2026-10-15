@@ -20,7 +20,52 @@
       <h1>You’re currently offline</h1>
       <p>Purple Yam AIMS can’t reach the server right now. No transaction has been saved by this page. Please reconnect before recording or changing inventory.</p>
       <p>When the connection returns, try opening the app again.</p>
+      <p id="queue-status" role="status" aria-live="polite">Checking for saved offline work…</p>
+      <p>Keep this browser profile and its site data until pending work has synchronized in the app.</p>
       <button type="button" onclick="window.location.reload()">Try again</button>
     </main>
+    <script>
+      (() => {
+        const status = document.getElementById("queue-status");
+        if (!status || !("indexedDB" in window)) {
+          if (status) status.textContent = "This browser cannot show the offline queue summary.";
+          return;
+        }
+        const request = indexedDB.open("purple-yam-aims-offline", 3);
+        request.onupgradeneeded = () => {
+          const db = request.result;
+          if (!db.objectStoreNames.contains("pending-sales")) db.createObjectStore("pending-sales", { keyPath: "requestId" });
+          if (!db.objectStoreNames.contains("pending-operations")) db.createObjectStore("pending-operations", { keyPath: "requestId" });
+        };
+        request.onsuccess = () => {
+          const db = request.result;
+          const names = ["pending-sales", "pending-operations"].filter((name) => db.objectStoreNames.contains(name));
+          if (!names.length) {
+            status.textContent = "No offline queue is available on this device.";
+            db.close();
+            return;
+          }
+          const transaction = db.transaction(names, "readonly");
+          let total = 0;
+          names.forEach((name) => {
+            const countRequest = transaction.objectStore(name).count();
+            countRequest.onsuccess = () => { total += countRequest.result; };
+          });
+          transaction.oncomplete = () => {
+            status.textContent = total > 0
+              ? total + " saved operation(s) are waiting on this device. They are not confirmed in central inventory until synchronization succeeds."
+              : "No queued offline work was found on this device.";
+            db.close();
+          };
+          transaction.onerror = () => {
+            status.textContent = "Could not read the offline queue. Keep this browser data and reconnect.";
+            db.close();
+          };
+        };
+        request.onerror = () => {
+          status.textContent = "Could not check the offline queue. Keep this browser data and reconnect.";
+        };
+      })();
+    </script>
   </body>
 </html>
