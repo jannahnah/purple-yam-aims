@@ -90,7 +90,7 @@ export default function OfflineStatus() {
             {pendingSales.map((sale) => (
               <li key={sale.requestId} className="rounded border border-current/15 px-2 py-1">
                 <span className="font-semibold">{sale.productLabel ?? sale.finishedItemId}</span>
-                {` — ${sale.soldQuantity} ${sale.unit ?? "units"} · ${new Date(sale.createdAt).toLocaleString()}`}
+                {` — ${sale.soldQuantity} ${sale.unit ?? "units"} · Sale time: ${new Date(sale.occurredAt ?? sale.createdAt).toLocaleString()}`}
                 {sale.lastError && <span className="block font-medium">Needs attention: {sale.lastError}</span>}
               </li>
             ))}
