@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { logProductionRun } from "@/app/actions/production";
 import { formatItemLabel } from "@/lib/item-label";
-import { savePendingOperation, syncPendingOperations } from "@/lib/offline-sales-queue";
+import { savePendingOperation, syncAllPendingWork } from "@/lib/offline-sales-queue";
 
 interface Branch {
   id: string;
@@ -266,7 +266,7 @@ export default function ProductionModal({
       alert(message);
     } finally {
       setLoading(false);
-      if (navigator.onLine) void syncPendingOperations();
+      if (navigator.onLine) void syncAllPendingWork();
     }
   }
 
