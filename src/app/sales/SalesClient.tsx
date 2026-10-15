@@ -33,6 +33,7 @@ type SalesHistoryRecord = {
   unit: string;
   quantity: number;
   createdAt: string | Date;
+  syncedAt?: string | Date;
 };
 
 type SalesClientProps = {
@@ -608,7 +609,10 @@ export default function SalesClient({
                       </th>
 
                       <th className="px-4 py-3 font-semibold">
-                        Date
+                        Sale time
+                      </th>
+                      <th className="px-4 py-3 font-semibold">
+                        Synced to system
                       </th>
                     </tr>
                   </thead>
@@ -632,6 +636,9 @@ export default function SalesClient({
 
                         <td className="px-4 py-4 text-gray-500">
                           {formatDate(sale.createdAt)}
+                        </td>
+                        <td className="px-4 py-4 text-gray-500">
+                          {sale.syncedAt ? formatDate(sale.syncedAt) : "Not available"}
                         </td>
                       </tr>
                     ))}
