@@ -137,6 +137,7 @@ export async function syncPendingSales(): Promise<{ synced: number; pending: num
           branchId: sale.branchId,
           finishedItemId: sale.finishedItemId,
           soldQuantity: sale.soldQuantity,
+          occurredAt: sale.occurredAt ?? sale.createdAt,
         }),
       });
       const result = await response.json().catch(() => ({}));
