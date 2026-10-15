@@ -66,7 +66,9 @@ export async function adjustStock({
     if (requestId) {
       const existing = await tx.offlineOperation.findUnique({ where: { requestId } });
       if (existing) {
-        if (existing.operationType !== "ADJUSTMENT" || existing.userId !== currentUser.id || JSON.stringify(existing.payload) !== JSON.stringify(operationPayload)) {
+        const existingPayload = existing.payload as Record<string, unknown>;
+        const payloadMismatch = Object.keys(operationPayload).some((key) => existingPayload[key] !== operationPayload[key]);
+        if (existing.operationType !== "ADJUSTMENT" || existing.userId !== currentUser.id || payloadMismatch) {
           throw new Error("This request ID was already used for a different operation.");
         }
         return;
@@ -250,7 +252,9 @@ export async function transferStock({
     if (requestId) {
       const existing = await tx.offlineOperation.findUnique({ where: { requestId } });
       if (existing) {
-        if (existing.operationType !== "TRANSFER" || existing.userId !== currentUser.id || JSON.stringify(existing.payload) !== JSON.stringify(operationPayload)) {
+        const existingPayload = existing.payload as Record<string, unknown>;
+        const payloadMismatch = Object.keys(operationPayload).some((key) => existingPayload[key] !== operationPayload[key]);
+        if (existing.operationType !== "TRANSFER" || existing.userId !== currentUser.id || payloadMismatch) {
           throw new Error("This request ID was already used for a different operation.");
         }
         return;
