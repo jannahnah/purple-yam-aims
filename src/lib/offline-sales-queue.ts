@@ -11,7 +11,7 @@ export type PendingOfflineSale = {
 };
 
 const DATABASE_NAME = "purple-yam-aims-offline";
-const DATABASE_VERSION = 2;
+const DATABASE_VERSION = 3;
 const STORE_NAME = "pending-sales";
 const OPERATIONS_STORE_NAME = "pending-operations";
 
