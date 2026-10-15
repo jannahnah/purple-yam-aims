@@ -77,6 +77,7 @@ export default async function SalesPage() {
     >
       <SalesClient
         user={{
+          id: user.id,
           username: user.username,
           name: user.name,
           branchId: user.branch.id,
