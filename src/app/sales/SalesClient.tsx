@@ -157,6 +157,7 @@ export default function SalesClient({
       branchId: user.branchId,
       finishedItemId: selectedProduct.id,
       soldQuantity: parsedQuantity,
+      occurredAt: new Date().toISOString(),
       productLabel: formatItemLabel(selectedProduct),
       unit: selectedProduct.unit,
     };
