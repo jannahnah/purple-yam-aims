@@ -1,5 +1,6 @@
 export type PendingOfflineSale = {
   requestId: string;
+  userId: string;
   branchId: string;
   finishedItemId: string;
   soldQuantity: number;
@@ -125,6 +126,7 @@ export async function syncPendingSales(): Promise<{ synced: number; pending: num
         credentials: "same-origin",
         body: JSON.stringify({
           requestId: sale.requestId,
+          userId: sale.userId,
           branchId: sale.branchId,
           finishedItemId: sale.finishedItemId,
           soldQuantity: sale.soldQuantity,
