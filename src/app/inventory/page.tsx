@@ -96,6 +96,7 @@ export default async function InventoryPage() {
     >
       <InventoryClient
         user={{
+          id: user.id,
           role: user.role,
           username: user.username,
           branchId: user.branchId,
