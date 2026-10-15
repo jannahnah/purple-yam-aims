@@ -17,6 +17,7 @@ export async function POST(request: Request) {
       typeof body.soldQuantity === "number" ? body.soldQuantity : Number.NaN;
     const requestId = typeof body.requestId === "string" ? body.requestId : "";
     const userId = typeof body.userId === "string" ? body.userId : "";
+    const occurredAt = typeof body.occurredAt === "string" ? body.occurredAt : "";
 
     if (
       !branchId ||
@@ -37,6 +38,7 @@ export async function POST(request: Request) {
       finishedItemId,
       soldQuantity,
       requestId,
+      occurredAt: occurredAt || undefined,
       expectedUserId: userId,
     });
 
