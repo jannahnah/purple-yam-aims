@@ -172,6 +172,15 @@ export default function SalesClient({
         return;
       }
 
+      const syncResult = await syncAllPendingWork();
+      if (syncResult.pending > 0) {
+        await savePendingSale(sale);
+        setMessage("This sale is queued behind earlier offline work. It is not confirmed until the pending queue synchronizes.");
+        setSoldQuantity("");
+        setIsReviewing(false);
+        return;
+      }
+
       await recordSale(sale);
 
       setMessage("Sale recorded successfully.");
@@ -205,6 +214,7 @@ export default function SalesClient({
       }
     } finally {
       setIsSubmitting(false);
+      if (navigator.onLine) void syncAllPendingWork();
     }
   }
 
