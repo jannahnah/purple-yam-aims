@@ -11,15 +11,27 @@ export async function adjustStock({
   itemId,
   quantity,
   type = "ADJUSTMENT",
+  physicalCount,
+  requestId,
+  expectedUserId,
 }: {
   branchId: string;
   itemId: string;
   quantity: number;
   type?: "ADJUSTMENT" | "STOCK_RECEIPT";
+  physicalCount?: number;
+  requestId?: string;
+  expectedUserId?: string;
 }) {
   // Zero quantities are never valid.
-  if (quantity === 0) {
+  if (physicalCount === undefined && quantity === 0) {
     throw new Error("Stock adjustment quantity cannot be zero.");
+  }
+  if (physicalCount !== undefined && (!Number.isFinite(physicalCount) || physicalCount < 0 || type !== "ADJUSTMENT")) {
+    throw new Error("Physical count must be a non-negative quantity for an adjustment.");
+  }
+  if (requestId !== undefined && (requestId.length < 8 || requestId.length > 128)) {
+    throw new Error("Invalid offline operation request ID.");
   }
 
   // Stock receipts must always increase stock.
@@ -31,6 +43,9 @@ export async function adjustStock({
 
   if (!currentUser) {
     throw new Error("You must be logged in.");
+  }
+  if (expectedUserId && currentUser.id !== expectedUserId) {
+    throw new Error("This queued operation belongs to a different user. Sign in with the original account to synchronize it.");
   }
 
   if (
@@ -47,6 +62,16 @@ export async function adjustStock({
   }
 
   await prisma.$transaction(async (tx) => {
+    const operationPayload = { branchId, itemId, type, quantity, physicalCount: physicalCount ?? null };
+    if (requestId) {
+      const existing = await tx.offlineOperation.findUnique({ where: { requestId } });
+      if (existing) {
+        if (existing.operationType !== "ADJUSTMENT" || existing.userId !== currentUser.id || JSON.stringify(existing.payload) !== JSON.stringify(operationPayload)) {
+          throw new Error("This request ID was already used for a different operation.");
+        }
+        return;
+      }
+    }
     const item = await tx.item.findUnique({
       where: { id: itemId },
     });
@@ -83,7 +108,11 @@ export async function adjustStock({
     });
 
     const previousQuantity = existingStock?.quantity ?? 0;
-    const newQuantity = previousQuantity + quantity;
+    const effectiveQuantity = physicalCount !== undefined ? physicalCount - previousQuantity : quantity;
+    if (effectiveQuantity === 0) {
+      throw new Error("The physical quantity matches current stock. No adjustment is needed.");
+    }
+    const newQuantity = previousQuantity + effectiveQuantity;
 
     // Never allow stock to become negative.
     if (newQuantity < 0) {
@@ -118,7 +147,7 @@ export async function adjustStock({
     await tx.stockTransaction.create({
       data: {
         type,
-        quantityDelta: quantity,
+        quantityDelta: effectiveQuantity,
         previousQuantity,
         newQuantity: updatedStock.quantity,
         branch: {
@@ -145,6 +174,9 @@ export async function adjustStock({
       itemId,
       updatedStock.quantity
     );
+    if (requestId) {
+      await tx.offlineOperation.create({ data: { requestId, operationType: "ADJUSTMENT", userId: currentUser.id, payload: operationPayload } });
+    }
   });
 
   revalidatePath("/inventory");
@@ -157,14 +189,21 @@ export async function transferStock({
   destinationBranchId,
   itemId,
   quantity,
+  requestId,
+  expectedUserId,
 }: {
   sourceBranchId: string;
   destinationBranchId: string;
   itemId: string;
   quantity: number;
+  requestId?: string;
+  expectedUserId?: string;
 }) {
   if (quantity <= 0) {
     throw new Error("Transfer quantity must be greater than zero.");
+  }
+  if (requestId !== undefined && (requestId.length < 8 || requestId.length > 128)) {
+    throw new Error("Invalid offline operation request ID.");
   }
 
   if (sourceBranchId === destinationBranchId) {
@@ -177,6 +216,9 @@ export async function transferStock({
 
   if (!currentUser) {
     throw new Error("You must be logged in.");
+  }
+  if (expectedUserId && currentUser.id !== expectedUserId) {
+    throw new Error("This queued operation belongs to a different user. Sign in with the original account to synchronize it.");
   }
 
   if (
@@ -204,6 +246,16 @@ export async function transferStock({
   const transferId = crypto.randomUUID();
 
   await prisma.$transaction(async (tx) => {
+    const operationPayload = { sourceBranchId, destinationBranchId, itemId, quantity };
+    if (requestId) {
+      const existing = await tx.offlineOperation.findUnique({ where: { requestId } });
+      if (existing) {
+        if (existing.operationType !== "TRANSFER" || existing.userId !== currentUser.id || JSON.stringify(existing.payload) !== JSON.stringify(operationPayload)) {
+          throw new Error("This request ID was already used for a different operation.");
+        }
+        return;
+      }
+    }
     const sourceBranch = await tx.branch.findUnique({
       where: { id: sourceBranchId },
     });
@@ -362,6 +414,9 @@ export async function transferStock({
       itemId,
       updatedDestinationStock.quantity
     );
+    if (requestId) {
+      await tx.offlineOperation.create({ data: { requestId, operationType: "TRANSFER", userId: currentUser.id, payload: operationPayload } });
+    }
   });
 
   revalidatePath("/inventory");
