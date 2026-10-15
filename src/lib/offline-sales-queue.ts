@@ -1,3 +1,10 @@
+/** Detect likely transport failures without queueing ordinary server validation errors. */
+export function isLikelyNetworkFailure(error: unknown): boolean {
+  if (error instanceof TypeError) return true;
+  const message = error instanceof Error ? error.message : String(error ?? "");
+  return /failed to fetch|fetch failed|network error|network request failed|load failed|networkerror|connection (was )?lost/i.test(message);
+}
+
 export type PendingOfflineSale = {
   requestId: string;
   userId: string;
