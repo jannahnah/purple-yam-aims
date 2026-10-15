@@ -25,6 +25,9 @@ export default function OfflineStatus() {
   }, []);
 
   const synchronize = useCallback(async () => {
+    // This callback is also invoked by the initial effect; keeping the connection
+    // state update here ensures status stays correct during manual/automatic sync.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsOnline(navigator.onLine);
     if (!navigator.onLine) {
       await refreshPendingCount();
