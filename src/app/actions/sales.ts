@@ -78,7 +78,8 @@ export async function recordSale({
           existingTransaction.itemId === finishedItemId &&
           existingTransaction.quantityDelta === -soldQuantity &&
           existingTransaction.userId === currentUser.id &&
-          existingTransaction.occurredAt?.getTime() === saleOccurredAt.getTime();
+          (existingTransaction.occurredAt === null ||
+            existingTransaction.occurredAt.getTime() === saleOccurredAt.getTime());
 
         if (!sameSale) {
           throw new Error("This sale request ID was already used for a different transaction.");
