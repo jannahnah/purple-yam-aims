@@ -20,7 +20,7 @@ permissions:
 jobs:
   prisma-validation:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     services:
       postgres:
         image: postgres:17
@@ -57,3 +57,9 @@ jobs:
         run: npx prisma migrate deploy
       - name: Verify migration history
         run: npx prisma migrate status
+      - name: Run ESLint
+        run: npm run lint
+      - name: Run TypeScript type check
+        run: npx tsc --noEmit
+      - name: Run production build
+        run: npm run build
