@@ -12,6 +12,8 @@ This branch adds an offline outbox for **sales, stock adjustments, stock receipt
 - Every queued action has a unique request ID. Sales use the stock transaction request ID; adjustments, receipts, transfers, and production use an idempotency record written atomically with the inventory changes.
 - The server re-checks the current session, original user, role/branch access, item status, and current stock before committing.
 - All queued work is synchronized in chronological order through one guarded outbox runner. A rejected operation blocks later work until the queue is retried or reconciled.
+- When a transaction request fails because of a likely network interruption, the client saves the same request ID and payload for retry; the server idempotency record handles the case where the first request committed but its response was lost.
+- Online stock adjustments, receipts, transfers, and production first attempt to drain earlier queued work; if any earlier work remains pending, the new action is queued behind it rather than committed out of order.
 - Physical-count adjustments are queued as an absolute count and converted to a delta against server-side stock at synchronization time, avoiding reliance on stale offline quantities.
 - The inventory action forms can queue work if the form is already loaded when the connection is lost. Production still requires its recipe to have been loaded before going offline.
 
@@ -44,8 +46,8 @@ The migrations add a nullable unique requestId to StockTransaction and create th
 3. Verify online and offline sales, stock adjustments, stock receipts, transfers, and production runs.
 4. Verify each offline form saves a pending item and clearly indicates it is not yet confirmed centrally.
 5. Record a sale offline, wait before reconnecting, and verify Sales History keeps the original **Sale time** while **Synced to system** reflects when the server accepted it. Also verify online sales and older records display sensibly.
-5. Restore connectivity and verify the queue drains in chronological order and each inventory change is applied exactly once.
-6. Simulate a lost response / retry for every operation type and verify idempotency prevents duplicate stock changes.
-7. Verify stale stock, insufficient stock, inactive items, invalid recipe/production stock, wrong branch, and a different signed-in user are rejected and remain visible as pending errors.
-8. Verify a queued physical count is applied against the latest server stock and that a no-op or invalid adjustment is not silently discarded.
-9. Confirm the live main branch and production database remain untouched until review and approval.
+6. Restore connectivity and verify the queue drains in chronological order and each inventory change is applied exactly once.
+7. Simulate a lost response / retry for every operation type and verify idempotency prevents duplicate stock changes.
+8. Verify stale stock, insufficient stock, inactive items (including transfers), invalid recipe/production stock, wrong branch, and a different signed-in user are rejected and remain visible as pending errors.
+9. Verify a queued physical count is applied against the latest server stock and that a no-op or invalid adjustment is not silently discarded.
+10. Confirm the live main branch and production database remain untouched until review and approval.
