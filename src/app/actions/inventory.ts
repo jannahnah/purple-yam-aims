@@ -68,7 +68,7 @@ export async function adjustStock({
       if (existing) {
         const existingPayload = existing.payload as Record<string, unknown>;
         const payloadMismatch = Object.keys(operationPayload).some((key) => existingPayload[key] !== operationPayload[key]);
-        if (existing.operationType !== "ADJUSTMENT" || existing.userId !== currentUser.id || payloadMismatch) {
+        if (existing.operationType !== type || existing.userId !== currentUser.id || payloadMismatch) {
           throw new Error("This request ID was already used for a different operation.");
         }
         return;
@@ -177,7 +177,7 @@ export async function adjustStock({
       updatedStock.quantity
     );
     if (requestId) {
-      await tx.offlineOperation.create({ data: { requestId, operationType: "ADJUSTMENT", userId: currentUser.id, payload: operationPayload } });
+      await tx.offlineOperation.create({ data: { requestId, operationType: type, userId: currentUser.id, payload: operationPayload } });
     }
   });
 
