@@ -70,6 +70,7 @@ export async function getPendingSales(): Promise<PendingOfflineSale[]> {
     });
   } finally {
     database.close();
+    notifyQueueChanged();
   }
 }
 
@@ -84,6 +85,7 @@ export async function removePendingSale(requestId: string): Promise<void> {
     });
   } finally {
     database.close();
+    notifyQueueChanged();
   }
 }
 
@@ -102,6 +104,7 @@ export async function setPendingSaleError(requestId: string, lastError: string):
     });
   } finally {
     database.close();
+    notifyQueueChanged();
   }
 }
 
