@@ -275,6 +275,20 @@ export default function StockActionsModal({
         return;
       }
 
+      const syncResult = await syncAllPendingWork();
+      if (syncResult.pending > 0) {
+        await savePendingOperation({
+          requestId,
+          userId: user.id,
+          type: actionType,
+          payload: operationPayload,
+          label: `${actionType === "ADJUSTMENT" ? "Physical count" : "Stock receipt"} · ${formatItemLabel(items.find((item) => item.id === itemId) ?? { name: itemId })}`,
+        });
+        setNewTotalQuantity("");
+        setIsOpen(false);
+        return;
+      }
+
       try {
         await adjustStock({
           branchId,
