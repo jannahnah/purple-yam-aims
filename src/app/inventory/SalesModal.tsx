@@ -3,6 +3,11 @@
 import { useMemo, useState } from "react";
 import { recordSale } from "@/app/actions/sales";
 import { formatItemLabel } from "@/lib/item-label";
+import {
+  isLikelyNetworkFailure,
+  savePendingSale,
+  syncAllPendingWork,
+} from "@/lib/offline-sales-queue";
 
 interface Branch {
   id: string;
@@ -24,10 +29,12 @@ interface BranchStock {
 }
 
 export default function SalesModal({
+  userId,
   branches,
   items,
   branchStocks,
 }: {
+  userId: string;
   branches: Branch[];
   items: Item[];
   branchStocks: BranchStock[];
@@ -101,26 +108,66 @@ export default function SalesModal({
 
     setLoading(true);
 
+    const sale = {
+      requestId: crypto.randomUUID(),
+      userId,
+      branchId: selectedBranch,
+      finishedItemId: selectedFinishedItem,
+      soldQuantity,
+      occurredAt: new Date().toISOString(),
+      productLabel: selectedProduct ? formatItemLabel(selectedProduct) : undefined,
+      unit: selectedProduct?.unit,
+    };
+
     try {
-      await recordSale({
-        branchId: selectedBranch,
-        finishedItemId: selectedFinishedItem,
-        soldQuantity,
-      });
+      if (!navigator.onLine) {
+        await savePendingSale(sale);
+        alert("Connection is offline. Sale saved on this device and will synchronize when connection returns.");
+        setIsOpen(false);
+        setSoldQuantity(1);
+        return;
+      }
 
-      alert("Sale recorded successfully.");
+      const syncResult = await syncAllPendingWork();
+      if (syncResult.pending > 0) {
+        await savePendingSale(sale);
+        alert("Sale saved on this device behind pending work. It will synchronize when the connection is available.");
+        setIsOpen(false);
+        setSoldQuantity(1);
+        return;
+      }
 
-      setIsOpen(false);
-      setSoldQuantity(1);
+      try {
+        await recordSale({
+          branchId: sale.branchId,
+          finishedItemId: sale.finishedItemId,
+          soldQuantity: sale.soldQuantity,
+          requestId: sale.requestId,
+          occurredAt: sale.occurredAt,
+          expectedUserId: sale.userId,
+        });
+        alert("Sale recorded successfully.");
+        setIsOpen(false);
+        setSoldQuantity(1);
+      } catch (error) {
+        if (!navigator.onLine || isLikelyNetworkFailure(error)) {
+          await savePendingSale(sale);
+          alert("Connection was interrupted. Sale saved on this device and will synchronize when connection returns.");
+          setIsOpen(false);
+          setSoldQuantity(1);
+        } else {
+          throw error;
+        }
+      }
     } catch (err) {
       const message =
         err instanceof Error
           ? err.message
           : "Failed to record sale.";
-
       alert(message);
     } finally {
       setLoading(false);
+      if (navigator.onLine) void syncAllPendingWork();
     }
   }
 
