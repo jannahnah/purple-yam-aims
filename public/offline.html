@@ -25,6 +25,7 @@
         <p style="margin:.25rem 0 .75rem;font-size:.9rem">You can open this navigation hub while offline. Pages that need live inventory, reports, or account data still require a connection; this hub does not pretend those pages are loaded.</p>
         <nav aria-label="Owner pages" style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
           <a href="/dashboard" data-offline-route="Owner Dashboard" style="padding:.6rem;border:1px solid #e7dcef;border-radius:.5rem;color:#6b21a8;text-decoration:none">Dashboard</a>
+          <a href="/inventory" data-offline-route="Inventory" style="padding:.6rem;border:1px solid #e7dcef;border-radius:.5rem;color:#6b21a8;text-decoration:none">Inventory</a>
           <a href="/item-master" data-offline-route="Item Master" style="padding:.6rem;border:1px solid #e7dcef;border-radius:.5rem;color:#6b21a8;text-decoration:none">Item Master</a>
           <a href="/users" data-offline-route="User Management" style="padding:.6rem;border:1px solid #e7dcef;border-radius:.5rem;color:#6b21a8;text-decoration:none">User Management</a>
           <a href="/transactions" data-offline-route="Transactions" style="padding:.6rem;border:1px solid #e7dcef;border-radius:.5rem;color:#6b21a8;text-decoration:none">Transactions</a>
@@ -34,22 +35,79 @@
         </nav>
         <p id="offline-route-status" role="status" aria-live="polite" style="margin:.75rem 0 0;font-size:.85rem;color:#5f5369">Choose a section. If it needs server data, reconnect and try again.</p>
       </section>
+      <section id="offline-inventory" hidden aria-labelledby="offline-inventory-title" style="margin:1rem 0;padding:1rem;border:1px solid #e7dcef;border-radius:.75rem;text-align:left">
+        <h2 id="offline-inventory-title" style="margin:0 0 .35rem;font-size:1rem">Saved inventory snapshot</h2>
+        <p id="offline-inventory-meta" style="font-size:.85rem"></p>
+        <div style="overflow:auto;max-height:18rem">
+          <table style="width:100%;border-collapse:collapse;font-size:.8rem">
+            <thead><tr><th style="text-align:left;padding:.4rem;border-bottom:1px solid #eee">Item / Branch</th><th style="text-align:right;padding:.4rem;border-bottom:1px solid #eee">Stock</th><th style="text-align:left;padding:.4rem;border-bottom:1px solid #eee">Status</th></tr></thead>
+            <tbody id="offline-inventory-rows"></tbody>
+          </table>
+        </div>
+        <p style="font-size:.8rem">Read-only cached data. Stock may have changed since this snapshot was saved. Sales and stock changes must be confirmed by the server after reconnection.</p>
+      </section>
       <p id="queue-status" role="status" aria-live="polite">Checking for saved offline work…</p>
       <p>Keep this browser profile and its site data until pending work has synchronized in the app.</p>
       <button type="button" onclick="window.location.reload()">Try again</button>
     </main>
     <script>
       (() => {
+        const inventorySection = document.getElementById("offline-inventory");
+        const inventoryMeta = document.getElementById("offline-inventory-meta");
+        const inventoryRows = document.getElementById("offline-inventory-rows");
+        const isInventoryRoute = window.location.pathname.replace(/\\/$/, "").endsWith("/inventory");
+        const activeUserId = window.sessionStorage.getItem("purple-yam-offline-user-id");
+        const activeRole = window.sessionStorage.getItem("purple-yam-offline-role");
+
+        if (isInventoryRoute && activeUserId && activeRole === "OWNER" && inventorySection) {
+          const snapshotRequest = indexedDB.open("purple-yam-aims-offline", 4);
+          snapshotRequest.onsuccess = () => {
+            const snapshotDb = snapshotRequest.result;
+            if (!snapshotDb.objectStoreNames.contains("inventory-snapshots")) {
+              snapshotDb.close();
+              return;
+            }
+            const tx = snapshotDb.transaction("inventory-snapshots", "readonly");
+            const getRequest = tx.objectStore("inventory-snapshots").get(activeUserId);
+            getRequest.onsuccess = () => {
+              const snapshot = getRequest.result;
+              if (!snapshot || snapshot.role !== "OWNER" || !Array.isArray(snapshot.stockRecords)) return;
+              inventorySection.hidden = false;
+              if (inventoryMeta) inventoryMeta.textContent = "Owner · All branches · Saved " + new Date(snapshot.savedAt).toLocaleString() + " · " + snapshot.stockRecords.length + " records";
+              if (inventoryRows) {
+                inventoryRows.replaceChildren();
+                snapshot.stockRecords.forEach((stock) => {
+                  const row = document.createElement("tr");
+                  const itemCell = document.createElement("td");
+                  itemCell.style.cssText = "padding:.4rem;border-bottom:1px solid #eee";
+                  itemCell.textContent = String(stock.itemName || "Unknown item") + (stock.itemSize ? " — " + stock.itemSize : "") + " / " + String(stock.branchName || "Unknown branch");
+                  const quantityCell = document.createElement("td");
+                  quantityCell.style.cssText = "padding:.4rem;text-align:right;border-bottom:1px solid #eee;font-weight:600";
+                  quantityCell.textContent = String(stock.quantity) + " " + String(stock.unit || "units");
+                  const statusCell = document.createElement("td");
+                  statusCell.style.cssText = "padding:.4rem;border-bottom:1px solid #eee";
+                  statusCell.textContent = Number(stock.quantity) === 0 ? "OUT OF STOCK" : Number(stock.quantity) <= Number(stock.minThreshold) ? "LOW STOCK" : "IN STOCK";
+                  row.append(itemCell, quantityCell, statusCell);
+                  inventoryRows.appendChild(row);
+                });
+              }
+            };
+            tx.oncomplete = () => snapshotDb.close();
+            tx.onerror = () => snapshotDb.close();
+          };
+        }
+
         const status = document.getElementById("queue-status");
         if (!status || !("indexedDB" in window)) {
           if (status) status.textContent = "This browser cannot show the offline queue summary.";
           return;
         }
-        const request = indexedDB.open("purple-yam-aims-offline", 3);
+        const request = indexedDB.open("purple-yam-aims-offline", 4);
         request.onupgradeneeded = () => {
           const db = request.result;
           if (!db.objectStoreNames.contains("pending-sales")) db.createObjectStore("pending-sales", { keyPath: "requestId" });
           if (!db.objectStoreNames.contains("pending-operations")) db.createObjectStore("pending-operations", { keyPath: "requestId" });
+          if (!db.objectStoreNames.contains("inventory-snapshots")) db.createObjectStore("inventory-snapshots", { keyPath: "userId" });
         };
         request.onsuccess = () => {
           const db = request.result;
