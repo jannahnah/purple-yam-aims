@@ -19,7 +19,7 @@ export type PendingOfflineSale = {
 };
 
 const DATABASE_NAME = "purple-yam-aims-offline";
-const DATABASE_VERSION = 3;
+const DATABASE_VERSION = 4;
 const STORE_NAME = "pending-sales";
 const OPERATIONS_STORE_NAME = "pending-operations";
 
@@ -45,6 +45,9 @@ function openDatabase(): Promise<IDBDatabase> {
       }
       if (!database.objectStoreNames.contains(OPERATIONS_STORE_NAME)) {
         database.createObjectStore(OPERATIONS_STORE_NAME, { keyPath: "requestId" });
+      }
+      if (!database.objectStoreNames.contains("inventory-snapshots")) {
+        database.createObjectStore("inventory-snapshots", { keyPath: "userId" });
       }
     };
 
