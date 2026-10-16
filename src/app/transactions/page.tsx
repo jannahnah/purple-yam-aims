@@ -108,7 +108,7 @@ export default async function TransactionsPage() {
               transaction.newQuantity ?? null,
 
             createdAt:
-              transaction.createdAt.toISOString(),
+              (transaction.occurredAt ?? transaction.createdAt).toISOString(),
 
             item: {
               name: transaction.item.name,
