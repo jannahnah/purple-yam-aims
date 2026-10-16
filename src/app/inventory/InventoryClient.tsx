@@ -142,6 +142,13 @@ export default function InventoryClient({
   useEffect(() => {
     if (typeof window === "undefined" || !("indexedDB" in window)) return;
 
+    try {
+      window.sessionStorage.setItem("purple-yam-offline-user-id", user.id);
+      window.sessionStorage.setItem("purple-yam-offline-role", user.role);
+    } catch {
+      // Offline snapshot remains optional if session storage is unavailable.
+    }
+
     const request = window.indexedDB.open("purple-yam-aims-offline", 4);
     request.onupgradeneeded = () => {
       const database = request.result;
