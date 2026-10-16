@@ -301,6 +301,7 @@ export default function InventoryClient({
             )}
 
             <SalesModal
+              userId={user.id}
               branches={branches}
               items={items}
               branchStocks={stockRecords.map((stock) => ({
