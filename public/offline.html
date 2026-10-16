@@ -20,6 +20,20 @@
       <h1>You’re currently offline</h1>
       <p>Purple Yam AIMS can’t reach the server right now. No transaction has been saved by this page. Please reconnect before recording or changing inventory.</p>
       <p>When the connection returns, try opening the app again.</p>
+      <section aria-labelledby="offline-nav-title" style="margin:1.25rem 0;padding:1rem;border:1px solid #e7dcef;border-radius:.75rem;text-align:left">
+        <h2 id="offline-nav-title" style="margin:0 0 .5rem;font-size:1rem">Owner offline navigation</h2>
+        <p style="margin:.25rem 0 .75rem;font-size:.9rem">You can open this navigation hub while offline. Pages that need live inventory, reports, or account data still require a connection; this hub does not pretend those pages are loaded.</p>
+        <nav aria-label="Owner pages" style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
+          <a href="/dashboard" data-offline-route="Owner Dashboard" style="padding:.6rem;border:1px solid #e7dcef;border-radius:.5rem;color:#6b21a8;text-decoration:none">Dashboard</a>
+          <a href="/item-master" data-offline-route="Item Master" style="padding:.6rem;border:1px solid #e7dcef;border-radius:.5rem;color:#6b21a8;text-decoration:none">Item Master</a>
+          <a href="/users" data-offline-route="User Management" style="padding:.6rem;border:1px solid #e7dcef;border-radius:.5rem;color:#6b21a8;text-decoration:none">User Management</a>
+          <a href="/transactions" data-offline-route="Transactions" style="padding:.6rem;border:1px solid #e7dcef;border-radius:.5rem;color:#6b21a8;text-decoration:none">Transactions</a>
+          <a href="/reorder-alerts" data-offline-route="Reorder Alerts" style="padding:.6rem;border:1px solid #e7dcef;border-radius:.5rem;color:#6b21a8;text-decoration:none">Reorder Alerts</a>
+          <a href="/reports" data-offline-route="Reports" style="padding:.6rem;border:1px solid #e7dcef;border-radius:.5rem;color:#6b21a8;text-decoration:none">Reports</a>
+          <a href="/account-settings" data-offline-route="Account Settings" style="padding:.6rem;border:1px solid #e7dcef;border-radius:.5rem;color:#6b21a8;text-decoration:none">Account Settings</a>
+        </nav>
+        <p id="offline-route-status" role="status" aria-live="polite" style="margin:.75rem 0 0;font-size:.85rem;color:#5f5369">Choose a section. If it needs server data, reconnect and try again.</p>
+      </section>
       <p id="queue-status" role="status" aria-live="polite">Checking for saved offline work…</p>
       <p>Keep this browser profile and its site data until pending work has synchronized in the app.</p>
       <button type="button" onclick="window.location.reload()">Try again</button>
