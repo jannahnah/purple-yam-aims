@@ -137,6 +137,59 @@ export default function InventoryClient({
   const [selectedStatus, setSelectedStatus] = useState("ALL");
   const [inventoryPage, setInventoryPage] = useState(1);
 
+  // Keep a read-only, role-scoped inventory snapshot for the offline fallback.
+  // This is a convenience cache only; the server remains the source of truth.
+  useEffect(() => {
+    if (typeof window === "undefined" || !("indexedDB" in window)) return;
+
+    const request = window.indexedDB.open("purple-yam-aims-offline", 4);
+    request.onupgradeneeded = () => {
+      const database = request.result;
+      if (!database.objectStoreNames.contains("pending-sales")) {
+        database.createObjectStore("pending-sales", { keyPath: "requestId" });
+      }
+      if (!database.objectStoreNames.contains("pending-operations")) {
+        database.createObjectStore("pending-operations", { keyPath: "requestId" });
+      }
+      if (!database.objectStoreNames.contains("inventory-snapshots")) {
+        database.createObjectStore("inventory-snapshots", { keyPath: "userId" });
+      }
+    };
+    request.onsuccess = () => {
+      const database = request.result;
+      if (!database.objectStoreNames.contains("inventory-snapshots")) {
+        database.close();
+        return;
+      }
+      const transaction = database.transaction("inventory-snapshots", "readwrite");
+      transaction.objectStore("inventory-snapshots").put({
+        userId: user.id,
+        role: user.role,
+        branchId: user.branchId,
+        branchName: user.branchName,
+        savedAt: new Date().toISOString(),
+        stockRecords: stockRecords.map((stock) => ({
+          id: stock.id,
+          branchId: stock.branchId,
+          branchName: stock.branch.name,
+          itemId: stock.itemId,
+          itemName: stock.item.name,
+          itemSize: stock.item.size ?? null,
+          sourceType: stock.item.sourceType,
+          unit: stock.item.unit,
+          minThreshold: stock.item.minThreshold,
+          quantity: stock.quantity,
+          updatedAt: new Date(stock.updatedAt).toISOString(),
+        })),
+      });
+      transaction.oncomplete = () => database.close();
+      transaction.onerror = () => database.close();
+    };
+    request.onerror = () => {
+      // Inventory remains usable online if browser storage is unavailable.
+    };
+  }, [user, stockRecords]);
+
   const INVENTORY_PAGE_SIZE = 10;
 
   const canManageStock = isOwner || isManager;
