@@ -55,7 +55,7 @@
         const inventorySection = document.getElementById("offline-inventory");
         const inventoryMeta = document.getElementById("offline-inventory-meta");
         const inventoryRows = document.getElementById("offline-inventory-rows");
-        const isInventoryRoute = window.location.pathname.replace(/\\/$/, "").endsWith("/inventory");
+        const isInventoryRoute = window.location.pathname.replace(/\/+$/, "").endsWith("/inventory");
         const activeUserId = window.sessionStorage.getItem("purple-yam-offline-user-id");
         const activeRole = window.sessionStorage.getItem("purple-yam-offline-role");
 
