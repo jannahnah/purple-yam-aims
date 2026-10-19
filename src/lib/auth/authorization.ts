@@ -4,7 +4,7 @@ import { getCurrentUser } from "@/lib/auth/current-user";
 export type UserRole =
   | "OWNER"
   | "BRANCH_MANAGER"
-  | "CASHIER";
+  | "CASHIER" | "INVENTORY_MANAGER";
 
 export async function requireUser(options?: {
   allowPasswordChange?: boolean;
@@ -59,7 +59,7 @@ export function canAccessBranch(
   },
   branchId: string
 ) {
-  if (user.role === "OWNER") {
+  if (user.role === "OWNER" || user.role === "INVENTORY_MANAGER") {
     return true;
   }
 
