@@ -144,11 +144,8 @@ export async function GET(request: Request) {
 // POST /api/users
 // Owner only
 //
-// Creates a Branch Manager or Cashier account.
-// The Owner provides a branch name.
-// If the branch already exists for the Owner's business,
-// the existing branch is used.
-// If it does not exist, a new branch is created.
+// Creates a Branch Manager, Inventory Manager, or Cashier account.
+// Inventory Managers receive all-branch inventory access and no branch assignment.
 export async function POST(request: Request) {
   try {
     const currentUser = await getCurrentUser();
