@@ -35,7 +35,8 @@ export async function adjustStock({
 
   if (
     currentUser.role !== "OWNER" &&
-    currentUser.role !== "BRANCH_MANAGER"
+    currentUser.role !== "BRANCH_MANAGER" &&
+    currentUser.role !== "INVENTORY_MANAGER"
   ) {
     throw new Error("You do not have permission to adjust stock.");
   }
