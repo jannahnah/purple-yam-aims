@@ -6,6 +6,7 @@ import PurpleYamLogo from "@/components/PurpleYamLogo";
 const roles = [
   { key: "owner", title: "Owner", description: "Business-wide access and user management" },
   { key: "branch-manager", title: "Branch Manager", description: "Manage your assigned branch operations" },
+  { key: "inventory-manager", title: "Inventory Manager", description: "View all branches and enter physical inventory counts" },
   { key: "cashier", title: "Cashier", description: "Record sales and view branch transactions" },
 ];
 
