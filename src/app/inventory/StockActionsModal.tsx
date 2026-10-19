@@ -425,13 +425,22 @@ export default function StockActionsModal({
   return (
     <>
       {/* Open Modal Button */}
-      <button
-        type="button"
-        onClick={openModal}
-        className="rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700"
-      >
-        Stock Actions
-      </button>
+      {user.role === "INVENTORY_MANAGER" ? (
+        <a
+          href="/inventory/stock-adjustment"
+          className="inline-flex rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700"
+        >
+          Stock Actions
+        </a>
+      ) : (
+        <button
+          type="button"
+          onClick={openModal}
+          className="rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700"
+        >
+          Stock Actions
+        </button>
+      )}
 
       {/* Modal */}
       {isOpen && (
