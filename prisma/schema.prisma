@@ -175,6 +175,7 @@ model Business {
 enum Role {
   OWNER
   BRANCH_MANAGER
+  INVENTORY_MANAGER
   CASHIER
 }
 

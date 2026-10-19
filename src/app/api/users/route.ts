@@ -84,11 +84,12 @@ export async function GET(request: Request) {
           : {}),
 
         ...(role &&
-        ["OWNER", "BRANCH_MANAGER", "CASHIER"].includes(role)
+        ["OWNER", "BRANCH_MANAGER", "INVENTORY_MANAGER", "CASHIER"].includes(role)
           ? {
               role: role as
                 | "OWNER"
                 | "BRANCH_MANAGER"
+                | "INVENTORY_MANAGER"
                 | "CASHIER",
             }
           : {}),
@@ -143,11 +144,8 @@ export async function GET(request: Request) {
 // POST /api/users
 // Owner only
 //
-// Creates a Branch Manager or Cashier account.
-// The Owner provides a branch name.
-// If the branch already exists for the Owner's business,
-// the existing branch is used.
-// If it does not exist, a new branch is created.
+// Creates a Branch Manager, Inventory Manager, or Cashier account.
+// Inventory Managers receive all-branch inventory access and no branch assignment.
 export async function POST(request: Request) {
   try {
     const currentUser = await getCurrentUser();
@@ -262,6 +260,7 @@ export async function POST(request: Request) {
     const validRoles = [
       "OWNER",
       "BRANCH_MANAGER",
+      "INVENTORY_MANAGER",
       "CASHIER",
     ];
 
@@ -276,7 +275,8 @@ export async function POST(request: Request) {
 
     // This Create Staff Account screen is intended
     // for Branch Manager and Cashier accounts.
-    if (role !== "OWNER" && !branchName) {
+    const branchRequired = role === "BRANCH_MANAGER" || role === "CASHIER";
+    if (branchRequired && !branchName) {
       return NextResponse.json(
         {
           error:
@@ -286,12 +286,12 @@ export async function POST(request: Request) {
       );
     }
 
-    // Owner accounts should not be assigned to branches.
-    if (role === "OWNER" && branchName) {
+    // Owner and Inventory Manager accounts are not restricted to one branch.
+    if ((role === "OWNER" || role === "INVENTORY_MANAGER") && branchName) {
       return NextResponse.json(
         {
           error:
-            "Owner accounts cannot be assigned to a branch.",
+            "Owner and Inventory Manager accounts cannot be assigned to a single branch.",
         },
         { status: 400 }
       );
@@ -359,8 +359,8 @@ export async function POST(request: Request) {
       async (tx) => {
         let resolvedBranchId: string | null = null;
 
-        // Branch Manager and Cashier must belong to a branch.
-        if (role !== "OWNER") {
+        // Branch-scoped operational roles must belong to a branch.
+        if (role === "BRANCH_MANAGER" || role === "CASHIER") {
           // Look for an existing branch belonging to
           // the Owner's business.
           const existingBranch =
@@ -408,6 +408,7 @@ export async function POST(request: Request) {
             role: role as
               | "OWNER"
               | "BRANCH_MANAGER"
+              | "INVENTORY_MANAGER"
               | "CASHIER",
             status: "ACTIVE",
             mustChangePassword: true,

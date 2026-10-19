@@ -16,6 +16,10 @@ export default async function ChangePasswordPage() {
       redirect("/manager-dashboard");
     }
 
+    if (user.role === "INVENTORY_MANAGER") {
+      redirect("/inventory");
+    }
+
     redirect("/cashier-dashboard");
   }
 

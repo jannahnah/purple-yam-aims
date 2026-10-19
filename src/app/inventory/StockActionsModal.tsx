@@ -4,7 +4,7 @@ import { useState } from "react";
 import { adjustStock, transferStock } from "@/app/actions/inventory";
 import { formatItemLabel } from "@/lib/item-label";
 
-type Role = "OWNER" | "BRANCH_MANAGER" | "CASHIER";
+type Role = "OWNER" | "BRANCH_MANAGER" | "INVENTORY_MANAGER" | "CASHIER";
 
 interface UserInfo {
   role: Role;
@@ -467,7 +467,7 @@ export default function StockActionsModal({
 
             {/* Tabs */}
             <div className="mb-6 flex border-b">
-              <button
+              {user.role !== "INVENTORY_MANAGER" && <button
                 type="button"
                 className={`flex-1 border-b-2 py-2 text-center text-sm font-medium ${
                   activeTab === "transfer"
@@ -480,7 +480,7 @@ export default function StockActionsModal({
                 }}
               >
                 Transfer Stock
-              </button>
+              </button>}
 
               <button
                 type="button"
@@ -508,7 +508,7 @@ export default function StockActionsModal({
             {/* =========================
                 TRANSFER STOCK
             ========================= */}
-            {activeTab === "transfer" && (
+            {user.role !== "INVENTORY_MANAGER" && activeTab === "transfer" && (
               <form
                 onSubmit={handleTransferSubmit}
                 className="space-y-4"

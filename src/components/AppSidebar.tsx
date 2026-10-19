@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-type Role = "OWNER" | "BRANCH_MANAGER" | "CASHIER";
+type Role = "OWNER" | "BRANCH_MANAGER" | "INVENTORY_MANAGER" | "CASHIER";
 
 type SidebarUser = {
   username: string;
@@ -24,6 +24,8 @@ function getRoleLabel(role: Role) {
       return "Admin Owner";
     case "BRANCH_MANAGER":
       return "Branch Manager";
+    case "INVENTORY_MANAGER":
+      return "Inventory Manager";
     case "CASHIER":
       return "Cashier";
     default:
@@ -39,12 +41,15 @@ export default function AppSidebar({ user }: AppSidebarProps) {
   const isOwner = user.role === "OWNER";
   const isManager = user.role === "BRANCH_MANAGER";
   const isCashier = user.role === "CASHIER";
+  const isInventoryManager = user.role === "INVENTORY_MANAGER";
 
   const dashboardHref = isOwner
     ? "/dashboard"
     : isManager
       ? "/manager-dashboard"
-      : "/cashier-dashboard";
+      : isInventoryManager
+        ? "/inventory"
+        : "/cashier-dashboard";
 
   function isActive(href: string) {
     if (href === dashboardHref) {
@@ -96,9 +101,9 @@ export default function AppSidebar({ user }: AppSidebarProps) {
       </p>
 
       <div className="space-y-1">
-        <Link href={dashboardHref} className={getNavClass(dashboardHref)}>
+        {!isInventoryManager && <Link href={dashboardHref} className={getNavClass(dashboardHref)}>
           Dashboard
-        </Link>
+        </Link>}
 
         {isCashier && (
           <Link href="/sales" className={getNavClass("/sales")}>
@@ -112,9 +117,9 @@ export default function AppSidebar({ user }: AppSidebarProps) {
               Inventory
             </Link>
 
-            <Link href="/transactions" className={getNavClass("/transactions")}>
+            {!isInventoryManager && <Link href="/transactions" className={getNavClass("/transactions")}>
               Transactions
-            </Link>
+            </Link>}
 
             {(isOwner || isManager) && (
               <>

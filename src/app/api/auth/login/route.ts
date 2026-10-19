@@ -3,11 +3,12 @@ import { prisma } from "@/lib/prisma";
 import { createSessionToken, SESSION_MAX_AGE } from "@/lib/auth/session";
 import { verifyPassword } from "@/lib/auth/password";
 
-const validRoles = ["OWNER", "BRANCH_MANAGER", "CASHIER"] as const;
+const validRoles = ["OWNER", "BRANCH_MANAGER", "CASHIER", "INVENTORY_MANAGER"] as const;
 type LoginRole = (typeof validRoles)[number];
 
 function getRoleLabel(role: LoginRole) {
   if (role === "OWNER") return "Owner";
+  if (role === "INVENTORY_MANAGER") return "Inventory Manager";
   if (role === "BRANCH_MANAGER") return "Branch Manager";
   return "Cashier";
 }

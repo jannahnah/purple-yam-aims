@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-type UserRole = "OWNER" | "BRANCH_MANAGER" | "CASHIER";
+type UserRole = "OWNER" | "BRANCH_MANAGER" | "CASHIER" | "INVENTORY_MANAGER";
 
 interface CurrentUser {
   id: string;

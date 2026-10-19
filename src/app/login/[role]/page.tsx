@@ -4,6 +4,7 @@ import LoginByRoleClient from "./LoginByRoleClient";
 const roleConfig = {
   owner: { role: "OWNER" as const, label: "Owner" },
   "branch-manager": { role: "BRANCH_MANAGER" as const, label: "Branch Manager" },
+  "inventory-manager": { role: "INVENTORY_MANAGER" as const, label: "Inventory Manager" },
   cashier: { role: "CASHIER" as const, label: "Cashier" },
 };
 

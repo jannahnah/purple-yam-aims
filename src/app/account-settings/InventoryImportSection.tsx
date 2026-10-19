@@ -14,7 +14,7 @@ type PreviewRow = {
 };
 
 type Props = {
-  role: "OWNER" | "BRANCH_MANAGER" | "CASHIER";
+  role: "OWNER" | "BRANCH_MANAGER" | "INVENTORY_MANAGER" | "CASHIER";
 };
 
 function formatQuantity(

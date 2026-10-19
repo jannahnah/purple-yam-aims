@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-type Role = "OWNER" | "BRANCH_MANAGER" | "CASHIER";
+type Role = "OWNER" | "BRANCH_MANAGER" | "INVENTORY_MANAGER" | "CASHIER";
 type UserStatus = "ACTIVE" | "INACTIVE";
 
 type Branch = {
@@ -28,6 +28,7 @@ type User = {
 const ROLE_LABELS: Record<Role, string> = {
   OWNER: "Owner",
   BRANCH_MANAGER: "Branch Manager",
+  INVENTORY_MANAGER: "Inventory Manager",
   CASHIER: "Cashier",
 };
 
@@ -43,6 +44,9 @@ function roleBadgeClass(role: Role) {
   switch (role) {
     case "BRANCH_MANAGER":
       return "bg-purple-100 text-purple-700";
+
+    case "INVENTORY_MANAGER":
+      return "bg-emerald-100 text-emerald-700";
 
     case "CASHIER":
       return "bg-blue-100 text-blue-700";
@@ -84,7 +88,7 @@ export default function UsersClient() {
   const [email, setEmail] = useState("");
 
   const [role, setRole] =
-    useState<"BRANCH_MANAGER" | "CASHIER">(
+    useState<"BRANCH_MANAGER" | "INVENTORY_MANAGER" | "CASHIER">(
       "CASHIER"
     );
 
@@ -309,7 +313,7 @@ export default function UsersClient() {
       return;
     }
 
-    if (!branchName.trim()) {
+    if ((role === "BRANCH_MANAGER" || role === "CASHIER") && !branchName.trim()) {
       setError("Please enter a branch.");
       return;
     }
@@ -336,7 +340,7 @@ export default function UsersClient() {
             username: username.trim(),
             email: email.trim(),
             role,
-            branchName: branchName
+            branchName: role === "INVENTORY_MANAGER" ? "" : branchName
               .trim()
               .replace(/\s+/g, " "),
             temporaryPassword,
@@ -706,8 +710,7 @@ export default function UsersClient() {
               </h2>
 
               <p className="mt-1 text-sm text-gray-500">
-                Create a Branch Manager or Cashier
-                account.
+                Create a Branch Manager, Cashier, or Inventory Manager account.
               </p>
             </div>
 
@@ -797,6 +800,7 @@ export default function UsersClient() {
                       setRole(
                         event.target.value as
                           | "BRANCH_MANAGER"
+                          | "INVENTORY_MANAGER"
                           | "CASHIER"
                       )
                     }
@@ -809,122 +813,63 @@ export default function UsersClient() {
                     <option value="BRANCH_MANAGER">
                       Branch Manager
                     </option>
+                    <option value="INVENTORY_MANAGER">
+                      Inventory Manager
+                    </option>
                   </select>
                 </div>
 
-                {/* Branch */}
-                <div className="relative">
-                  <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                    Branch
-                  </label>
-
-                  <input
-                    type="text"
-                    value={branchName}
-                    onChange={(event) =>
-                      handleBranchInput(
-                        event.target.value
-                      )
-                    }
-                    onFocus={() =>
-                      setShowBranchOptions(true)
-                    }
-                    onBlur={() =>
-                      setTimeout(
-                        () =>
-                          setShowBranchOptions(
-                            false
-                          ),
-                        150
-                      )
-                    }
-                    placeholder="Enter or select branch name"
-                    autoComplete="off"
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none transition focus:border-purple-600 focus:ring-2 focus:ring-purple-100"
-                  />
-
-                  {/* Existing branch suggestions */}
-                  {showBranchOptions &&
-                    filteredBranches.length >
-                      0 && (
+                {role !== "INVENTORY_MANAGER" ? (
+                  <div className="relative">
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700">Branch</label>
+                    <input
+                      type="text"
+                      value={branchName}
+                      onChange={(event) => handleBranchInput(event.target.value)}
+                      onFocus={() => setShowBranchOptions(true)}
+                      onBlur={() => setTimeout(() => setShowBranchOptions(false), 150)}
+                      placeholder="Enter or select branch name"
+                      autoComplete="off"
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none transition focus:border-purple-600 focus:ring-2 focus:ring-purple-100"
+                    />
+                    {showBranchOptions && filteredBranches.length > 0 && (
                       <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-52 overflow-y-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
-                        <p className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
-                          Existing Branches
-                        </p>
-
-                        {filteredBranches.map(
-                          (branch) => (
-                            <button
-                              key={branch.id}
-                              type="button"
-                              onMouseDown={(
-                                event
-                              ) =>
-                                event.preventDefault()
-                              }
-                              onClick={() =>
-                                selectBranch(
-                                  branch
-                                )
-                              }
-                              className="flex w-full items-start justify-between gap-3 px-3 py-2.5 text-left transition hover:bg-purple-50"
-                            >
-                              <span>
-                                <span className="block text-sm font-medium text-gray-900">
-                                  {branch.name}
-                                </span>
-
-                                {branch.location && (
-                                  <span className="block text-xs text-gray-400">
-                                    {branch.location}
-                                  </span>
-                                )}
-                              </span>
-
-                              {branch.isCommissary && (
-                                <span className="shrink-0 rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-semibold text-purple-700">
-                                  Commissary
-                                </span>
-                              )}
-                            </button>
-                          )
-                        )}
+                        <p className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gray-400">Existing Branches</p>
+                        {filteredBranches.map((branch) => (
+                          <button
+                            key={branch.id}
+                            type="button"
+                            onMouseDown={(event) => event.preventDefault()}
+                            onClick={() => selectBranch(branch)}
+                            className="flex w-full items-start justify-between gap-3 px-3 py-2.5 text-left transition hover:bg-purple-50"
+                          >
+                            <span>
+                              <span className="block text-sm font-medium text-gray-900">{branch.name}</span>
+                              {branch.location && <span className="block text-xs text-gray-400">{branch.location}</span>}
+                            </span>
+                            {branch.isCommissary && <span className="shrink-0 rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-semibold text-purple-700">Commissary</span>}
+                          </button>
+                        ))}
                       </div>
                     )}
-
-                  {/* Existing branch selected */}
-                  {exactBranchMatch && (
-                    <p className="mt-1 text-xs text-green-600">
-                      ✓ Existing branch selected.
-                    </p>
-                  )}
-
-                  {/* New branch notice */}
-                  {branchName.trim() &&
-                    !exactBranchMatch && (
+                    {exactBranchMatch && <p className="mt-1 text-xs text-green-600">✓ Existing branch selected.</p>}
+                    {branchName.trim() && !exactBranchMatch && (
                       <div className="mt-2 rounded-lg border border-purple-200 bg-purple-50 p-3">
-                        <p className="text-xs text-purple-700">
-                          This branch is not currently
-                          in the branch list.
-                        </p>
-
-                        <p className="mt-0.5 text-sm font-semibold text-purple-900">
-                          "{branchName.trim()}"
-                        </p>
-
-                        <p className="mt-1 text-xs text-purple-700">
-                          It will be created automatically
-                          when you create the staff account.
-                        </p>
+                        <p className="text-xs text-purple-700">This branch is not currently in the branch list.</p>
+                        <p className="mt-0.5 text-sm font-semibold text-purple-900">"{branchName.trim()}"</p>
+                        <p className="mt-1 text-xs text-purple-700">It will be created automatically when you create the staff account.</p>
                       </div>
                     )}
-
-                  <p className="mt-1 text-xs text-gray-400">
-                    Select an existing branch or type a
-                    new branch name. New branches are
-                    created automatically.
-                  </p>
-                </div>
+                    <p className="mt-1 text-xs text-gray-400">
+                      Select an existing branch or type a new branch name. New branches are created automatically.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
+                    <p className="text-sm font-semibold text-emerald-900">All-branch inventory access</p>
+                    <p className="mt-1 text-xs leading-5 text-emerald-800">This role can view inventory and enter delivery counts or physical-count adjustments for every branch. It cannot record sales, production, or branch transfers, or manage users.</p>
+                  </div>
+                )}
 
                 {/* Temporary Password */}
                 <div>

@@ -146,8 +146,8 @@ async function validateRows(
   currentUser: Awaited<ReturnType<typeof getCurrentUser>>
 ): Promise<NormalizedRow[]> {
   if (!currentUser) throw new Error("Unauthorized.");
-  if (currentUser.role !== "OWNER" && currentUser.role !== "BRANCH_MANAGER") {
-    throw new Error("Only the Owner or Branch Manager can import inventory.");
+  if (currentUser.role !== "OWNER" && currentUser.role !== "BRANCH_MANAGER" && currentUser.role !== "INVENTORY_MANAGER") {
+    throw new Error("Only the Owner, Branch Manager, or Inventory Manager can import inventory.");
   }
   if (!Array.isArray(rows) || !rows.length) throw new Error("The uploaded file contains no inventory rows.");
   if (rows.length > 1000) throw new Error("The import file cannot contain more than 1,000 rows.");
@@ -228,8 +228,8 @@ export async function POST(request: Request) {
   try {
     const currentUser = await getCurrentUser();
     if (!currentUser) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-    if (currentUser.role !== "OWNER" && currentUser.role !== "BRANCH_MANAGER") {
-      return NextResponse.json({ error: "Only the Owner or Branch Manager can import inventory." }, { status: 403 });
+    if (currentUser.role !== "OWNER" && currentUser.role !== "BRANCH_MANAGER" && currentUser.role !== "INVENTORY_MANAGER") {
+      return NextResponse.json({ error: "Only the Owner, Branch Manager, or Inventory Manager can import inventory." }, { status: 403 });
     }
 
     const contentType = request.headers.get("content-type") ?? "";

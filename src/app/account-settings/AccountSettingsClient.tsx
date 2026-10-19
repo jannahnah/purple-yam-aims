@@ -8,7 +8,7 @@ type UserProfile = {
   username: string;
   name: string | null;
   email: string;
-  role: "OWNER" | "BRANCH_MANAGER" | "CASHIER";
+  role: "OWNER" | "BRANCH_MANAGER" | "INVENTORY_MANAGER" | "CASHIER";
   status: "ACTIVE" | "INACTIVE";
   branchId: string | null;
   businessId: string | null;
@@ -24,6 +24,7 @@ type OpenSection = "name" | "password" | null;
 const ROLE_LABELS: Record<UserProfile["role"], string> = {
   OWNER: "Owner",
   BRANCH_MANAGER: "Branch Manager",
+  INVENTORY_MANAGER: "Inventory Manager",
   CASHIER: "Cashier / Staff",
 };
 
@@ -278,7 +279,7 @@ async function handleSaveName(
   }
 
   const branchLabel =
-    user.role === "OWNER"
+    user.role === "OWNER" || user.role === "INVENTORY_MANAGER"
       ? "All Branches"
       : user.branch?.name ?? "Not assigned";
 
