@@ -1,4 +1,4 @@
-import { requireUser, requireRole } from "@/lib/auth/authorization";
+import { requireRole } from "@/lib/auth/authorization";
 import AppSidebar from "@/components/AppSidebar";
 import AccountSettingsClient from "./AccountSettingsClient";
 
