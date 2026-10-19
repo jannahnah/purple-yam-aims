@@ -260,7 +260,7 @@ export default function InventoryClient({
                 ? "Monitor raw materials and finished products across all branches."
                 : isInventoryManager
                   ? "Review delivery counts and update physical inventory across all branches."
-                : `Monitor inventory for ${
+                  : `Monitor inventory for ${
                     user.branchName ?? "your assigned branch"
                   }.`}
             </p>
@@ -270,7 +270,7 @@ export default function InventoryClient({
                 ? "OWNER • ALL BRANCHES"
                 : isInventoryManager
                   ? "INVENTORY MANAGER • ALL BRANCHES"
-                : `${user.role.replace("_", " ")} • ${
+                  : `${user.role.replace("_", " ")} • ${
                     user.branchName ?? "NO BRANCH"
                   }`}
             </div>
