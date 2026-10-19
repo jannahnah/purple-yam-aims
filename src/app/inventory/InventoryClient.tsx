@@ -6,7 +6,7 @@ import ProductionModal from "./ProductionModal";
 import SalesModal from "./SalesModal";
 import { formatItemLabel } from "@/lib/item-label";
 
-type Role = "OWNER" | "BRANCH_MANAGER" | "CASHIER";
+type Role = "OWNER" | "BRANCH_MANAGER" | "INVENTORY_MANAGER" | "CASHIER";
 
 type Branch = {
   id: string;
@@ -127,10 +127,12 @@ export default function InventoryClient({
 }: Props) {
   const isOwner = user.role === "OWNER";
   const isManager = user.role === "BRANCH_MANAGER";
+  const isInventoryManager = user.role === "INVENTORY_MANAGER";
+  const canChooseBranch = isOwner || isInventoryManager;
 
   const [search, setSearch] = useState("");
   const [selectedBranch, setSelectedBranch] = useState(
-    isOwner ? "ALL" : user.branchId ?? ""
+    canChooseBranch ? "ALL" : user.branchId ?? ""
   );
   const [selectedSource, setSelectedSource] = useState("ALL");
   const [selectedStatus, setSelectedStatus] = useState("ALL");
@@ -138,7 +140,7 @@ export default function InventoryClient({
 
   const INVENTORY_PAGE_SIZE = 10;
 
-  const canManageStock = isOwner || isManager;
+  const canManageStock = isOwner || isManager || isInventoryManager;
 
   const filteredRecords = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
@@ -225,7 +227,7 @@ export default function InventoryClient({
   const clearFilters = () => {
     setSearch("");
     setSelectedBranch(
-      isOwner ? "ALL" : user.branchId ?? ""
+      canChooseBranch ? "ALL" : user.branchId ?? ""
     );
     setSelectedSource("ALL");
     setSelectedStatus("ALL");
@@ -235,7 +237,7 @@ export default function InventoryClient({
     search.trim() !== "" ||
     selectedSource !== "ALL" ||
     selectedStatus !== "ALL" ||
-    (isOwner && selectedBranch !== "ALL");
+    (canChooseBranch && selectedBranch !== "ALL");
 
   return (
     <div className="aims-page">
@@ -256,6 +258,8 @@ export default function InventoryClient({
             <p className="aims-subtitle">
               {isOwner
                 ? "Monitor raw materials and finished products across all branches."
+                : isInventoryManager
+                  ? "Review delivery counts and update physical inventory across all branches."
                 : `Monitor inventory for ${
                     user.branchName ?? "your assigned branch"
                   }.`}
@@ -264,6 +268,8 @@ export default function InventoryClient({
             <div className="mt-3 inline-flex rounded-full border border-purple-200 bg-purple-50 px-3 py-1.5 text-xs font-semibold text-purple-700">
               {isOwner
                 ? "OWNER • ALL BRANCHES"
+                : isInventoryManager
+                  ? "INVENTORY MANAGER • ALL BRANCHES"
                 : `${user.role.replace("_", " ")} • ${
                     user.branchName ?? "NO BRANCH"
                   }`}
@@ -287,22 +293,26 @@ export default function InventoryClient({
                   }))}
                 />
 
-                <ProductionModal
-                  branches={branches}
-                  items={items}
-                />
+                {!isInventoryManager && (
+                  <ProductionModal
+                    branches={branches}
+                    items={items}
+                  />
+                )}
               </>
             )}
 
-            <SalesModal
-              branches={branches}
-              items={items}
-              branchStocks={stockRecords.map((stock) => ({
-                branchId: stock.branchId,
-                itemId: stock.itemId,
-                quantity: stock.quantity,
-              }))}
-            />
+            {!isInventoryManager && (
+              <SalesModal
+                branches={branches}
+                items={items}
+                branchStocks={stockRecords.map((stock) => ({
+                  branchId: stock.branchId,
+                  itemId: stock.itemId,
+                  quantity: stock.quantity,
+                }))}
+              />
+            )}
           </div>
         </div>
 
@@ -318,7 +328,7 @@ export default function InventoryClient({
             </p>
 
             <p className="mt-1 text-xs text-gray-500">
-              {isOwner
+              {canChooseBranch
                 ? "Stock records across all branches"
                 : "Stock records in your branch"}
             </p>
@@ -334,7 +344,7 @@ export default function InventoryClient({
             </p>
 
             <p className="mt-1 text-xs text-gray-500">
-              {isOwner
+              {canChooseBranch
                 ? "Active business branches"
                 : "Your assigned branch"}
             </p>
@@ -430,10 +440,10 @@ export default function InventoryClient({
                 onChange={(event) =>
                   setSelectedBranch(event.target.value)
                 }
-                disabled={!isOwner}
+                disabled={!canChooseBranch}
                 className="aims-control w-full px-3 text-sm outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500"
               >
-                {isOwner && (
+                {canChooseBranch && (
                   <option value="ALL">
                     All Branches
                   </option>
@@ -747,15 +757,19 @@ export default function InventoryClient({
               <p className="text-sm font-semibold text-purple-900">
                 {isOwner
                   ? "Owner inventory access"
-                  : isManager
-                    ? "Branch Manager inventory access"
-                    : "Cashier inventory access"}
+                  : isInventoryManager
+                    ? "Inventory Manager access"
+                    : isManager
+                      ? "Branch Manager inventory access"
+                      : "Cashier inventory access"}
               </p>
 
               <p className="mt-1 text-xs leading-relaxed text-purple-700">
                 {isOwner
                   ? "You are viewing inventory across all branches. Stock operations and production can be recorded from this page."
-                  : isManager
+                  : isInventoryManager
+                    ? "You can review all branches and record stock receipts or physical-count adjustments. Sales, production, transfers, and user administration are not available to this role."
+                    : isManager
                     ? `You are viewing inventory for ${
                         user.branchName ??
                         "your assigned branch"
