@@ -9,6 +9,7 @@ export default async function InventoryPage() {
   const user = await requireUser();
 
   const isOwner = user.role === "OWNER";
+  const canViewAllBranches = isOwner || user.role === "INVENTORY_MANAGER";
 
   /*
    * Inventory / adjustment branches:
@@ -19,7 +20,7 @@ export default async function InventoryPage() {
    * Branch Manager / Cashier:
    *   Only their assigned branch is exposed here.
    */
-  const branchFilter = isOwner
+  const branchFilter = canViewAllBranches
     ? {}
     : user.branchId
       ? { branchId: user.branchId }
@@ -48,7 +49,7 @@ export default async function InventoryPage() {
    * Keep these restricted for non-owners.
    */
   const branches = await prisma.branch.findMany({
-    where: isOwner
+    where: canViewAllBranches
       ? undefined
       : user.branchId
         ? { id: user.branchId }
