@@ -1,3 +1,11 @@
+"use server";
+
+import { prisma } from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
+import { getCurrentUser } from "@/lib/auth/current-user";
+import { canAccessBranch } from "@/lib/auth/authorization";
+import { updateReorderAlert } from "@/lib/reorder-alerts";
+
 export async function adjustStock({
   branchId,
   itemId,
