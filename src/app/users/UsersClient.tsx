@@ -821,9 +821,7 @@ export default function UsersClient() {
 
                 {role !== "INVENTORY_MANAGER" ? (
                   <div className="relative">
-                    <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                      Branch
-                    </label>
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700">Branch</label>
                     <input
                       type="text"
                       value={branchName}
@@ -836,9 +834,7 @@ export default function UsersClient() {
                     />
                     {showBranchOptions && filteredBranches.length > 0 && (
                       <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-52 overflow-y-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
-                        <p className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
-                          Existing Branches
-                        </p>
+                        <p className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gray-400">Existing Branches</p>
                         {filteredBranches.map((branch) => (
                           <button
                             key={branch.id}
@@ -851,18 +847,12 @@ export default function UsersClient() {
                               <span className="block text-sm font-medium text-gray-900">{branch.name}</span>
                               {branch.location && <span className="block text-xs text-gray-400">{branch.location}</span>}
                             </span>
-                            {branch.isCommissary && (
-                              <span className="shrink-0 rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-semibold text-purple-700">
-                                Commissary
-                              </span>
-                            )}
+                            {branch.isCommissary && <span className="shrink-0 rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-semibold text-purple-700">Commissary</span>}
                           </button>
                         ))}
                       </div>
                     )}
-                    {exactBranchMatch && (
-                      <p className="mt-1 text-xs text-green-600">✓ Existing branch selected.</p>
-                    )}
+                    {exactBranchMatch && <p className="mt-1 text-xs text-green-600">✓ Existing branch selected.</p>}
                     {branchName.trim() && !exactBranchMatch && (
                       <div className="mt-2 rounded-lg border border-purple-200 bg-purple-50 p-3">
                         <p className="text-xs text-purple-700">This branch is not currently in the branch list.</p>
