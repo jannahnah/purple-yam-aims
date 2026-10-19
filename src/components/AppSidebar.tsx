@@ -279,8 +279,6 @@ function UserCard({ user }: { user: SidebarUser }) {
       <p className="text-sm font-semibold">{getRoleLabel(user.role)}</p>
       <p className="mt-1 truncate text-xs text-purple-200">
         {user.name?.trim() || user.username}
-        {" • "}
-        {user.branchName ?? "Owner"}
       </p>
     </div>
   );
