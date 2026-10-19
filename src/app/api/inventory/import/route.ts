@@ -228,8 +228,8 @@ export async function POST(request: Request) {
   try {
     const currentUser = await getCurrentUser();
     if (!currentUser) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-    if (currentUser.role !== "OWNER" && currentUser.role !== "BRANCH_MANAGER") {
-      return NextResponse.json({ error: "Only the Owner or Branch Manager can import inventory." }, { status: 403 });
+    if (currentUser.role !== "OWNER" && currentUser.role !== "BRANCH_MANAGER" && currentUser.role !== "INVENTORY_MANAGER") {
+      return NextResponse.json({ error: "Only the Owner, Branch Manager, or Inventory Manager can import inventory." }, { status: 403 });
     }
 
     const contentType = request.headers.get("content-type") ?? "";
