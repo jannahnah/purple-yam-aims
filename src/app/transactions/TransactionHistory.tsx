@@ -30,7 +30,7 @@ type Transaction = {
 };
 
 type CurrentUser = {
-  role: "OWNER" | "BRANCH_MANAGER" | "CASHIER";
+  role: "OWNER" | "BRANCH_MANAGER" | "CASHIER" | "INVENTORY_MANAGER";
   branchName: string | null;
 };
 
