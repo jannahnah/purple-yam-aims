@@ -4,7 +4,7 @@ const accounts = [
   {
     username: "owner",
     name: "Purple Yam Owner",
-    email: "owner@purpleyam.local",
+    email: "emsnayomi@gmail.com",
   },
   {
     username: "manager_b1",

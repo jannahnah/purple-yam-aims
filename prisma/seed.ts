@@ -148,7 +148,7 @@ async function main() {
   // Existing passwords, status, assignments, and audit history are preserved.
   await ensureUser({
     username: "owner",
-    email: "owner@purpleyam.local",
+    email: "emsnayomi@gmail.com",
     password: ownerPassword,
     role: Role.OWNER,
     branchId: null,

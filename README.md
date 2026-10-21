@@ -491,6 +491,21 @@ npx prisma db seed
 
 The current seed strategy intentionally avoids inventing operational inventory quantities and is designed to preserve existing operational records when the default data already exists.
 
+### Replace owner credentials
+
+Use the credential-rotation script to update the existing owner account without
+storing the password in source control:
+
+```bash
+# PowerShell
+$env:OWNER_EMAIL="new-owner@example.com"
+$env:OWNER_PASSWORD="use-a-new-password-here"
+npm run credentials:replace-owner
+```
+
+The script requires an existing owner account, rejects an email already assigned
+to another user, hashes the new password, and keeps the account active.
+
 ### Start the development server
 
 ```bash

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { PageContainer } from "@/components/PageContainer";
 
 type ReportType =
   | "inventory-by-branch"
@@ -490,13 +491,13 @@ export default function ReportsClient({
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 p-[clamp(1rem,2vw,2rem)]">
-      <div className="mx-auto w-full space-y-6">
+    <PageContainer className="space-y-6">
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Reports</h1>
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="aims-eyebrow">History & Analytics</p>
+            <h1 className="aims-title">Reports</h1>
+            <p className="aims-subtitle">
               Inventory and operations reports based on live system data.
             </p>
           </div>
@@ -1202,8 +1203,7 @@ export default function ReportsClient({
             </>
           )}
         </div>
-      </div>
-    </main>
+    </PageContainer>
   );
 }
 

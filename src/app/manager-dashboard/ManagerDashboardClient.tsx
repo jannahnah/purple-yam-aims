@@ -271,7 +271,7 @@ export default function ManagerDashboard({
   }
 
   return (
-    <main className="aims-page p-4 sm:p-6 lg:p-8">
+    <main className="aims-page aims-container">
       <div className="mx-auto w-full max-w-7xl space-y-6">
 
         {/* Header */}

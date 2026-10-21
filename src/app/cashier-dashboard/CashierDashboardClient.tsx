@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { PageContainer } from "@/components/PageContainer";
 import { formatItemLabel } from "@/lib/item-label";
 
 interface FinishedItem {
@@ -107,8 +108,7 @@ export default function CashierDashboardClient({
   );
 
   return (
-    <div className="aims-page px-6 py-8">
-      <div className="mx-auto w-full max-w-4xl space-y-6">
+    <PageContainer className="max-w-4xl space-y-6">
 
         {/* Header */}
         <div>
@@ -286,7 +286,6 @@ export default function CashierDashboardClient({
           )}
         </section>
 
-      </div>
-    </div>
+    </PageContainer>
   );
 }

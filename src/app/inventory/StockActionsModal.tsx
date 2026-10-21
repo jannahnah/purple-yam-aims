@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { adjustStock, transferStock } from "@/app/actions/inventory";
 import { formatItemLabel } from "@/lib/item-label";
+import Button from "@/components/Button";
 
 type Role = "OWNER" | "BRANCH_MANAGER" | "INVENTORY_MANAGER" | "CASHIER";
 
@@ -428,18 +429,18 @@ export default function StockActionsModal({
       {user.role === "INVENTORY_MANAGER" ? (
         <a
           href="/inventory/stock-adjustment"
-          className="inline-flex rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700"
+          className="aims-button aims-button-primary inline-flex w-full sm:w-auto"
         >
           Stock Actions
         </a>
       ) : (
-        <button
+        <Button
           type="button"
           onClick={openModal}
-          className="rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700"
+          className="w-full sm:w-auto"
         >
           Stock Actions
-        </button>
+        </Button>
       )}
 
       {/* Modal */}

@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "credentials:replace-owner": "tsx scripts/replace-owner-credentials.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.0.0",

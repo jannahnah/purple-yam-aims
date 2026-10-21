@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import ServiceWorkerRegister from "./ServiceWorkerRegister";
 import "./globals.css";
@@ -29,12 +30,17 @@ export const metadata: Metadata = {
     apple: "/purple-yam-logo.jpg",
   },
 
-  applicationName: "Purple Yam AIMS",
+  applicationName: "Purple Yam",
   appleWebApp: {
     capable: true,
-    title: "Purple Yam AIMS",
+    title: "Purple Yam",
     statusBarStyle: "default",
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
