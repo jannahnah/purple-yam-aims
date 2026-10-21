@@ -145,7 +145,7 @@ export async function GET(request: Request) {
 // POST /api/users
 // Owner only
 //
-// Creates a Branch Manager, Inventory Manager, or Cashier account.
+// Creates operational accounts, including Production Staff.
 // Inventory Managers receive all-branch inventory access and no branch assignment.
 export async function POST(request: Request) {
   try {
@@ -275,8 +275,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // This Create Staff Account screen is intended
-    // for Branch Manager and Cashier accounts.
+    // Branch-scoped operational accounts must be assigned to an existing branch.
     const branchRequired = role === "BRANCH_MANAGER" || role === "CASHIER" || role === "PRODUCTION_STAFF";
     if (branchRequired && !branchName) {
       return NextResponse.json(
