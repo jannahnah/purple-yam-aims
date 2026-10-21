@@ -84,13 +84,14 @@ export async function GET(request: Request) {
           : {}),
 
         ...(role &&
-        ["OWNER", "BRANCH_MANAGER", "INVENTORY_MANAGER", "CASHIER"].includes(role)
+        ["OWNER", "BRANCH_MANAGER", "INVENTORY_MANAGER", "CASHIER", "PRODUCTION_STAFF"].includes(role)
           ? {
               role: role as
                 | "OWNER"
                 | "BRANCH_MANAGER"
                 | "INVENTORY_MANAGER"
-                | "CASHIER",
+                | "CASHIER"
+                | "PRODUCTION_STAFF",
             }
           : {}),
 
@@ -262,6 +263,7 @@ export async function POST(request: Request) {
       "BRANCH_MANAGER",
       "INVENTORY_MANAGER",
       "CASHIER",
+      "PRODUCTION_STAFF",
     ];
 
     if (!validRoles.includes(role)) {
@@ -275,12 +277,12 @@ export async function POST(request: Request) {
 
     // This Create Staff Account screen is intended
     // for Branch Manager and Cashier accounts.
-    const branchRequired = role === "BRANCH_MANAGER" || role === "CASHIER";
+    const branchRequired = role === "BRANCH_MANAGER" || role === "CASHIER" || role === "PRODUCTION_STAFF";
     if (branchRequired && !branchName) {
       return NextResponse.json(
         {
           error:
-            "A branch assignment is required for Branch Manager and Cashier users.",
+            "A branch assignment is required for Branch Manager, Cashier, and Production Staff users.",
         },
         { status: 400 }
       );
@@ -360,7 +362,7 @@ export async function POST(request: Request) {
         let resolvedBranchId: string | null = null;
 
         // Branch-scoped operational roles must belong to a branch.
-        if (role === "BRANCH_MANAGER" || role === "CASHIER") {
+        if (role === "BRANCH_MANAGER" || role === "CASHIER" || role === "PRODUCTION_STAFF") {
           // Look for an existing branch belonging to
           // the Owner's business.
           const existingBranch =
@@ -409,7 +411,8 @@ export async function POST(request: Request) {
               | "OWNER"
               | "BRANCH_MANAGER"
               | "INVENTORY_MANAGER"
-              | "CASHIER",
+              | "CASHIER"
+              | "PRODUCTION_STAFF",
             status: "ACTIVE",
             mustChangePassword: true,
             branchId: resolvedBranchId,
