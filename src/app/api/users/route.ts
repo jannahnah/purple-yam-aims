@@ -379,26 +379,10 @@ export async function POST(request: Request) {
               },
             });
 
-          if (existingBranch) {
-            // Use the existing branch.
-            resolvedBranchId = existingBranch.id;
-          } else {
-            // Create the branch if it does not exist.
-            const newBranch =
-              await tx.branch.create({
-                data: {
-                  name: branchName,
-                  location: null,
-                  isCommissary: false,
-                  businessId: currentUser.businessId,
-                },
-                select: {
-                  id: true,
-                },
-              });
-
-            resolvedBranchId = newBranch.id;
+          if (!existingBranch) {
+            throw new Error("Branch not found. Create the branch first, then assign this user to it.");
           }
+          resolvedBranchId = existingBranch.id;
         }
 
         const newUser = await tx.user.create({
@@ -463,12 +447,7 @@ export async function POST(request: Request) {
     );
   } catch (error) {
     console.error("POST /api/users error:", error);
-
-    return NextResponse.json(
-      {
-        error: "Failed to create user.",
-      },
-      { status: 500 }
-    );
+    const message = error instanceof Error ? error.message : "Failed to create user.";
+    return NextResponse.json({ error: message }, { status: message.includes("Branch not found") ? 400 : 500 });
   }
 }
