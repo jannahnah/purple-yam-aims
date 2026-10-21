@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 // GET /api/branches
 // Owner: all branches
 // Manager/Cashier: assigned branch only
+// Production Staff: denied; production pages use their server-derived branch
 export async function GET() {
   try {
     const currentUser = await getCurrentUser();
