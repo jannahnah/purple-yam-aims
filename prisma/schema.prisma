@@ -177,6 +177,7 @@ enum Role {
   BRANCH_MANAGER
   INVENTORY_MANAGER
   CASHIER
+  PRODUCTION_STAFF
 }
 
 enum ItemSourceType {

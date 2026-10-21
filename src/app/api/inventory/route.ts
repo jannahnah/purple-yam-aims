@@ -13,6 +13,13 @@ export async function GET() {
       );
     }
 
+    if (currentUser.role === "PRODUCTION_STAFF") {
+      return NextResponse.json(
+        { error: "Production Staff may only access the production logging workspace." },
+        { status: 403 }
+      );
+    }
+
     const branchWhere =
       (currentUser.role === "OWNER" || currentUser.role === "INVENTORY_MANAGER")
         ? undefined

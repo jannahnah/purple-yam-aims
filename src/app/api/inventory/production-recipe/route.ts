@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/current-user";
-import { canAccessBranch } from "@/lib/auth/authorization";
 
 export async function GET(request: Request) {
   try {
@@ -16,7 +15,8 @@ export async function GET(request: Request) {
 
     if (
       currentUser.role !== "OWNER" &&
-      currentUser.role !== "BRANCH_MANAGER"
+      currentUser.role !== "BRANCH_MANAGER" &&
+      currentUser.role !== "PRODUCTION_STAFF"
     ) {
       return NextResponse.json(
         { error: "You do not have permission to view production recipes." },
@@ -34,12 +34,19 @@ export async function GET(request: Request) {
         : currentUser.branchId;
 
     if (
-      currentUser.role === "BRANCH_MANAGER" &&
+      currentUser.role !== "OWNER" &&
       requestedBranchId &&
-      !canAccessBranch(currentUser, requestedBranchId)
+      requestedBranchId !== currentUser.branchId
     ) {
       return NextResponse.json(
         { error: "You cannot access production data for this branch." },
+        { status: 403 }
+      );
+    }
+
+    if (currentUser.role !== "OWNER" && !currentUser.branchId) {
+      return NextResponse.json(
+        { error: "Your account is not assigned to a branch." },
         { status: 403 }
       );
     }
@@ -51,9 +58,12 @@ export async function GET(request: Request) {
       );
     }
 
-    const finishedItem = await prisma.item.findUnique({
+    const finishedItem = await prisma.item.findFirst({
       where: {
         id: finishedItemId,
+        isActive: true,
+        sourceType: "FINISHED_PRODUCT",
+        ...(currentUser.businessId ? { businessId: currentUser.businessId } : {}),
       },
       select: {
         id: true,

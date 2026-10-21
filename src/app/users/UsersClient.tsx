@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-type Role = "OWNER" | "BRANCH_MANAGER" | "INVENTORY_MANAGER" | "CASHIER";
+type Role = "OWNER" | "BRANCH_MANAGER" | "INVENTORY_MANAGER" | "CASHIER" | "PRODUCTION_STAFF";
 type UserStatus = "ACTIVE" | "INACTIVE";
 
 type Branch = {
@@ -30,6 +30,7 @@ const ROLE_LABELS: Record<Role, string> = {
   BRANCH_MANAGER: "Branch Manager",
   INVENTORY_MANAGER: "Inventory Manager",
   CASHIER: "Cashier",
+  PRODUCTION_STAFF: "Production Staff",
 };
 
 function formatDate(value: string) {
@@ -50,6 +51,9 @@ function roleBadgeClass(role: Role) {
 
     case "CASHIER":
       return "bg-blue-100 text-blue-700";
+
+    case "PRODUCTION_STAFF":
+      return "bg-amber-100 text-amber-800";
 
     case "OWNER":
       return "bg-gray-100 text-gray-700";
@@ -88,7 +92,7 @@ export default function UsersClient() {
   const [email, setEmail] = useState("");
 
   const [role, setRole] =
-    useState<"BRANCH_MANAGER" | "INVENTORY_MANAGER" | "CASHIER">(
+    useState<"BRANCH_MANAGER" | "INVENTORY_MANAGER" | "CASHIER" | "PRODUCTION_STAFF">(
       "CASHIER"
     );
 
@@ -313,7 +317,7 @@ export default function UsersClient() {
       return;
     }
 
-    if ((role === "BRANCH_MANAGER" || role === "CASHIER") && !branchName.trim()) {
+    if ((role === "BRANCH_MANAGER" || role === "CASHIER" || role === "PRODUCTION_STAFF") && !branchName.trim()) {
       setError("Please enter a branch.");
       return;
     }
@@ -815,6 +819,9 @@ export default function UsersClient() {
                     </option>
                     <option value="INVENTORY_MANAGER">
                       Inventory Manager
+                    </option>
+                    <option value="PRODUCTION_STAFF">
+                      Production Staff
                     </option>
                   </select>
                 </div>

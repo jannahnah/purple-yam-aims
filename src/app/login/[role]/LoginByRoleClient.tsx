@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import PurpleYamLogo from "@/components/PurpleYamLogo";
 
-type LoginRole = "OWNER" | "BRANCH_MANAGER" | "INVENTORY_MANAGER" | "CASHIER";
+type LoginRole = "OWNER" | "BRANCH_MANAGER" | "INVENTORY_MANAGER" | "CASHIER" | "PRODUCTION_STAFF";
 
 type Props = {
   role: LoginRole;
@@ -55,6 +55,8 @@ export default function LoginByRoleClient({ role, roleLabel }: Props) {
         router.push("/manager-dashboard");
       } else if (data.user.role === "INVENTORY_MANAGER") {
         router.push("/inventory");
+      } else if (data.user.role === "PRODUCTION_STAFF") {
+        router.push("/production-dashboard");
       } else {
         router.push("/cashier-dashboard");
       }

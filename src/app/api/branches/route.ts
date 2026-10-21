@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 // GET /api/branches
 // Owner: all branches
 // Manager/Cashier: assigned branch only
+// Production Staff: denied; production pages use their server-derived branch
 export async function GET() {
   try {
     const currentUser = await getCurrentUser();
@@ -13,6 +14,13 @@ export async function GET() {
       return NextResponse.json(
         { error: "Unauthorized." },
         { status: 401 }
+      );
+    }
+
+    if (currentUser.role === "PRODUCTION_STAFF") {
+      return NextResponse.json(
+        { error: "Production Staff may only access the production logging workspace." },
+        { status: 403 }
       );
     }
 

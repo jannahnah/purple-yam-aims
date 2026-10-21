@@ -32,7 +32,8 @@ export async function logProductionRun({
 
   if (
     currentUser.role !== "OWNER" &&
-    currentUser.role !== "BRANCH_MANAGER"
+    currentUser.role !== "BRANCH_MANAGER" &&
+    currentUser.role !== "PRODUCTION_STAFF"
   ) {
     throw new Error(
       "You do not have permission to record production."

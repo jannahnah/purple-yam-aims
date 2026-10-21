@@ -1,7 +1,7 @@
 import AppSidebar from "@/components/AppSidebar";
 import { ReactNode } from "react";
 
-type Role = "OWNER" | "BRANCH_MANAGER" | "CASHIER" | "INVENTORY_MANAGER";
+type Role = "OWNER" | "BRANCH_MANAGER" | "CASHIER" | "INVENTORY_MANAGER" | "PRODUCTION_STAFF";
 
 type AppShellUser = {
   username: string;
