@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-type Role = "OWNER" | "BRANCH_MANAGER" | "INVENTORY_MANAGER" | "CASHIER";
+type Role = "OWNER" | "BRANCH_MANAGER" | "INVENTORY_MANAGER" | "CASHIER" | "PRODUCTION_STAFF";
 
 type SidebarUser = {
   username: string;
@@ -28,6 +28,8 @@ function getRoleLabel(role: Role) {
       return "Inventory Manager";
     case "CASHIER":
       return "Cashier";
+    case "PRODUCTION_STAFF":
+      return "Production Staff";
     default:
       return role;
   }
@@ -42,6 +44,7 @@ export default function AppSidebar({ user }: AppSidebarProps) {
   const isManager = user.role === "BRANCH_MANAGER";
   const isCashier = user.role === "CASHIER";
   const isInventoryManager = user.role === "INVENTORY_MANAGER";
+  const isProductionStaff = user.role === "PRODUCTION_STAFF";
 
   const dashboardHref = isOwner
     ? "/dashboard"
@@ -49,7 +52,9 @@ export default function AppSidebar({ user }: AppSidebarProps) {
       ? "/manager-dashboard"
       : isInventoryManager
         ? "/inventory"
-        : "/cashier-dashboard";
+        : isProductionStaff
+          ? "/production-dashboard"
+          : "/cashier-dashboard";
 
   function isActive(href: string) {
     if (href === dashboardHref) {
@@ -105,13 +110,19 @@ export default function AppSidebar({ user }: AppSidebarProps) {
           Dashboard
         </Link>}
 
+        {isProductionStaff && (
+          <Link href="/production-dashboard" className={getNavClass("/production-dashboard")}>
+            Production Log
+          </Link>
+        )}
+
         {isCashier && (
           <Link href="/sales" className={getNavClass("/sales")}>
             Sales
           </Link>
         )}
 
-        {!isCashier && (
+        {!isCashier && !isProductionStaff && (
           <>
             <Link href="/inventory" className={getNavClass("/inventory")}>
               Inventory
