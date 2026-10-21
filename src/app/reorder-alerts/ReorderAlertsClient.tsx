@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { PageContainer } from "@/components/PageContainer";
 
-type UserRole = "OWNER" | "BRANCH_MANAGER" | "CASHIER";
+type UserRole = "OWNER" | "BRANCH_MANAGER" | "CASHIER" | "INVENTORY_MANAGER";
 
 interface CurrentUser {
   id: string;

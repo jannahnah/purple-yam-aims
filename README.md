@@ -617,8 +617,11 @@ Actual physical inventory is expected to enter through the appropriate inventory
 ```text
 OWNER
 BRANCH_MANAGER
+INVENTORY_MANAGER
 CASHIER
 ```
+
+`INVENTORY_MANAGER` is a dedicated all-branch inventory role for viewing branch stock, recording received quantities, and entering physical-count adjustments. It is not permitted to record sales, production, branch transfers, or manage users/items.
 
 ### Item source types
 ```text

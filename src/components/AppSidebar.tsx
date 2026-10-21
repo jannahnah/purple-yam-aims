@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-type Role = "OWNER" | "BRANCH_MANAGER" | "CASHIER";
+type Role = "OWNER" | "BRANCH_MANAGER" | "INVENTORY_MANAGER" | "CASHIER";
 type NavIconName =
   | "dashboard"
   | "inventory"
@@ -35,6 +35,8 @@ function getRoleLabel(role: Role) {
       return "Admin Owner";
     case "BRANCH_MANAGER":
       return "Branch Manager";
+    case "INVENTORY_MANAGER":
+      return "Inventory Manager";
     case "CASHIER":
       return "Cashier";
     default:
@@ -50,12 +52,15 @@ export default function AppSidebar({ user }: AppSidebarProps) {
   const isOwner = user.role === "OWNER";
   const isManager = user.role === "BRANCH_MANAGER";
   const isCashier = user.role === "CASHIER";
+  const isInventoryManager = user.role === "INVENTORY_MANAGER";
 
   const dashboardHref = isOwner
     ? "/dashboard"
     : isManager
       ? "/manager-dashboard"
-      : "/cashier-dashboard";
+      : isInventoryManager
+        ? "/inventory"
+        : "/cashier-dashboard";
 
   function isActive(href: string) {
     if (href === dashboardHref) {
@@ -137,10 +142,12 @@ export default function AppSidebar({ user }: AppSidebarProps) {
       </p>
 
       <div className="space-y-1">
-        <Link href={dashboardHref} className={getNavClass(dashboardHref)}>
-          <NavIcon name="dashboard" />
-          Dashboard
-        </Link>
+        {!isInventoryManager && (
+          <Link href={dashboardHref} className={getNavClass(dashboardHref)}>
+            <NavIcon name="dashboard" />
+            Dashboard
+          </Link>
+        )}
 
         {isCashier && (
           <Link href="/sales" className={getNavClass("/sales")}>
@@ -156,10 +163,12 @@ export default function AppSidebar({ user }: AppSidebarProps) {
               Inventory
             </Link>
 
-            <Link href="/transactions" className={getNavClass("/transactions")}>
-              <NavIcon name="transactions" />
-              Transactions
-            </Link>
+            {!isInventoryManager && (
+              <Link href="/transactions" className={getNavClass("/transactions")}>
+                <NavIcon name="transactions" />
+                Transactions
+              </Link>
+            )}
 
             {(isOwner || isManager) && (
               <>
@@ -325,8 +334,6 @@ function UserCard({ user }: { user: SidebarUser }) {
       <p className="text-sm font-semibold">{getRoleLabel(user.role)}</p>
       <p className="mt-1 truncate text-xs text-purple-200">
         {user.name?.trim() || user.username}
-        {" • "}
-        {user.branchName ?? "Owner"}
       </p>
     </div>
   );

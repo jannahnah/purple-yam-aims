@@ -35,7 +35,8 @@ export async function adjustStock({
 
   if (
     currentUser.role !== "OWNER" &&
-    currentUser.role !== "BRANCH_MANAGER"
+    currentUser.role !== "BRANCH_MANAGER" &&
+    currentUser.role !== "INVENTORY_MANAGER"
   ) {
     throw new Error("You do not have permission to adjust stock.");
   }
@@ -364,6 +365,51 @@ export async function transferStock({
     );
   });
 
+  revalidatePath("/inventory");
+  revalidatePath("/dashboard");
+  revalidatePath("/transactions");
+}
+
+export async function adjustStockBatch({
+  branchId, entries,
+}: {
+  branchId: string;
+  entries: Array<{ itemId: string; quantity: number; type: "ADJUSTMENT" | "STOCK_RECEIPT" }>;
+}) {
+  if (!branchId || !Array.isArray(entries) || entries.length === 0) throw new Error("Select a branch and add at least one item.");
+  const seen = new Set<string>();
+  for (const entry of entries) {
+    if (!entry.itemId || seen.has(entry.itemId)) throw new Error("Each item may only appear once in a batch.");
+    seen.add(entry.itemId);
+    if (!Number.isFinite(entry.quantity) || entry.quantity < 0) throw new Error("All quantities must be valid non-negative numbers.");
+    if (entry.type === "STOCK_RECEIPT" && entry.quantity <= 0) throw new Error("Received quantities must be greater than zero.");
+    if (entry.type !== "ADJUSTMENT" && entry.type !== "STOCK_RECEIPT") throw new Error("Invalid stock action type.");
+  }
+  const currentUser = await getCurrentUser();
+  if (!currentUser) throw new Error("You must be logged in.");
+  if (currentUser.role !== "OWNER" && currentUser.role !== "BRANCH_MANAGER" && currentUser.role !== "INVENTORY_MANAGER") throw new Error("You do not have permission to adjust stock.");
+  if (!canAccessBranch(currentUser, branchId)) throw new Error("You do not have permission to modify stock for this branch.");
+  await prisma.$transaction(async (tx) => {
+    const branch = await tx.branch.findUnique({ where: { id: branchId } });
+    if (!branch) throw new Error("Branch not found.");
+    for (const entry of entries) {
+      const item = await tx.item.findUnique({ where: { id: entry.itemId } });
+      if (!item || !item.isActive) throw new Error("One or more selected items are unavailable or inactive.");
+      const existing = await tx.branchStock.findUnique({ where: { branchId_itemId: { branchId, itemId: entry.itemId } } });
+      const previousQuantity = existing?.quantity ?? 0;
+      const quantityDelta = entry.type === "ADJUSTMENT" ? entry.quantity - previousQuantity : entry.quantity;
+      if (quantityDelta === 0) throw new Error("No change is needed for " + item.name + "; its quantity is unchanged.");
+      const newQuantity = previousQuantity + quantityDelta;
+      if (newQuantity < 0) throw new Error("Stock quantity cannot be negative for " + item.name + ".");
+      const updated = await tx.branchStock.upsert({
+        where: { branchId_itemId: { branchId, itemId: entry.itemId } },
+        update: { quantity: newQuantity },
+        create: { branchId, itemId: entry.itemId, quantity: newQuantity },
+      });
+      await tx.stockTransaction.create({ data: { type: entry.type, quantityDelta, previousQuantity, newQuantity: updated.quantity, branchId, itemId: entry.itemId, userId: currentUser.id } });
+      await updateReorderAlert(tx, branchId, entry.itemId, updated.quantity);
+    }
+  });
   revalidatePath("/inventory");
   revalidatePath("/dashboard");
   revalidatePath("/transactions");

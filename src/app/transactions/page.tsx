@@ -17,12 +17,13 @@ export default async function TransactionsPage() {
   const transactions =
     await prisma.stockTransaction.findMany({
       where:
-        currentUser.role === "OWNER"
+        currentUser.role === "OWNER" ||
+        currentUser.role === "INVENTORY_MANAGER"
           ? undefined
-          : {
-              branchId:
-                currentUser.branchId ?? "__NO_BRANCH__",
-            },
+            : {
+          branchId:
+          currentUser.branchId ?? "__NO_BRANCH__",
+        },
       include: {
         item: true,
         branch: true,

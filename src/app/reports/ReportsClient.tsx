@@ -12,7 +12,7 @@ type ReportType =
   | "transfer-delivery-history"
   | "transaction-history";
 
-type UserRole = "OWNER" | "BRANCH_MANAGER" | "CASHIER";
+type UserRole = "OWNER" | "BRANCH_MANAGER" | "CASHIER" | "INVENTORY_MANAGER";
 
 interface CurrentUser {
   id: string;

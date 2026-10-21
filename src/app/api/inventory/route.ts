@@ -14,7 +14,7 @@ export async function GET() {
     }
 
     const branchWhere =
-      currentUser.role === "OWNER"
+      (currentUser.role === "OWNER" || currentUser.role === "INVENTORY_MANAGER")
         ? undefined
         : currentUser.branchId
           ? { branchId: currentUser.branchId }
@@ -23,7 +23,7 @@ export async function GET() {
     const items = await prisma.item.findMany({
       where: {
         isActive: true,
-        ...(currentUser.role === "OWNER"
+        ...((currentUser.role === "OWNER" || currentUser.role === "INVENTORY_MANAGER")
           ? {}
           : {
               branchStocks: {

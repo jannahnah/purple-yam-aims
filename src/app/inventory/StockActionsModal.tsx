@@ -5,7 +5,7 @@ import { adjustStock, transferStock } from "@/app/actions/inventory";
 import { formatItemLabel } from "@/lib/item-label";
 import Button from "@/components/Button";
 
-type Role = "OWNER" | "BRANCH_MANAGER" | "CASHIER";
+type Role = "OWNER" | "BRANCH_MANAGER" | "INVENTORY_MANAGER" | "CASHIER";
 
 interface UserInfo {
   role: Role;
@@ -426,13 +426,22 @@ export default function StockActionsModal({
   return (
     <>
       {/* Open Modal Button */}
-      <Button
-        type="button"
-        onClick={openModal}
-        className="w-full sm:w-auto"
-      >
-        Stock Actions
-      </Button>
+      {user.role === "INVENTORY_MANAGER" ? (
+        <a
+          href="/inventory/stock-adjustment"
+          className="aims-button aims-button-primary inline-flex w-full sm:w-auto"
+        >
+          Stock Actions
+        </a>
+      ) : (
+        <Button
+          type="button"
+          onClick={openModal}
+          className="w-full sm:w-auto"
+        >
+          Stock Actions
+        </Button>
+      )}
 
       {/* Modal */}
       {isOpen && (
@@ -468,7 +477,7 @@ export default function StockActionsModal({
 
             {/* Tabs */}
             <div className="mb-6 flex border-b">
-              <button
+              {user.role !== "INVENTORY_MANAGER" && <button
                 type="button"
                 className={`flex-1 border-b-2 py-2 text-center text-sm font-medium ${
                   activeTab === "transfer"
@@ -481,7 +490,7 @@ export default function StockActionsModal({
                 }}
               >
                 Transfer Stock
-              </button>
+              </button>}
 
               <button
                 type="button"
@@ -509,7 +518,7 @@ export default function StockActionsModal({
             {/* =========================
                 TRANSFER STOCK
             ========================= */}
-            {activeTab === "transfer" && (
+            {user.role !== "INVENTORY_MANAGER" && activeTab === "transfer" && (
               <form
                 onSubmit={handleTransferSubmit}
                 className="space-y-4"
