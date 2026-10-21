@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import TransactionHistory from "./TransactionHistory";
 import { formatItemLabel } from "@/lib/item-label";
-import { requireRole } from "@/lib/auth/authorization";
 
 export const revalidate = 0;
 
