@@ -6,21 +6,11 @@ import { getCurrentUser } from "@/lib/auth/current-user";
 export default async function Home() {
   const user = await getCurrentUser({ allowPasswordChange: true });
 
-  if (user?.mustChangePassword) {
-    redirect("/change-password");
-  }
-
-  if (user?.role === "OWNER") {
-    redirect("/dashboard");
-  }
-
-  if (user?.role === "BRANCH_MANAGER") {
-    redirect("/manager-dashboard");
-  }
-
-  if (user?.role === "CASHIER") {
-    redirect("/cashier-dashboard");
-  }
+  if (user?.mustChangePassword) redirect("/change-password");
+  if (user?.role === "OWNER") redirect("/dashboard");
+  if (user?.role === "BRANCH_MANAGER") redirect("/manager-dashboard");
+  if (user?.role === "CASHIER") redirect("/cashier-dashboard");
+  if (user?.role === "PRODUCTION_STAFF") redirect("/production-dashboard");
 
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#16052b] px-4 py-8">
