@@ -20,11 +20,15 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const branchId = typeof body.branchId === "string" ? body.branchId : "";
+    const requestedBranchId = typeof body.branchId === "string" ? body.branchId : "";
+    const branchId = currentUser.role === "PRODUCTION_STAFF"
+      ? currentUser.branchId ?? ""
+      : requestedBranchId;
     const finishedProductItemId = typeof body.finishedProductItemId === "string" ? body.finishedProductItemId : "";
     const finishedProductQuantity = typeof body.finishedProductQuantity === "number" ? body.finishedProductQuantity : Number.NaN;
 
     if (
+      !branchId ||
       !finishedProductItemId ||
       !Number.isFinite(finishedProductQuantity) ||
       finishedProductQuantity <= 0 ||
