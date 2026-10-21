@@ -59,9 +59,12 @@ export async function GET(request: Request) {
       );
     }
 
-    const finishedItem = await prisma.item.findUnique({
+    const finishedItem = await prisma.item.findFirst({
       where: {
         id: finishedItemId,
+        isActive: true,
+        sourceType: "FINISHED_PRODUCT",
+        ...(currentUser.businessId ? { businessId: currentUser.businessId } : {}),
       },
       select: {
         id: true,
