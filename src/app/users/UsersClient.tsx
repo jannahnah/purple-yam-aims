@@ -820,6 +820,9 @@ export default function UsersClient() {
                     <option value="INVENTORY_MANAGER">
                       Inventory Manager
                     </option>
+                    <option value="PRODUCTION_STAFF">
+                      Production Staff
+                    </option>
                   </select>
                 </div>
 
