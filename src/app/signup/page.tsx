@@ -7,6 +7,7 @@ const roles = [
   { key: "owner", title: "Owner", description: "Create the primary business owner account" },
   { key: "branch-manager", title: "Branch Manager", description: "Contact your Owner for an account" },
   { key: "cashier", title: "Cashier", description: "Contact your Owner for an account" },
+  { key: "production-staff", title: "Production Staff", description: "Contact your Owner for an account" },
 ];
 
 export default function SignupRolePage() {
