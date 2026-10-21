@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/current-user";
-import { canAccessBranch } from "@/lib/auth/authorization";
 
 export async function GET(request: Request) {
   try {
