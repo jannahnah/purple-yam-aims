@@ -38,7 +38,7 @@ export async function POST(request: Request) {
     }
 
     // Staff branch is resolved from the server session, never trusted from the request.
-    const effectiveBranchId = currentUser.role === "PRODUCTION_STAFF" ? currentUser.branchId : branchId;
+    const effectiveBranchId = branchId;
     if (!effectiveBranchId) {
       return NextResponse.json({ error: "Your account is not assigned to a branch." }, { status: 403 });
     }
