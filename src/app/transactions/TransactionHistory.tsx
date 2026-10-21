@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PageContainer } from "@/components/PageContainer";
+import { StatCard } from "@/components/StatCard";
 import { formatItemLabel } from "@/lib/item-label";
 
 type Transaction = {
@@ -38,6 +39,10 @@ type CurrentUser = {
 type ViewMode = "DAY" | "WEEK" | "MONTH";
 
 const TZ = "Asia/Manila";
+
+function isViewMode(value: string): value is ViewMode {
+  return value === "DAY" || value === "WEEK" || value === "MONTH";
+}
 
 function dateKey(value: string | Date) {
   return new Intl.DateTimeFormat("en-CA", {
@@ -136,6 +141,101 @@ function transactionDateInRange(
   const fromKey = inputDate(from);
   const toKey = inputDate(to);
   return key >= fromKey && key <= toKey;
+}
+
+type FilterOption = {
+  value: string;
+  label: string;
+};
+
+function FilterDropdown({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: FilterOption[];
+  onChange: (value: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const selectedOption =
+    options.find((option) => option.value === value) ?? options[0];
+
+  useEffect(() => {
+    if (!open) return;
+
+    function handlePointerDown(event: PointerEvent) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        setOpen(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
+  function selectOption(optionValue: string) {
+    onChange(optionValue);
+    setOpen(false);
+  }
+
+  return (
+    <div ref={containerRef} className="transaction-filter-dropdown">
+      <button
+        type="button"
+        className={`transaction-filter-trigger${open ? " is-open" : ""}`}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={label}
+        onClick={() => setOpen((current) => !current)}
+      >
+        <span className="truncate">{selectedOption?.label ?? label}</span>
+        <svg
+          aria-hidden="true"
+          className={`transaction-filter-chevron${open ? " is-open" : ""}`}
+          viewBox="0 0 20 20"
+          fill="none"
+        >
+          <path d="m5 7.5 5 5 5-5" />
+        </svg>
+      </button>
+
+      {open && (
+        <div className="transaction-filter-panel" role="listbox" aria-label={label}>
+          {options.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              role="option"
+              aria-selected={option.value === value}
+              className={`transaction-filter-option${
+                option.value === value ? " is-selected" : ""
+              }`}
+              onClick={() => selectOption(option.value)}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function TransactionHistory({
@@ -385,64 +485,61 @@ export default function TransactionHistory({
 
         <section className="rounded-2xl border border-gray-200 bg-white p-3 shadow-sm">
           <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-            <div
-              className="grid w-full grid-cols-3 rounded-lg border border-purple-200 bg-purple-50 p-1 sm:w-auto"
-              aria-label="View mode"
-              role="group"
-            >
-              {(["DAY", "WEEK", "MONTH"] as ViewMode[]).map((mode) => (
-                <button
-                  key={mode}
-                  type="button"
-                  onClick={() => setViewMode(mode)}
-                  aria-pressed={viewMode === mode}
-                  className={`min-h-9 rounded-md px-3 text-xs font-semibold transition sm:min-w-20 sm:text-sm ${
-                    viewMode === mode
-                      ? "bg-purple-700 text-white shadow-sm"
-                      : "text-purple-700 hover:bg-white"
-                  }`}
-                >
-                  {mode === "DAY" ? "Day" : mode === "WEEK" ? "Week" : "Month"}
-                </button>
-              ))}
+            <div className="w-full sm:w-52">
+              <FilterDropdown
+                label="View mode"
+                value={viewMode}
+                onChange={(value) => {
+                  if (isViewMode(value)) {
+                    setViewMode(value);
+                  }
+                }}
+                options={[
+                  { value: "DAY", label: "Day" },
+                  { value: "WEEK", label: "Week" },
+                  { value: "MONTH", label: "Month" },
+                ]}
+              />
             </div>
 
-            <div className="grid gap-2 sm:grid-cols-3 xl:min-w-[720px]">
-              <select
+            <div className="transaction-filter-controls grid gap-2 sm:grid-cols-3 xl:min-w-[720px]">
+              <FilterDropdown
+                label="Branch"
                 value={branchFilter}
-                onChange={(event) => setBranchFilter(event.target.value)}
-                className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-700"
-              >
-                <option value="ALL">All Branches</option>
-                {branches.map((branch) => (
-                  <option key={branch} value={branch}>{branch}</option>
-                ))}
-              </select>
+                onChange={setBranchFilter}
+                options={[
+                  { value: "ALL", label: "All Branches" },
+                  ...branches.map((branch) => ({
+                    value: branch,
+                    label: branch,
+                  })),
+                ]}
+              />
 
-              <select
+              <FilterDropdown
+                label="Activity"
                 value={typeFilter}
-                onChange={(event) => setTypeFilter(event.target.value)}
-                className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-700"
-              >
-                <option value="ALL">All Activities</option>
-                <option value="SALE">Sales</option>
-                <option value="PRODUCTION">Production / Consumption</option>
-                <option value="STOCK_RECEIPT">Stock Receipts</option>
-                <option value="ADJUSTMENT">Adjustments</option>
-                <option value="TRANSFER_IN">Transfer In</option>
-                <option value="TRANSFER_OUT">Transfer Out</option>
-              </select>
+                onChange={setTypeFilter}
+                options={[
+                  { value: "ALL", label: "All Activities" },
+                  { value: "SALE", label: "Sales" },
+                  { value: "PRODUCTION", label: "Production / Consumption" },
+                  { value: "STOCK_RECEIPT", label: "Stock Receipts" },
+                  { value: "ADJUSTMENT", label: "Adjustments" },
+                  { value: "TRANSFER_IN", label: "Transfer In" },
+                  { value: "TRANSFER_OUT", label: "Transfer Out" },
+                ]}
+              />
 
-              <select
+              <FilterDropdown
+                label="Item or product"
                 value={itemFilter}
-                onChange={(event) => setItemFilter(event.target.value)}
-                className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-700"
-              >
-                <option value="ALL">All Items / Products</option>
-                {items.map((item) => (
-                  <option key={item} value={item}>{item}</option>
-                ))}
-              </select>
+                onChange={setItemFilter}
+                options={[
+                  { value: "ALL", label: "All Items / Products" },
+                  ...items.map((item) => ({ value: item, label: item })),
+                ]}
+              />
             </div>
           </div>
 
@@ -457,7 +554,7 @@ export default function TransactionHistory({
           )}
         </section>
 
-        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <section className="dashboard-summary-grid grid gap-2.5 sm:gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {[
             ["Sales", summary.sales, "text-red-600"],
             ["Production", summary.production, "text-purple-700"],
@@ -466,18 +563,16 @@ export default function TransactionHistory({
             ["Transfers", summary.transfers, "text-blue-700"],
             ["Adjustments", summary.adjustments, "text-amber-700"],
           ].map(([label, value, tone]) => (
-            <div key={String(label)} className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                {label}
-              </p>
-              <p className={`mt-1 text-xl font-bold ${tone}`}>
-                {formatNumber(Number(value))}
-              </p>
-            </div>
+            <StatCard
+              key={String(label)}
+              label={String(label)}
+              value={formatNumber(Number(value))}
+              valueClassName={String(tone)}
+            />
           ))}
         </section>
 
-                <div className="grid min-w-0 items-start gap-4 2xl:grid-cols-[minmax(300px,0.72fr)_minmax(0,1.28fr)]">
+                <div className="transaction-results-grid grid min-w-0 items-start gap-4 2xl:grid-cols-[minmax(300px,0.72fr)_minmax(0,1.28fr)]">
           <section ref={calendarRef} className="min-w-0 w-full rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
             <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>

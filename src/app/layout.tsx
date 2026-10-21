@@ -30,10 +30,10 @@ export const metadata: Metadata = {
     apple: "/purple-yam-logo.jpg",
   },
 
-  applicationName: "Purple Yam AIMS",
+  applicationName: "Purple Yam",
   appleWebApp: {
     capable: true,
-    title: "Purple Yam AIMS",
+    title: "Purple Yam",
     statusBarStyle: "default",
   },
 };

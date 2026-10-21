@@ -41,7 +41,7 @@ export default async function Home() {
           <div className="mb-6">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-purple-300/70">Secure System Access</p>
             <h2 className="mt-2 text-2xl font-bold text-white">Welcome</h2>
-            <p className="mt-2 text-sm leading-6 text-purple-100/60">Choose how you would like to access the Purple Yam AIMS.</p>
+            <p className="mt-2 text-sm leading-6 text-purple-100/60">Choose how you would like to access Purple Yam.</p>
           </div>
           <div className="space-y-3">
             <Link href="/login" className="flex h-12 w-full items-center justify-center rounded-xl bg-gradient-to-r from-purple-600 via-purple-600 to-violet-700 text-sm font-bold uppercase tracking-wide text-white shadow-[0_8px_22px_rgba(124,58,237,0.25)] transition hover:from-purple-500 hover:via-purple-600 hover:to-violet-600">Log In</Link>

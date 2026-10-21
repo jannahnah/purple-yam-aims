@@ -726,7 +726,7 @@ export default function InventoryClient({
                     <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 text-xs">
                       <div>
                         <p className="text-gray-500">Stock</p>
-                        <p className="mt-0.5 text-right text-base font-bold tabular-nums text-gray-900">
+                        <p className="mt-0.5 whitespace-nowrap text-left text-base font-bold leading-5 tabular-nums text-gray-900">
                           {formatQuantity(stock.quantity)} {stock.item.unit}
                         </p>
                       </div>

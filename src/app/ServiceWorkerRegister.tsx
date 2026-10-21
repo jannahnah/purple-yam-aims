@@ -12,7 +12,7 @@ export default function ServiceWorkerRegister() {
       .register("/sw.js")
       .then((registration) => {
         console.log(
-          "Purple Yam AIMS service worker registered:",
+          "Purple Yam service worker registered:",
           registration.scope
         );
       })

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { formatItemLabel } from "@/lib/item-label";
+import { StatCard } from "@/components/StatCard";
 import { useEffect, useRef, useState } from "react";
 
 type Role = "OWNER" | "BRANCH_MANAGER" | "CASHIER" | "INVENTORY_MANAGER";
@@ -161,7 +162,7 @@ export default function DashboardClient({
             const registration = await navigator.serviceWorker.ready;
 
             for (const alert of newAlerts) {
-              await registration.showNotification("Purple Yam AIMS — Low stock", {
+              await registration.showNotification("Purple Yam — Low stock", {
                 body: `${alert.item.name} at ${alert.branch.name}: ${alert.currentQuantity} ${alert.item.unit} remaining (threshold ${alert.item.minThreshold}).`,
                 icon: "/purple-yam-favicon.svg",
                 badge: "/purple-yam-favicon.svg",
@@ -254,7 +255,7 @@ export default function DashboardClient({
       <header className="dashboard-topbar relative z-30 border-b border-purple-900/30 px-3 py-3 backdrop-blur sm:sticky sm:px-6 sm:py-4 lg:px-8">
         <div className="flex items-start justify-between gap-3 sm:items-center sm:gap-4">
           <div>
-            <p className="text-xs leading-4 text-purple-100/75 sm:text-sm sm:leading-normal">
+            <p className="text-xs leading-4 text-zinc-500 sm:text-sm sm:leading-normal">
               Business-wide inventory overview —{" "}
               {new Date().toLocaleDateString("en-US", {
                 month: "long",
@@ -263,13 +264,13 @@ export default function DashboardClient({
               })}
             </p>
 
-            <h1 className="mt-1 text-xl font-bold leading-tight tracking-tight text-white sm:text-2xl lg:text-3xl">
-              Purple Yam AIMS
+            <h1 className="mt-1 text-xl font-bold leading-tight tracking-tight text-zinc-900 sm:text-2xl lg:text-3xl">
+              Purple Yam
             </h1>
 
-            <p className="mt-1 text-xs leading-4 text-purple-100/75 sm:text-sm sm:leading-normal">
+            <p className="mt-1 text-xs leading-4 text-zinc-500 sm:text-sm sm:leading-normal">
               Signed in as{" "}
-              <span className="font-semibold text-white">
+              <span className="font-semibold text-zinc-900">
                 {user.name?.trim() || user.username}
               </span>
             </p>
@@ -282,7 +283,7 @@ export default function DashboardClient({
                 onClick={() =>
                   setIsNotificationOpen((currentValue) => !currentValue)
                 }
-                className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/15 bg-white/10 text-white transition hover:bg-white/20 sm:h-11 sm:w-11 sm:rounded-xl"
+                className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-zinc-300 bg-zinc-50 text-zinc-700 transition hover:bg-zinc-100 sm:h-11 sm:w-11 sm:rounded-xl"
                 aria-label="Open stock notifications"
                 aria-expanded={isNotificationOpen}
               >
@@ -408,15 +409,15 @@ export default function DashboardClient({
       </header>
 
       <main className="aims-container space-y-5 sm:space-y-8">
-        <section className="dashboard-welcome flex flex-col gap-4 rounded-2xl p-4 text-white shadow-lg sm:flex-row sm:items-center sm:justify-between sm:p-6">
+        <section className="dashboard-welcome flex flex-col gap-4 rounded-2xl p-4 text-zinc-900 shadow-lg sm:flex-row sm:items-center sm:justify-between sm:p-6">
           <div className="min-w-0">
-            <span className="inline-flex rounded-full bg-white/15 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-purple-100">
+            <span className="inline-flex rounded-full bg-zinc-100 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-zinc-600">
               Owner Role
             </span>
             <h2 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">
               Welcome back, {user.name?.trim() || "Owner"}! <span aria-hidden="true">👋</span>
             </h2>
-            <p className="mt-1 max-w-xl text-xs leading-5 text-purple-100/80 sm:text-sm">
+            <p className="mt-1 max-w-xl text-xs leading-5 text-zinc-600 sm:text-sm">
               Here&apos;s your real-time stock summary across your central commissary and satellite branches.
             </p>
           </div>
@@ -431,69 +432,28 @@ export default function DashboardClient({
         </section>
 
         <section className="dashboard-summary-grid grid gap-2.5 sm:gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <div className="dashboard-kpi rounded-xl border border-gray-200 bg-white p-3 shadow-sm sm:rounded-2xl sm:p-5">
-            <div className="flex items-start justify-between gap-2">
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-500 sm:text-xs">
-              Inventory Items
-              </p>
-            </div>
-
-            <p className="mt-1.5 text-2xl font-bold text-gray-900 sm:mt-3 sm:text-3xl">
-              {totalItems}
-            </p>
-
-            <p className="mt-0.5 text-[11px] leading-4 text-gray-500 sm:mt-1 sm:text-xs">
-              Across all branches
-            </p>
-          </div>
-
-          <div className="dashboard-kpi rounded-2xl border border-gray-200 bg-white p-3 shadow-sm sm:p-5">
-            <div className="flex items-start justify-between gap-2">
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-500 sm:text-xs">
-              Active Branches
-              </p>
-            </div>
-
-            <p className="mt-3 text-3xl font-bold text-gray-900">
-              {activeBranches}
-            </p>
-
-            <p className="mt-1 text-xs text-gray-500">
-              Commissary and satellite branches
-            </p>
-          </div>
-
-          <div className="dashboard-kpi rounded-2xl border border-gray-200 bg-white p-3 shadow-sm sm:p-5">
-            <div className="flex items-start justify-between gap-2">
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-500 sm:text-xs">
-              Low Stock
-              </p>
-            </div>
-
-            <p className="mt-1.5 text-2xl font-bold text-amber-600 sm:mt-3 sm:text-3xl">
-              {lowStock}
-            </p>
-
-            <p className="mt-1 text-xs text-gray-500">
-              At or below minimum threshold
-            </p>
-          </div>
-
-          <div className="dashboard-kpi rounded-2xl border border-gray-200 bg-white p-3 shadow-sm sm:p-5">
-            <div className="flex items-start justify-between gap-2">
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-500 sm:text-xs">
-              Out of Stock
-              </p>
-            </div>
-
-            <p className="mt-1.5 text-2xl font-bold text-red-600 sm:mt-3 sm:text-3xl">
-              {outOfStock}
-            </p>
-
-            <p className="mt-1 text-xs text-gray-500">
-              Zero-quantity entries
-            </p>
-          </div>
+          <StatCard
+            label="Inventory Items"
+            value={totalItems}
+            description="Across all branches"
+          />
+          <StatCard
+            label="Active Branches"
+            value={activeBranches}
+            description="Commissary and satellite branches"
+          />
+          <StatCard
+            label="Low Stock"
+            value={lowStock}
+            valueClassName="text-amber-600"
+            description="At or below minimum threshold"
+          />
+          <StatCard
+            label="Out of Stock"
+            value={outOfStock}
+            valueClassName="text-red-600"
+            description="Zero-quantity entries"
+          />
         </section>
 
         <section className="rounded-xl border border-gray-200 bg-white shadow-sm sm:rounded-2xl">
