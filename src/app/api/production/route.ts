@@ -24,7 +24,12 @@ export async function POST(request: Request) {
     const finishedProductItemId = typeof body.finishedProductItemId === "string" ? body.finishedProductItemId : "";
     const finishedProductQuantity = typeof body.finishedProductQuantity === "number" ? body.finishedProductQuantity : Number.NaN;
 
-    if (!finishedProductItemId || !Number.isFinite(finishedProductQuantity) || finishedProductQuantity <= 0) {
+    if (
+      !finishedProductItemId ||
+      !Number.isFinite(finishedProductQuantity) ||
+      finishedProductQuantity <= 0 ||
+      !Number.isInteger(finishedProductQuantity)
+    ) {
       return NextResponse.json({ error: "Invalid production data." }, { status: 400 });
     }
 
