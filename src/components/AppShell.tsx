@@ -1,7 +1,7 @@
 import AppSidebar from "@/components/AppSidebar";
 import { ReactNode } from "react";
 
-type Role = "OWNER" | "BRANCH_MANAGER" | "CASHIER" | "INVENTORY_MANAGER" | "PRODUCTION_STAFF";
+import type { Role } from "@prisma/client";
 
 type AppShellUser = {
   username: string;
