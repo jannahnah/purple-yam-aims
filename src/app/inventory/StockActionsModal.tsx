@@ -4,7 +4,7 @@ import { useState } from "react";
 import { adjustStock, transferStock } from "@/app/actions/inventory";
 import { formatItemLabel } from "@/lib/item-label";
 
-type Role = "OWNER" | "BRANCH_MANAGER" | "INVENTORY_MANAGER" | "CASHIER";
+type Role = "OWNER" | "BRANCH_MANAGER" | "INVENTORY_MANAGER" | "CASHIER" | "PRODUCTION_STAFF";
 
 interface UserInfo {
   role: Role;
