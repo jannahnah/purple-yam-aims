@@ -113,8 +113,10 @@ The inventory module provides:
 - Current inventory by branch
 - Item creation and maintenance
 - Item source classification
-- Inventory quantity adjustments
+- Single-item and multi-item inventory quantity adjustments
 - Inventory history
+- Physical-count and stock-receipt workflows for authorized inventory roles
+- Spoilage-related stock tracking
 - Branch stock tracking
 - Active/inactive item handling
 - Inventory categories and units
@@ -162,6 +164,10 @@ Administrative user management includes:
 - Active/inactive status
 - Account details
 - User audit history
+
+### Notifications and User Feedback
+
+A shared toast notification system provides top-positioned success, error, warning, and informational messages across the application. Notifications automatically dismiss after a short interval, reducing the need for disruptive browser alert dialogs while keeping users informed about completed or failed actions.
 
 ### Audit and Transaction History
 The system records operational history for traceability.
@@ -557,6 +563,8 @@ The application is being designed for both desktop and mobile use.
 - Responsive navigation
 - Smaller action controls
 - Readable inventory tables
+- Better spacing and alignment for branch-manager finished-product tables
+- Mobile-friendly popup forms and stock-validation messages
 - Touch-friendly controls
 - Preservation of information hierarchy without excessive spacing
 
@@ -743,6 +751,11 @@ The UI and backend should represent the actual Purple Yam workflow rather than i
 The project is currently in active implementation and refinement.
 
 Recent development areas include:
+- Shared toast notifications for success, error, warning, and informational feedback
+- Spoilage logging and spoilage summary reporting
+- Production staff quick-logging workflows
+- Multi-item stock adjustment workflows
+- Role-aware inventory actions and transaction history
 - Responsive dashboard layouts
 - Compact mobile summary cards
 - Desktop spacing and balance
@@ -764,6 +777,8 @@ Features that are intentionally deferred should be reintroduced only when their 
 
 Potential future work includes:
 - Additional reporting and export capabilities
+- Verified near-real-time inventory refresh across all active user dashboards
+- Offline-first operation and reliable synchronization, once fully integrated and validated on the main branch
 - More complete production workflow configuration
 - Expanded inventory reconciliation tooling
 - Improved notification mechanisms
