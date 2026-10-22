@@ -18,7 +18,13 @@ export default function ProductionStaffClient({ branchId, branchName, products, 
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
-  const selectedProduct = products.find(p => p.id === selected);\n\n  // Refresh server-backed totals regularly so cashier sales appear without a manual reload.\n  useEffect(() => {\n    const interval = window.setInterval(() => router.refresh(), 15000);\n    return () => window.clearInterval(interval);\n  }, [router]);
+  const selectedProduct = products.find(p => p.id === selected);
+
+  // Refresh server-backed totals regularly so cashier sales appear without a manual reload.
+  useEffect(() => {
+    const interval = window.setInterval(() => router.refresh(), 15000);
+    return () => window.clearInterval(interval);
+  }, [router]);
 
   function submit(value?: string) {
     const count = Number(value ?? amount);
