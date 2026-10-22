@@ -298,6 +298,7 @@ export async function GET() {
             unit: transaction.item.unit,
             sourceType: transaction.item.sourceType,
           },
+          reason: transaction.reason ?? null,
           user: {
             username: transaction.user.username,
             role: transaction.user.role,
