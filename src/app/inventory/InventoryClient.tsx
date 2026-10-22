@@ -5,6 +5,7 @@ import StockActionsModal from "./StockActionsModal";
 import ProductionModal from "./ProductionModal";
 import SalesModal from "./SalesModal";
 import { formatItemLabel } from "@/lib/item-label";
+import SpoilageQuickForm from "@/components/SpoilageQuickForm";
 
 type Role = "OWNER" | "BRANCH_MANAGER" | "INVENTORY_MANAGER" | "CASHIER" | "PRODUCTION_STAFF";
 
@@ -45,6 +46,7 @@ type Props = {
   branches: Branch[];
   transferBranches: Branch[];
   items: Item[];
+  spoilageItems: { id: string; name: string; size: string | null; unit: string; sourceType: string; category: string }[];
 };
 
 function formatQuantity(quantity: number) {
@@ -124,6 +126,7 @@ export default function InventoryClient({
   branches,
   transferBranches,
   items,
+  spoilageItems,
 }: Props) {
   const isOwner = user.role === "OWNER";
   const isManager = user.role === "BRANCH_MANAGER";
@@ -311,6 +314,15 @@ export default function InventoryClient({
                   itemId: stock.itemId,
                   quantity: stock.quantity,
                 }))}
+              />
+            )}
+
+            {(isOwner || isManager) && (
+              <SpoilageQuickForm
+                userRole={isOwner ? "OWNER" : "BRANCH_MANAGER"}
+                branches={branches}
+                initialBranchId={isOwner ? (branches[0]?.id ?? "") : (user.branchId ?? "")}
+                items={spoilageItems}
               />
             )}
           </div>

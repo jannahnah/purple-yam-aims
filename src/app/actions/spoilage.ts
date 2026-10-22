@@ -18,6 +18,9 @@ export async function logSpoilage(input: { branchId: string; itemId: string; qua
   const reason = input.reason.trim();
   if (!reason) throw new Error("Please provide a reason for the spoilage.");
   if (reason.length > 500) throw new Error("Reason must be 500 characters or fewer.");
+  if (currentUser.role === "BRANCH_MANAGER" && currentUser.branchId !== input.branchId) {
+    throw new Error("You can only log spoilage for your assigned branch.");
+  }
   if (currentUser.role === "PRODUCTION_STAFF" && currentUser.branchId !== input.branchId) {
     throw new Error("You can only log spoilage for your assigned branch.");
   }

@@ -9,8 +9,8 @@ export const dynamic = "force-dynamic";
 export default async function SpoilagePage() {
   const user = await getCurrentUser();
   if (!user) redirect("/");
-  if (!["OWNER", "BRANCH_MANAGER", "INVENTORY_MANAGER", "PRODUCTION_STAFF"].includes(user.role)) redirect("/unauthorized");
-  const canViewAll = user.role === "OWNER" || user.role === "INVENTORY_MANAGER";
+  if (!["INVENTORY_MANAGER", "PRODUCTION_STAFF"].includes(user.role)) redirect("/unauthorized");
+  const canViewAll = user.role === "INVENTORY_MANAGER";
   const branches = await prisma.branch.findMany({
     where: canViewAll ? undefined : { id: user.branchId ?? "__NO_BRANCH__" },
     select: { id: true, name: true },
