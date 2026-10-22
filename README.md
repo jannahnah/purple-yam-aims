@@ -66,15 +66,17 @@ Actual operational quantities are intended to come from approved business record
 
 ## 3. System Users and Roles
 
-Purple Yam AIMS uses role-based access control with three primary roles:
+Purple Yam AIMS uses role-based access control for five operational roles:
 
 | Role | Primary responsibility |
 |---|---|
 | **Owner** | Business-wide oversight, branch monitoring, user management, inventory visibility, reports, and administrative controls |
 | **Branch Manager** | Manage and monitor inventory and operations for an assigned branch |
-| **Cashier / Staff** | Perform permitted day-to-day inventory and transaction activities within assigned access |
+| **Cashier** | Record permitted sales and perform day-to-day cashier activities for the assigned branch |
+| **Inventory Manager** | Monitor inventory across branches, record received stock, and perform authorized physical-count adjustments and inventory history review |
+| **Production Staff** | Perform branch-scoped production logging and authorized spoilage recording/reporting workflows |
 
-Users are associated with the Purple Yam business and may be assigned to a specific branch.
+Users are associated with the Purple Yam business and may be assigned to a specific branch. Access is role-aware and should be limited to the operational actions required by each role.
 
 The underlying data model also supports:
 - Active/inactive user status
@@ -113,8 +115,10 @@ The inventory module provides:
 - Current inventory by branch
 - Item creation and maintenance
 - Item source classification
-- Inventory quantity adjustments
+- Single-item and multi-item inventory quantity adjustments
 - Inventory history
+- Stock receipt and physical-count workflows for authorized inventory roles
+- Spoilage-related stock tracking
 - Branch stock tracking
 - Active/inactive item handling
 - Inventory categories and units
@@ -127,7 +131,10 @@ Inventory changes preserve a clear quantity history:
 This makes stock movement easier to audit than showing only the final quantity.
 
 ### Sales
-Sales transactions reduce inventory according to recorded sales activity and remain part of the transaction history.
+Sales transactions reduce inventory according to recorded sales activity and remain part of the transaction history. Stock validation helps prevent recording quantities beyond available inventory.
+
+### Production Staff and Spoilage
+Production Staff have branch-scoped quick-logging workflows for production activity. The system also supports spoilage recording and spoilage summary reporting so spoiled finished-product stock can be accounted for. Access to spoilage workflows depends on the user's role; Owner and Branch Manager can use the inventory popup workflow, while Inventory Manager and Production Staff have access to the dedicated spoilage logging workflow.
 
 ### Production
 Production records support finished-product workflows and can connect finished products with ingredient requirements through production recipes.
@@ -162,6 +169,9 @@ Administrative user management includes:
 - Active/inactive status
 - Account details
 - User audit history
+
+### Notifications and User Feedback
+A shared toast notification system provides top-positioned success, error, warning, and informational messages across user roles. Notifications automatically dismiss after a short interval, helping users understand completed or failed actions without relying on disruptive browser alert dialogs.
 
 ### Audit and Transaction History
 The system records operational history for traceability.
@@ -557,6 +567,7 @@ The application is being designed for both desktop and mobile use.
 - Responsive navigation
 - Smaller action controls
 - Readable inventory tables
+- Mobile-friendly popup forms, stock validation, and compact branch inventory layouts
 - Touch-friendly controls
 - Preservation of information hierarchy without excessive spacing
 
@@ -617,11 +628,13 @@ Actual physical inventory is expected to enter through the appropriate inventory
 ```text
 OWNER
 BRANCH_MANAGER
-INVENTORY_MANAGER
 CASHIER
+INVENTORY_MANAGER
+PRODUCTION_STAFF
 ```
 
-`INVENTORY_MANAGER` is a dedicated all-branch inventory role for viewing branch stock, recording received quantities, and entering physical-count adjustments. It is not permitted to record sales, production, branch transfers, or manage users/items.
+- `INVENTORY_MANAGER` is a dedicated all-branch inventory role for viewing branch stock, recording received quantities, entering physical-count adjustments, and reviewing inventory history. It is not permitted to record sales, production, branch transfers, or manage users/items unless explicitly authorized by the application rules.
+- `PRODUCTION_STAFF` is a branch-scoped role for permitted production logging and spoilage-related workflows. It does not receive the Owner's or Branch Manager's broad administrative permissions.
 
 ### Item source types
 ```text
@@ -743,6 +756,10 @@ The UI and backend should represent the actual Purple Yam workflow rather than i
 The project is currently in active implementation and refinement.
 
 Recent development areas include:
+- Dedicated Inventory Manager and Production Staff workflows
+- Production quick logging and spoilage reporting
+- Multi-item stock adjustment workflows
+- Shared toast notifications for success, error, warning, and informational feedback
 - Responsive dashboard layouts
 - Compact mobile summary cards
 - Desktop spacing and balance
