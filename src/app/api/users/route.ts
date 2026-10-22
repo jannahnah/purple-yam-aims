@@ -90,6 +90,7 @@ export async function GET(request: Request) {
                 | "OWNER"
                 | "BRANCH_MANAGER"
                 | "INVENTORY_MANAGER"
+                | "PRODUCTION_STAFF"
                 | "CASHIER",
             }
           : {}),
