@@ -156,6 +156,34 @@ export async function GET(request: Request) {
             branchId: currentUser.branchId ?? "__NO_BRANCH__",
           };
 
+    // Get the last recorded inventory level before the selected period.
+    // This keeps Beginning Inventory independent from today's on-hand quantity.
+    const beginningTransactions = exportDateRange
+      ? await prisma.stockTransaction.findMany({
+          where: {
+            ...branchWhere,
+            createdAt: { lt: exportDateRange.startAt },
+          },
+          select: {
+            branchId: true,
+            itemId: true,
+            previousQuantity: true,
+            newQuantity: true,
+            createdAt: true,
+          },
+          orderBy: { createdAt: "desc" },
+        })
+      : [];
+
+    const beginningInventoryByKey = new Map<string, number>();
+    for (const transaction of beginningTransactions) {
+      const key = `${transaction.branchId}:${transaction.itemId}`;
+      if (!beginningInventoryByKey.has(key)) {
+        const quantity = transaction.newQuantity ?? transaction.previousQuantity;
+        if (quantity !== null) beginningInventoryByKey.set(key, quantity);
+      }
+    }
+
     const [inventory, transactions, branches] = await Promise.all([
       prisma.branchStock.findMany({
         where: {
@@ -534,11 +562,16 @@ export async function GET(request: Request) {
                   .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
               : [];
             const firstPeriodTransaction = itemPeriodTransactions[0];
+            const beginningKey = itemId ? `${branch.transactions[0]?.branchId ?? ""}:${itemId}` : "";
+            const beginningQuantity =
+              firstPeriodTransaction?.previousQuantity ??
+              beginningInventoryByKey.get(beginningKey) ??
+              0;
 
             const row: Array<string | number> = [
               item.item,
               item.unit,
-              firstPeriodTransaction?.previousQuantity ?? "",
+              beginningQuantity,
             ];
             let total = 0;
 
