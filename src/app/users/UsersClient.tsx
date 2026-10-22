@@ -28,7 +28,8 @@ type User = {
 const ROLE_LABELS: Record<Role, string> = {
   OWNER: "Owner",
   BRANCH_MANAGER: "Branch Manager",
-  INVENTORY_MANAGER: "Inventory Manager",\n  PRODUCTION_STAFF: "Production Staff",
+  INVENTORY_MANAGER: "Inventory Manager",
+  PRODUCTION_STAFF: "Production Staff",
   CASHIER: "Cashier",
 };
 
