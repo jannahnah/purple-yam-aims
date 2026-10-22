@@ -550,19 +550,14 @@ export async function GET(request: Request) {
             }
           }
 
-          for (const item of [...itemGroups.values()].sort((a, b) =>
-            a.item.localeCompare(b.item)
+          for (const [itemId, item] of [...itemGroups.entries()].sort((a, b) =>
+            a[1].item.localeCompare(b[1].item)
           )) {
-            const itemId = [...itemGroups.entries()].find(
-              ([, group]) => group.item === item.item
-            )?.[0];
-            const itemPeriodTransactions = itemId
-              ? branch.transactions
-                  .filter((transaction) => transaction.itemId === itemId)
-                  .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
-              : [];
+            const itemPeriodTransactions = branch.transactions
+              .filter((transaction) => transaction.itemId === itemId)
+              .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
             const firstPeriodTransaction = itemPeriodTransactions[0];
-            const beginningKey = itemId ? `${branch.transactions[0]?.branchId ?? ""}:${itemId}` : "";
+            const beginningKey = `${branch.transactions[0]?.branchId ?? ""}:${itemId}`;
             const beginningQuantity =
               firstPeriodTransaction?.previousQuantity ??
               beginningInventoryByKey.get(beginningKey) ??
