@@ -492,7 +492,7 @@ export async function GET(request: Request) {
           }
 
           rows.push([formatTransactionType(transactionType)]);
-          rows.push(["Item", "Unit", ...dates, "Total Change"]);
+          rows.push(["Item", "Unit", "Beginning Inventory", ...dates, "Total Change"]);
 
           const itemGroups = new Map<
             string,
@@ -525,9 +525,20 @@ export async function GET(request: Request) {
           for (const item of [...itemGroups.values()].sort((a, b) =>
             a.item.localeCompare(b.item)
           )) {
+            const itemId = [...itemGroups.entries()].find(
+              ([, group]) => group.item === item.item
+            )?.[0];
+            const itemPeriodTransactions = itemId
+              ? branch.transactions
+                  .filter((transaction) => transaction.itemId === itemId)
+                  .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+              : [];
+            const firstPeriodTransaction = itemPeriodTransactions[0];
+
             const row: Array<string | number> = [
               item.item,
               item.unit,
+              firstPeriodTransaction?.previousQuantity ?? "",
             ];
             let total = 0;
 
@@ -593,6 +604,7 @@ export async function GET(request: Request) {
         worksheet["!cols"] = [
           { wch: 28 },
           { wch: 12 },
+          { wch: 22 },
           ...transactionDateKeys.map(() => ({ wch: 14 })),
           { wch: 16 },
         ];
