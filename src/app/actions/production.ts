@@ -40,7 +40,11 @@ export async function logProductionRun({
     );
   }
 
-  if (currentUser.role === "PRODUCTION_STAFF" && currentUser.branchId !== branchId) {\n    throw new Error("Production staff can only log production for their assigned branch.");\n  }\n\n  if (!canAccessBranch(currentUser, branchId)) {
+  if (currentUser.role === "PRODUCTION_STAFF" && currentUser.branchId !== branchId) {
+    throw new Error("Production staff can only log production for their assigned branch.");
+  }
+
+  if (!canAccessBranch(currentUser, branchId)) {
     throw new Error(
       "You do not have permission to record production for this branch."
     );
@@ -311,5 +315,6 @@ export async function logProductionRun({
 
   revalidatePath("/inventory");
   revalidatePath("/dashboard");
-  revalidatePath("/transactions");\n  revalidatePath("/production");
+  revalidatePath("/transactions");
+  revalidatePath("/production");
 }
