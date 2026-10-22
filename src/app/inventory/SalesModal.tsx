@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { recordSale } from "@/app/actions/sales";
 import { formatItemLabel } from "@/lib/item-label";
+import { useToast } from "@/components/ToastProvider";
 
 interface Branch {
   id: string;
@@ -32,6 +33,7 @@ export default function SalesModal({
   items: Item[];
   branchStocks: BranchStock[];
 }) {
+  const { notify } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -76,26 +78,25 @@ export default function SalesModal({
     e.preventDefault();
 
     if (!selectedBranch) {
-      alert("Please select a branch.");
+      notify({ message: "Please select a branch.", type: "error" });
       return;
     }
 
     if (!selectedFinishedItem) {
-      alert("Please select a finished product.");
+      notify({ message: "Please select a finished product.", type: "error" });
       return;
     }
 
     if (!Number.isInteger(soldQuantity) || soldQuantity <= 0) {
-      alert("Sale quantity must be a whole number greater than zero.");
+      notify({ message: "Sale quantity must be a whole number greater than zero.", type: "error" });
       return;
     }
 
     if (soldQuantity > availableStock) {
-      alert(
-        `Insufficient stock. Available: ${availableStock} ${
-          selectedProduct?.unit || "units"
-        }.`
-      );
+      notify({
+        message: `Insufficient stock. Available: ${availableStock} ${selectedProduct?.unit || "units"}.`,
+        type: "error",
+      });
       return;
     }
 
@@ -108,7 +109,7 @@ export default function SalesModal({
         soldQuantity,
       });
 
-      alert("Sale recorded successfully.");
+      notify({ message: "Sale recorded successfully.", type: "success" });
 
       setIsOpen(false);
       setSoldQuantity(1);
@@ -118,7 +119,7 @@ export default function SalesModal({
           ? err.message
           : "Failed to record sale.";
 
-      alert(message);
+      notify({ message, type: "error" });
     } finally {
       setLoading(false);
     }
