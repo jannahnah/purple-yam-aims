@@ -16,7 +16,7 @@ export default async function AccountSettingsPage() {
         }}
       />
 
-      <main className="min-w-0 flex-1">
+      <main className="aims-main min-w-0 flex-1">
         <AccountSettingsClient />
       </main>
     </div>
