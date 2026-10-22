@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { logProductionRun } from "@/app/actions/production";
 
 type Product = { id: string; name: string; size: string | null; unit: string; hasRecipe: boolean };
@@ -10,6 +11,7 @@ function label(p: { name: string; size: string | null }) { return p.size ? `${p.
 function quantity(n: number) { return Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/\.?0+$/, ""); }
 
 export default function ProductionStaffClient({ branchId, branchName, products, recent }: { branchId: string; branchName: string; products: Product[]; recent: Recent[] }) {
+  const router = useRouter();
   const [selected, setSelected] = useState(products.find(p => p.hasRecipe)?.id ?? "");
   const [amount, setAmount] = useState("1");
   const [message, setMessage] = useState("");
@@ -27,7 +29,7 @@ export default function ProductionStaffClient({ branchId, branchName, products, 
         await logProductionRun({ branchId, finishedItemId: selected, producedQuantity: count });
         setMessage(`Logged ${count} ${selectedProduct?.unit ?? "units"} of ${selectedProduct ? label(selectedProduct) : "finished product"}.`);
         setAmount("1");
-        window.location.reload();
+        router.refresh();
       } catch (e) {
         setError(e instanceof Error ? e.message : "Could not save production. Please try again.");
       }
