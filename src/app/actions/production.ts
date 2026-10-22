@@ -69,6 +69,10 @@ export async function logProductionRun({
       );
     }
 
+    if (currentUser.role === "PRODUCTION_STAFF" && finishedItem.businessId !== currentUser.businessId) {
+      throw new Error("You can only log finished products belonging to your business.");
+    }
+
     if (
       !finishedItem.isActive
     ) {
