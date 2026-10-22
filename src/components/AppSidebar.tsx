@@ -112,6 +112,8 @@ export default function AppSidebar({ user }: AppSidebarProps) {
 
         {isProductionStaff && <Link href="/production" className={getNavClass("/production")}>Production Log</Link>}
 
+        {(user.role === "OWNER" || isManager || isInventoryManager || isProductionStaff) && <Link href="/spoilage" className={getNavClass("/spoilage")}>Spoiled Stock Log</Link>}
+
         {isCashier && (
           <Link href="/sales" className={getNavClass("/sales")}>
             Sales
