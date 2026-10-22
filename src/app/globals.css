@@ -612,3 +612,105 @@ textarea:focus-visible {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }
+
+
+/* Mobile overflow and collision fixes (October 2026).
+   Keep responsive tables inside their cards, avoid clipping settings panels,
+   and allow flexible content to shrink instead of overlapping. */
+@media (max-width: 1023px) {
+  html,
+  body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  .aims-shell {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .aims-main,
+  .aims-main > *,
+  .aims-main .aims-page,
+  .aims-main .aims-container {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .aims-main .aims-page {
+    box-sizing: border-box;
+    overflow-x: clip;
+  }
+
+  .aims-main .aims-card,
+  .aims-main section,
+  .aims-main form,
+  .aims-main .grid,
+  .aims-main .flex {
+    min-width: 0;
+  }
+
+  .aims-main .aims-table-wrap,
+  .aims-main .overflow-x-auto {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+  }
+
+  /* Keep summary tiles legible instead of forcing four tiny columns. */
+  .aims-main .dashboard-summary-grid,
+  .aims-main .inventory-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .aims-main .dashboard-summary-grid > div,
+  .aims-main .inventory-summary-card {
+    aspect-ratio: auto;
+    min-height: 84px;
+  }
+
+  .aims-main .dashboard-summary-grid > div > p:first-child,
+  .aims-main .inventory-summary-card > p:first-child {
+    font-size: 10px !important;
+    overflow-wrap: anywhere;
+  }
+
+  .aims-main .dashboard-summary-grid > div > p:nth-child(3),
+  .aims-main .inventory-summary-card > p:nth-child(3) {
+    display: block !important;
+  }
+}
+
+@media (max-width: 639px) and (orientation: portrait) {
+  .aims-main .aims-title,
+  .aims-main h1 {
+    overflow-wrap: anywhere;
+  }
+
+  .aims-main .aims-primary,
+  .aims-main button.aims-primary {
+    min-height: 42px !important;
+    height: auto !important;
+    white-space: normal;
+    line-height: 1.3;
+  }
+
+  .aims-main input:not([type="checkbox"]):not([type="radio"]),
+  .aims-main select,
+  .aims-main textarea,
+  .aims-main .aims-control {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .aims-main .aims-table {
+    min-width: 680px;
+  }
+
+  .aims-main .aims-card-header {
+    overflow-wrap: anywhere;
+  }
+}
