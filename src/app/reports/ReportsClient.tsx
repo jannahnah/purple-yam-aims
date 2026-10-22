@@ -9,7 +9,8 @@ type ReportType =
   | "sales-summary"
   | "production-summary"
   | "transfer-delivery-history"
-  | "transaction-history";
+  | "transaction-history"
+  | "spoilage-summary";
 
 import type { Role as UserRole } from "@prisma/client";
 
@@ -71,6 +72,7 @@ interface ProductionRow {
 interface TransactionRow {
   id: string;
   type:
+    | "SPOILAGE"
     | "SALE"
     | "PRODUCTION"
     | "STOCK_RECEIPT"
@@ -91,6 +93,7 @@ interface TransactionRow {
     unit: string;
     sourceType: string;
   };
+  reason: string | null;
   user: {
     username: string;
     role: string;
@@ -169,6 +172,11 @@ const REPORT_OPTIONS: {
     id: "transaction-history",
     label: "Transaction History",
     desc: "Complete log of all inventory movements.",
+  },
+  {
+    id: "spoilage-summary",
+    label: "Spoilage Summary",
+    desc: "Spoiled ingredients and finished products, with reasons and stock impact.",
   },
 ];
 
@@ -317,6 +325,8 @@ export default function ReportsClient({
         return data.transferDeliveries;
       case "transaction-history":
         return data.transactions;
+      case "spoilage-summary":
+        return data.transactions.filter((transaction) => transaction.type === "SPOILAGE");
       default:
         return [];
     }
@@ -341,6 +351,7 @@ export default function ReportsClient({
   const paginatedProduction = data.production.slice(reportStartIndex, reportEndIndex);
   const paginatedTransfers = data.transferDeliveries.slice(reportStartIndex, reportEndIndex);
   const paginatedTransactions = data.transactions.slice(reportStartIndex, reportEndIndex);
+  const spoilageRows = data.transactions.filter((transaction) => transaction.type === "SPOILAGE").slice(reportStartIndex, reportEndIndex);
 
   function goToReportPage(page: number) {
     setReportPage(Math.min(Math.max(page, 1), reportPageCount));
@@ -1043,6 +1054,30 @@ export default function ReportsClient({
                           </tr>
                         ))
                       )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* Spoilage Summary */}
+              {report === "spoilage-summary" && (
+                <div className="overflow-x-auto">
+                  <table className="aims-table min-w-[1050px] text-left text-sm">
+                    <thead className="border-b border-gray-100 bg-gray-50 text-xs uppercase text-gray-500"><tr><th className="px-5 py-3">Date & Time</th><th className="px-5 py-3">Item</th><th className="px-5 py-3">Source Type</th><th className="px-5 py-3">Branch</th><th className="px-5 py-3 text-right">Previous</th><th className="px-5 py-3 text-right">Spoiled</th><th className="px-5 py-3 text-right">Remaining</th><th className="px-5 py-3">Reason / Notes</th><th className="px-5 py-3">Recorded By</th></tr></thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {spoilageRows.length === 0 ? <EmptyRow colSpan={9} /> : spoilageRows.map((transaction) => (
+                        <tr key={transaction.id} className="transition hover:bg-gray-50">
+                          <td className="whitespace-nowrap px-5 py-4"><div className="font-medium text-gray-900">{formatDate(transaction.createdAt)}</div><div className="mt-0.5 text-xs text-gray-500">{formatTime(transaction.createdAt)}</div></td>
+                          <td className="px-5 py-4 font-medium text-gray-900">{transaction.item.name}</td>
+                          <td className="px-5 py-4">{formatSourceType(transaction.item.sourceType)}</td>
+                          <td className="px-5 py-4 text-gray-600">{transaction.branch.name}</td>
+                          <td className="px-5 py-4 text-right font-mono">{transaction.previousQuantity === null ? "—" : formatQuantity(transaction.previousQuantity) + " " + transaction.item.unit}</td>
+                          <td className="px-5 py-4 text-right font-mono font-bold text-red-600">{formatQuantity(Math.abs(transaction.quantityDelta))} {transaction.item.unit}</td>
+                          <td className="px-5 py-4 text-right font-mono">{transaction.newQuantity === null ? "—" : formatQuantity(transaction.newQuantity) + " " + transaction.item.unit}</td>
+                          <td className="max-w-xs whitespace-normal px-5 py-4 text-gray-600">{transaction.reason?.trim() || "—"}</td>
+                          <td className="px-5 py-4"><div className="font-medium text-gray-900">{transaction.user.username}</div><div className="mt-0.5 text-xs text-gray-500">{transaction.user.role}</div></td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>
