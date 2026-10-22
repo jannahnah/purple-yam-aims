@@ -6,6 +6,7 @@ const roleConfig = {
   "branch-manager": { role: "BRANCH_MANAGER" as const, label: "Branch Manager" },
   "inventory-manager": { role: "INVENTORY_MANAGER" as const, label: "Inventory Manager" },
   cashier: { role: "CASHIER" as const, label: "Cashier" },
+  "production-staff": { role: "PRODUCTION_STAFF" as const, label: "Production Staff" },
 };
 
 export default async function LoginRolePage({
