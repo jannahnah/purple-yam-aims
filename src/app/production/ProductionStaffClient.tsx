@@ -1,23 +1,24 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { logProductionRun } from "@/app/actions/production";
 
 type Product = { id: string; name: string; size: string | null; unit: string; hasRecipe: boolean };
 type Recent = { id: string; itemName: string; size: string | null; unit: string; quantity: number; username: string; createdAt: string };
+type Summary = { producedToday: number; soldToday: number; availableStock: number; productCount: number };
 
 function label(p: { name: string; size: string | null }) { return p.size ? `${p.name} — ${p.size.charAt(0) + p.size.slice(1).toLowerCase()}` : p.name; }
 function quantity(n: number) { return Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/\.?0+$/, ""); }
 
-export default function ProductionStaffClient({ branchId, branchName, products, recent }: { branchId: string; branchName: string; products: Product[]; recent: Recent[] }) {
+export default function ProductionStaffClient({ branchId, branchName, products, recent, summary }: { branchId: string; branchName: string; products: Product[]; recent: Recent[]; summary: Summary }) {
   const router = useRouter();
   const [selected, setSelected] = useState(products.find(p => p.hasRecipe)?.id ?? "");
   const [amount, setAmount] = useState("1");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
-  const selectedProduct = products.find(p => p.id === selected);
+  const selectedProduct = products.find(p => p.id === selected);\n\n  // Refresh server-backed totals regularly so cashier sales appear without a manual reload.\n  useEffect(() => {\n    const interval = window.setInterval(() => router.refresh(), 15000);\n    return () => window.clearInterval(interval);\n  }, [router]);
 
   function submit(value?: string) {
     const count = Number(value ?? amount);
