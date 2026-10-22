@@ -9,7 +9,7 @@ type Recent = { id: string; itemName: string; size: string | null; unit: string;
 function label(p: { name: string; size: string | null }) { return p.size ? `${p.name} — ${p.size.charAt(0) + p.size.slice(1).toLowerCase()}` : p.name; }
 function quantity(n: number) { return Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/\.?0+$/, ""); }
 
-export default function ProductionStaffClient({ branchName, products, recent }: { branchName: string; products: Product[]; recent: Recent[] }) {
+export default function ProductionStaffClient({ branchId, branchName, products, recent }: { branchId: string; branchName: string; products: Product[]; recent: Recent[] }) {
   const [selected, setSelected] = useState(products.find(p => p.hasRecipe)?.id ?? "");
   const [amount, setAmount] = useState("1");
   const [message, setMessage] = useState("");
@@ -24,7 +24,7 @@ export default function ProductionStaffClient({ branchName, products, recent }: 
     if (!Number.isInteger(count) || count <= 0) { setError("Enter a whole number greater than zero."); return; }
     startTransition(async () => {
       try {
-        await logProductionRun({ branchId: "assigned-branch", finishedItemId: selected, producedQuantity: count });
+        await logProductionRun({ branchId, finishedItemId: selected, producedQuantity: count });
         setMessage(`Logged ${count} ${selectedProduct?.unit ?? "units"} of ${selectedProduct ? label(selectedProduct) : "finished product"}.`);
         setAmount("1");
         window.location.reload();
