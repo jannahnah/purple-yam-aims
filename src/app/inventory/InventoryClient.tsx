@@ -579,7 +579,7 @@ export default function InventoryClient({
                     Unit
                   </th>
 
-                  <th className="px-5 py-3.5">
+                  <th className="whitespace-nowrap px-5 py-3.5 text-right">
                     Reorder Threshold
                   </th>
 
@@ -671,7 +671,7 @@ export default function InventoryClient({
                           {stock.item.unit}
                         </td>
 
-                        <td className="px-5 py-4 text-gray-600">
+                        <td className="whitespace-nowrap px-5 py-4 text-right font-mono text-gray-600">
                           {formatQuantity(
                             stock.item.minThreshold
                           )}{" "}
