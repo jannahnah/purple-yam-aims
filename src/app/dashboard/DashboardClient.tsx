@@ -4,7 +4,7 @@ import Link from "next/link";
 import { formatItemLabel } from "@/lib/item-label";
 import { useEffect, useRef, useState } from "react";
 
-type Role = "OWNER" | "BRANCH_MANAGER" | "CASHIER" | "INVENTORY_MANAGER" | "PRODUCTION_STAFF";
+import type { Role } from "@prisma/client";
 
 type DashboardUser = {
   id: string;
