@@ -52,6 +52,21 @@ export default function ProductionStaffClient({ branchId, branchName, products, 
           <p className="mt-2 max-w-2xl text-sm text-purple-100">A quick, whiteboard-style entry for a busy production shift. Choose the product, tap a quantity, and save.</p>
         </header>
 
+        <section aria-label="Today's production summary" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {[
+            { label: "Produced today", value: quantity(summary.producedToday), detail: "Finished-product units logged" },
+            { label: "Sold today", value: quantity(summary.soldToday), detail: "Units recorded in sales" },
+            { label: "Available stock", value: quantity(summary.availableStock), detail: "Current finished-product stock" },
+            { label: "Finished products", value: String(summary.productCount), detail: "Products stocked at this branch" },
+          ].map((card) => (
+            <div key={card.label} className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
+              <p className="text-sm font-medium text-gray-500">{card.label}</p>
+              <p className="mt-2 text-2xl font-bold text-purple-800 sm:text-3xl">{card.value}</p>
+              <p className="mt-1 text-xs text-gray-500">{card.detail}</p>
+            </div>
+          ))}
+        </section>
+
         <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
           <div className="mb-4">
             <h2 className="text-lg font-bold text-gray-900">Quick entry</h2>
