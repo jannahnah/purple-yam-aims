@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { logProductionRun } from "@/app/actions/production";
 import { formatItemLabel } from "@/lib/item-label";
+import { useToast } from "@/components/ToastProvider";
 
 interface Branch {
   id: string;
@@ -44,6 +45,7 @@ export default function ProductionModal({
   branches: Branch[];
   items: Item[];
 }) {
+  const { notify } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -184,45 +186,37 @@ export default function ProductionModal({
     e.preventDefault();
 
     if (!selectedBranch) {
-      alert("Please select a branch.");
+      notify({ message: "Please select a branch.", type: "error" });
       return;
     }
 
     if (!selectedFinishedItem) {
-      alert("Please select a finished product.");
+      notify({ message: "Please select a finished product.", type: "error" });
       return;
     }
 
     if (!isValidProductionQuantity) {
       if (requiresWholeNumber) {
-        alert(
-          `Production quantity must be a whole number for products measured in ${selectedProduct?.unit}.`
-        );
+        notify({ message: `Production quantity must be a whole number for products measured in ${selectedProduct?.unit}.`, type: "error" });
       } else {
-        alert(
-          "Production quantity must be a whole number greater than zero."
-        );
+        notify({ message: "Production quantity must be a whole number greater than zero.", type: "error" });
       }
 
       return;
     }
 
     if (recipeLoading) {
-      alert("Please wait while the production recipe is loading.");
+      notify({ message: "Please wait while the production recipe is loading.", type: "warning" });
       return;
     }
 
     if (!hasRecipe) {
-      alert(
-        "No production recipe exists for the selected finished product."
-      );
+      notify({ message: "No production recipe exists for the selected finished product.", type: "error" });
       return;
     }
 
     if (hasInsufficientStock) {
-      alert(
-        "Production cannot be recorded because one or more ingredients have insufficient stock."
-      );
+      notify({ message: "Production cannot be recorded because one or more ingredients have insufficient stock.", type: "error" });
       return;
     }
 
@@ -235,7 +229,7 @@ export default function ProductionModal({
         producedQuantity: Number(producedQuantity),
       });
 
-      alert("Production recorded successfully.");
+      notify({ message: "Production recorded successfully.", type: "success" });
 
       setIsOpen(false);
       setProducedQuantity(1);
@@ -245,7 +239,7 @@ export default function ProductionModal({
           ? err.message
           : "Failed to log production run.";
 
-      alert(message);
+      notify({ message, type: "error" });
     } finally {
       setLoading(false);
     }
