@@ -8,8 +8,9 @@ type Item = { id: string; name: string; size: string | null; unit: string; sourc
 type Branch = { id: string; name: string };
 type Recent = { id: string; itemName: string; size: string | null; unit: string; quantity: number; reason: string; branchName: string; username: string; createdAt: string };
 
-function itemLabel(item: { name: string; size: string | null }) {
-  return item.size ? `${item.name} — ${item.size.charAt(0) + item.size.slice(1).toLowerCase()}` : item.name;
+function itemLabel(item: { name?: string; itemName?: string; size: string | null }) {
+  const name = item.name ?? item.itemName ?? "Unknown item";
+  return item.size ? `${name} — ${item.size.charAt(0) + item.size.slice(1).toLowerCase()}` : name;
 }
 export default function SpoilageClient({ userRole, branches, initialBranchId, items, recent }: { userRole: string; branches: Branch[]; initialBranchId: string; items: Item[]; recent: Recent[] }) {
   const router = useRouter();
