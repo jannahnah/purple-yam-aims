@@ -801,6 +801,7 @@ export default function UsersClient() {
                         event.target.value as
                           | "BRANCH_MANAGER"
                           | "INVENTORY_MANAGER"
+                          | "PRODUCTION_STAFF"
                           | "CASHIER"
                       )
                     }
@@ -815,6 +816,9 @@ export default function UsersClient() {
                     </option>
                     <option value="INVENTORY_MANAGER">
                       Inventory Manager
+                    </option>
+                    <option value="PRODUCTION_STAFF">
+                      Production Staff
                     </option>
                   </select>
                 </div>
