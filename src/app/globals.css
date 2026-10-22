@@ -247,7 +247,7 @@ textarea:focus-visible {
 .manager-inventory-threshold-col { width: 16%; }
 .manager-inventory-status-col { width: 15%; }
 
-.manager-finished-products-table {
+.aims-table.manager-finished-products-table {
   min-width: 0;
   table-layout: fixed;
 }
