@@ -25,12 +25,6 @@ export default function ProductionStaffClient({ branchId, branchName, products, 
   const visibleRecent = useMemo(() => recent.slice((currentPage - 1) * pageSize, currentPage * pageSize), [recent, currentPage]);
   const selectedProduct = products.find(p => p.id === selected);
 
-  // Refresh server-backed totals regularly so cashier sales appear without a manual reload.
-  useEffect(() => {
-    const interval = window.setInterval(() => router.refresh(), 15000);
-    return () => window.clearInterval(interval);
-  }, [router]);
-
   function submit(value?: string) {
     const count = Number(value ?? amount);
     setError(""); setMessage("");
