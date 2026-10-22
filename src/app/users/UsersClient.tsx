@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-type Role = "OWNER" | "BRANCH_MANAGER" | "INVENTORY_MANAGER" | "CASHIER";
+type Role = "OWNER" | "BRANCH_MANAGER" | "INVENTORY_MANAGER" | "PRODUCTION_STAFF" | "CASHIER";
 type UserStatus = "ACTIVE" | "INACTIVE";
 
 type Branch = {
@@ -29,6 +29,7 @@ const ROLE_LABELS: Record<Role, string> = {
   OWNER: "Owner",
   BRANCH_MANAGER: "Branch Manager",
   INVENTORY_MANAGER: "Inventory Manager",
+  PRODUCTION_STAFF: "Production Staff",
   CASHIER: "Cashier",
 };
 
@@ -47,6 +48,9 @@ function roleBadgeClass(role: Role) {
 
     case "INVENTORY_MANAGER":
       return "bg-emerald-100 text-emerald-700";
+
+    case "PRODUCTION_STAFF":
+      return "bg-amber-100 text-amber-800";
 
     case "CASHIER":
       return "bg-blue-100 text-blue-700";
@@ -88,7 +92,7 @@ export default function UsersClient() {
   const [email, setEmail] = useState("");
 
   const [role, setRole] =
-    useState<"BRANCH_MANAGER" | "INVENTORY_MANAGER" | "CASHIER">(
+    useState<"BRANCH_MANAGER" | "INVENTORY_MANAGER" | "PRODUCTION_STAFF" | "CASHIER">(
       "CASHIER"
     );
 
@@ -313,7 +317,7 @@ export default function UsersClient() {
       return;
     }
 
-    if ((role === "BRANCH_MANAGER" || role === "CASHIER") && !branchName.trim()) {
+    if ((role === "BRANCH_MANAGER" || role === "CASHIER" || role === "PRODUCTION_STAFF") && !branchName.trim()) {
       setError("Please enter a branch.");
       return;
     }
@@ -801,6 +805,7 @@ export default function UsersClient() {
                         event.target.value as
                           | "BRANCH_MANAGER"
                           | "INVENTORY_MANAGER"
+                          | "PRODUCTION_STAFF"
                           | "CASHIER"
                       )
                     }
@@ -815,6 +820,9 @@ export default function UsersClient() {
                     </option>
                     <option value="INVENTORY_MANAGER">
                       Inventory Manager
+                    </option>
+                    <option value="PRODUCTION_STAFF">
+                      Production Staff
                     </option>
                   </select>
                 </div>

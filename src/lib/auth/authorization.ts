@@ -4,7 +4,7 @@ import { getCurrentUser } from "@/lib/auth/current-user";
 export type UserRole =
   | "OWNER"
   | "BRANCH_MANAGER"
-  | "CASHIER" | "INVENTORY_MANAGER";
+  | "CASHIER" | "INVENTORY_MANAGER" | "PRODUCTION_STAFF";
 
 export async function requireUser(options?: {
   allowPasswordChange?: boolean;
@@ -48,7 +48,8 @@ export async function requireOperationalUser() {
   return requireRole(
     "OWNER",
     "BRANCH_MANAGER",
-    "CASHIER"
+    "CASHIER",
+    "PRODUCTION_STAFF"
   );
 }
 

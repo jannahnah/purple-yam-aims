@@ -8,6 +8,7 @@ const roles = [
   { key: "branch-manager", title: "Branch Manager", description: "Manage your assigned branch operations" },
   { key: "inventory-manager", title: "Inventory Manager", description: "View all branches and enter physical inventory counts" },
   { key: "cashier", title: "Cashier", description: "Record sales and view branch transactions" },
+  { key: "production-staff", title: "Production Staff", description: "Quickly log finished-product production for your assigned branch" },
 ];
 
 export default function LoginRolePage() {

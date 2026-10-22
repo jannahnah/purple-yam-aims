@@ -6,7 +6,7 @@ import ProductionModal from "./ProductionModal";
 import SalesModal from "./SalesModal";
 import { formatItemLabel } from "@/lib/item-label";
 
-type Role = "OWNER" | "BRANCH_MANAGER" | "INVENTORY_MANAGER" | "CASHIER";
+type Role = "OWNER" | "BRANCH_MANAGER" | "INVENTORY_MANAGER" | "CASHIER" | "PRODUCTION_STAFF";
 
 type Branch = {
   id: string;

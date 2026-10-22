@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth/authorization";
 import AppShell from "@/components/AppShell";
 import InventoryClient from "./InventoryClient";
@@ -7,6 +8,10 @@ export const dynamic = "force-dynamic";
 
 export default async function InventoryPage() {
   const user = await requireUser();
+
+  if (user.role === "PRODUCTION_STAFF") {
+    redirect("/production");
+  }
 
   const isOwner = user.role === "OWNER";
   const canViewAllBranches = isOwner || user.role === "INVENTORY_MANAGER";

@@ -32,11 +32,16 @@ export async function logProductionRun({
 
   if (
     currentUser.role !== "OWNER" &&
-    currentUser.role !== "BRANCH_MANAGER"
+    currentUser.role !== "BRANCH_MANAGER" &&
+    currentUser.role !== "PRODUCTION_STAFF"
   ) {
     throw new Error(
       "You do not have permission to record production."
     );
+  }
+
+  if (currentUser.role === "PRODUCTION_STAFF" && currentUser.branchId !== branchId) {
+    throw new Error("Production staff can only log production for their assigned branch.");
   }
 
   if (!canAccessBranch(currentUser, branchId)) {
@@ -62,6 +67,10 @@ export async function logProductionRun({
       throw new Error(
         "Finished-product item not found."
       );
+    }
+
+    if (currentUser.role === "PRODUCTION_STAFF" && (!currentUser.businessId || finishedItem.businessId !== currentUser.businessId)) {
+      throw new Error("You can only log finished products belonging to your business.");
     }
 
     if (
@@ -311,4 +320,5 @@ export async function logProductionRun({
   revalidatePath("/inventory");
   revalidatePath("/dashboard");
   revalidatePath("/transactions");
+  revalidatePath("/production");
 }

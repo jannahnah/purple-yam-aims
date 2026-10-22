@@ -30,7 +30,8 @@ type Transaction = {
     | "STOCK_RECEIPT"
     | "ADJUSTMENT"
     | "TRANSFER_IN"
-    | "TRANSFER_OUT";
+    | "TRANSFER_OUT"
+    | "SPOILAGE";
   quantityDelta: number;
   createdAt: string;
   itemName: string;
@@ -124,6 +125,9 @@ function formatTransactionType(
     case "TRANSFER_OUT":
       return "TRANSFER OUT";
 
+    case "SPOILAGE":
+      return "SPOILAGE";
+
     default:
       return type;
   }
@@ -150,6 +154,9 @@ function getTransactionClass(
 
     case "TRANSFER_OUT":
       return "bg-orange-50 text-orange-700 border-orange-200";
+
+    case "SPOILAGE":
+      return "bg-red-50 text-red-700 border-red-200";
 
     default:
       return "bg-gray-50 text-gray-700 border-gray-200";

@@ -14,6 +14,10 @@ export default async function TransactionsPage() {
     redirect("/");
   }
 
+  if (currentUser.role === "PRODUCTION_STAFF") {
+    redirect("/production");
+  }
+
   const transactions =
     await prisma.stockTransaction.findMany({
       where:
@@ -107,6 +111,7 @@ export default async function TransactionsPage() {
 
             newQuantity:
               transaction.newQuantity ?? null,
+            reason: transaction.reason ?? null,
 
             createdAt:
               transaction.createdAt.toISOString(),
