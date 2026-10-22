@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { logProductionRun } from "@/app/actions/production";
 
@@ -18,6 +18,11 @@ export default function ProductionStaffClient({ branchId, branchName, products, 
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+  const totalEntries = recent.length;
+  const totalPages = Math.max(1, Math.ceil(totalEntries / pageSize));
+  const visibleRecent = useMemo(() => recent.slice((currentPage - 1) * pageSize, currentPage * pageSize), [recent, currentPage]);
   const selectedProduct = products.find(p => p.id === selected);
 
   // Refresh server-backed totals regularly so cashier sales appear without a manual reload.
@@ -93,8 +98,8 @@ export default function ProductionStaffClient({ branchId, branchName, products, 
         </section>
 
         <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
-          <div className="mb-4 flex items-center justify-between gap-3"><div><h2 className="text-lg font-bold text-gray-900">Recent production entries</h2><p className="text-sm text-gray-500">Latest finished-product quantities logged for {branchName}.</p></div><span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600">{recent.length} entries</span></div>
-          {recent.length === 0 ? <p className="rounded-xl bg-gray-50 p-4 text-sm text-gray-500">No production entries yet for this branch.</p> : <div className="divide-y divide-gray-100">{recent.map(tx => <div key={tx.id} className="flex items-center justify-between gap-4 py-3"><div className="min-w-0"><p className="truncate font-semibold text-gray-900">{label({name: tx.itemName, size: tx.size})}</p><p className="mt-1 text-xs text-gray-500">By {tx.username} · {new Date(tx.createdAt).toLocaleString()}</p></div><p className="shrink-0 text-lg font-bold text-purple-800">+{quantity(tx.quantity)} <span className="text-xs font-medium text-gray-500">{tx.unit}</span></p></div>)}</div>}
+          <div className="mb-4 flex items-center justify-between gap-3"><div><h2 className="text-lg font-bold text-gray-900">Recent production entries</h2><p className="text-sm text-gray-500">Latest finished-product quantities logged for {branchName}.</p></div><span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600">{totalEntries} entries</span></div>
+          {totalEntries === 0 ? <p className="rounded-xl bg-gray-50 p-4 text-sm text-gray-500">No production entries yet for this branch.</p> : <><div className="divide-y divide-gray-100">{visibleRecent.map(tx => <div key={tx.id} className="flex items-center justify-between gap-4 py-3"><div className="min-w-0"><p className="truncate font-semibold text-gray-900">{label({name: tx.itemName, size: tx.size})}</p><p className="mt-1 text-xs text-gray-500">By {tx.username} · {new Date(tx.createdAt).toLocaleString()}</p></div><p className="shrink-0 text-lg font-bold text-purple-800">+{quantity(tx.quantity)} <span className="text-xs font-medium text-gray-500">{tx.unit}</span></p></div>)}</div><div className="mt-5 flex flex-col gap-3 border-t border-gray-100 pt-4 sm:flex-row sm:items-center sm:justify-between"><p className="text-sm text-gray-600">Showing <span className="font-semibold">{(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, totalEntries)}</span> out of <span className="font-semibold">{totalEntries}</span></p><nav aria-label="Production history pagination" className="flex flex-wrap items-center gap-2"><button type="button" onClick={() => setCurrentPage(1)} disabled={currentPage === 1} className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-40">First</button><button type="button" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-40">Previous</button><span className="px-1 text-sm text-gray-600">Page {currentPage} of {totalPages}</span><button type="button" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-40">Next</button><button type="button" onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages} className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-40">Last</button></nav></div></>}
         </section>
       </div>
     </div>
