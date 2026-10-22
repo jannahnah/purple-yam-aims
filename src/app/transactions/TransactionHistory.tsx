@@ -10,6 +10,7 @@ type Transaction = {
     | "PRODUCTION"
     | "STOCK_RECEIPT"
     | "ADJUSTMENT"
+    | "SPOILAGE"
     | "TRANSFER_IN"
     | "TRANSFER_OUT";
   transferId: string | null;
@@ -18,6 +19,7 @@ type Transaction = {
   previousQuantity: number | null;
   quantityDelta: number;
   newQuantity: number | null;
+  reason?: string | null;
   createdAt: string;
   item: {
     name: string;
@@ -89,6 +91,7 @@ function transactionTone(type: Transaction["type"]) {
   if (type === "PRODUCTION") return "text-purple-700 bg-purple-50";
   if (type === "STOCK_RECEIPT") return "text-green-700 bg-green-50";
   if (type === "ADJUSTMENT") return "text-amber-700 bg-amber-50";
+  if (type === "SPOILAGE") return "text-red-700 bg-red-50";
   return "text-blue-700 bg-blue-50";
 }
 
@@ -257,7 +260,7 @@ export default function TransactionHistory({
         transaction.type === "TRANSFER_OUT"
       ) {
         transfers += 1;
-      } else if (transaction.type === "ADJUSTMENT") {
+      } else if (transaction.type === "ADJUSTMENT" || transaction.type === "SPOILAGE") {
         adjustments += 1;
       }
     }
@@ -428,6 +431,7 @@ export default function TransactionHistory({
                 <option value="PRODUCTION">Production / Consumption</option>
                 <option value="STOCK_RECEIPT">Stock Receipts</option>
                 <option value="ADJUSTMENT">Adjustments</option>
+                <option value="SPOILAGE">Spoilage</option>
                 <option value="TRANSFER_IN">Transfer In</option>
                 <option value="TRANSFER_OUT">Transfer Out</option>
               </select>
