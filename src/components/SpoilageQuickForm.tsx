@@ -65,7 +65,7 @@ export default function SpoilageQuickForm({
         type="button"
         onClick={() => { setIsOpen((current) => !current); setError(""); setMessage(""); }}
         aria-expanded={isOpen}
-        className="inline-flex min-h-10 items-center justify-center rounded-xl bg-purple-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-purple-800"
+        className="inline-flex min-h-10 items-center justify-center rounded-xl bg-purple-800 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-purple-900"
       >
         {isOpen ? "Close form" : "＋ Record Spoiled Stock"}
       </button>
