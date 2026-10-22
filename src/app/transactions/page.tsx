@@ -111,6 +111,7 @@ export default async function TransactionsPage() {
 
             newQuantity:
               transaction.newQuantity ?? null,
+            reason: transaction.reason ?? null,
 
             createdAt:
               transaction.createdAt.toISOString(),
