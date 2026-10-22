@@ -106,7 +106,7 @@ export default function AppSidebar({ user }: AppSidebarProps) {
       </p>
 
       <div className="space-y-1">
-        {!isInventoryManager && <Link href={dashboardHref} className={getNavClass(dashboardHref)}>
+        {!isInventoryManager && !isProductionStaff && <Link href={dashboardHref} className={getNavClass(dashboardHref)}>
           Dashboard
         </Link>}
 
