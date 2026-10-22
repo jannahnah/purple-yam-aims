@@ -229,6 +229,62 @@ textarea:focus-visible {
   font-size: 12px;
 }
 
+/* Compact, predictable branch inventory tables on small screens. */
+.manager-inventory-table {
+  min-width: 680px;
+  table-layout: fixed;
+}
+
+.manager-inventory-table th,
+.manager-inventory-table td {
+  padding: 10px 12px;
+  vertical-align: middle;
+}
+
+.manager-inventory-item-col { width: 30%; }
+.manager-inventory-category-col { width: 22%; }
+.manager-inventory-stock-col { width: 17%; }
+.manager-inventory-threshold-col { width: 16%; }
+.manager-inventory-status-col { width: 15%; }
+
+.aims-table.manager-finished-products-table {
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.manager-finished-products-table th,
+.manager-finished-products-table td {
+  padding: 8px 12px;
+  vertical-align: middle;
+}
+
+.manager-finished-products-table th:first-child,
+.manager-finished-products-table td:first-child {
+  width: 62%;
+  overflow-wrap: anywhere;
+}
+
+.manager-finished-products-table th:last-child,
+.manager-finished-products-table td:last-child {
+  width: 38%;
+}
+
+@media (max-width: 639px) {
+  .manager-inventory-table th,
+  .manager-inventory-table td {
+    padding: 8px 10px;
+  }
+
+  .manager-finished-products-table th,
+  .manager-finished-products-table td {
+    padding: 7px 10px;
+  }
+
+  .manager-finished-products-table {
+    font-size: 12px;
+  }
+}
+
 @media (min-width: 1536px) {
   .aims-container {
     padding-inline: clamp(32px, 3vw, 56px);
@@ -712,5 +768,50 @@ textarea:focus-visible {
 
   .aims-main .aims-card-header {
     overflow-wrap: anywhere;
+  }
+}
+
+
+/* Final mobile overrides for the branch manager dashboard tables.
+   These must follow the shared responsive table rules above. */
+@media (max-width: 639px) and (orientation: portrait) {
+  .aims-main .aims-table.manager-finished-products-table {
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: fixed !important;
+  }
+
+  .aims-main .aims-table.manager-finished-products-table th,
+  .aims-main .aims-table.manager-finished-products-table td {
+    padding: 6px 10px !important;
+    line-height: 1.2 !important;
+    font-size: 11px !important;
+    white-space: normal;
+  }
+
+  .aims-main .aims-table.manager-finished-products-table th:last-child,
+  .aims-main .aims-table.manager-finished-products-table td:last-child {
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .aims-main .aims-table.manager-inventory-table {
+    width: 680px !important;
+    min-width: 680px !important;
+    table-layout: fixed !important;
+  }
+
+  .aims-main .aims-table.manager-inventory-table th,
+  .aims-main .aims-table.manager-inventory-table td {
+    padding: 7px 8px !important;
+    line-height: 1.2 !important;
+  }
+
+  .aims-main .aims-table.manager-inventory-table td:nth-child(3),
+  .aims-main .aims-table.manager-inventory-table td:nth-child(4),
+  .aims-main .aims-table.manager-inventory-table th:nth-child(3),
+  .aims-main .aims-table.manager-inventory-table th:nth-child(4) {
+    text-align: right !important;
+    white-space: nowrap;
   }
 }
