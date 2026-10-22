@@ -20,6 +20,10 @@ export default async function ChangePasswordPage() {
       redirect("/inventory");
     }
 
+    if (user.role === "PRODUCTION_STAFF") {
+      redirect("/production");
+    }
+
     redirect("/cashier-dashboard");
   }
 
