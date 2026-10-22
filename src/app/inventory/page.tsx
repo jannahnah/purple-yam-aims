@@ -83,12 +83,8 @@ export default async function InventoryPage() {
   });
 
   const items = await prisma.item.findMany({
-    where: {
-      isActive: true,
-    },
-    orderBy: {
-      name: "asc",
-    },
+    where: { isActive: true, ...(user.businessId ? { businessId: user.businessId } : {}) },
+    orderBy: { name: "asc" },
   });
 
   return (
@@ -111,6 +107,7 @@ export default async function InventoryPage() {
         branches={branches}
         transferBranches={transferBranches}
         items={items}
+        spoilageItems={items.map((item) => ({ id: item.id, name: item.name, size: item.size, unit: item.unit, sourceType: item.sourceType, category: item.category }))}
       />
     </AppShell>
   );
