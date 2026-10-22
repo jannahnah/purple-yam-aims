@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-type UserRole = "OWNER" | "BRANCH_MANAGER" | "CASHIER" | "INVENTORY_MANAGER" | "PRODUCTION_STAFF";
+import type { Role as UserRole } from "@prisma/client";
 
 interface CurrentUser {
   id: string;
