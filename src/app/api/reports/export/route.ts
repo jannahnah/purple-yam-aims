@@ -557,7 +557,8 @@ export async function GET(request: Request) {
               .filter((transaction) => transaction.itemId === itemId)
               .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
             const firstPeriodTransaction = itemPeriodTransactions[0];
-            const beginningKey = `${branch.transactions[0]?.branchId ?? ""}:${itemId}`;
+            const branchId = itemPeriodTransactions[0]?.branchId;
+            const beginningKey = branchId ? `${branchId}:${itemId}` : "";
             const beginningQuantity =
               firstPeriodTransaction?.previousQuantity ??
               beginningInventoryByKey.get(beginningKey) ??
