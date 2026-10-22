@@ -39,7 +39,6 @@ export default async function ProductionStaffPage() {
     }),
     prisma.stockTransaction.findMany({
       where: { branchId: assignedBranchId, type: "PRODUCTION", quantityDelta: { gt: 0 }, item: { sourceType: "FINISHED_PRODUCT", ...businessItemFilter } },
-      take: 12,
       orderBy: { createdAt: "desc" },
       include: { item: { select: { name: true, size: true, unit: true } }, user: { select: { name: true, username: true } } },
     }),
