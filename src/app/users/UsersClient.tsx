@@ -554,8 +554,8 @@ export default function UsersClient() {
           )}
 
         {/* User Table */}
-        <div className="aims-card min-w-0 overflow-hidden rounded-xl sm:rounded-2xl">
-          <div className="overflow-x-auto">
+        <div className="aims-card min-w-0 max-w-full overflow-hidden rounded-xl sm:rounded-2xl">
+          <div className="aims-table-wrap min-w-0 max-w-full overflow-x-auto">
             <table className="aims-table users-table min-w-[760px] sm:min-w-[980px]">
               <thead className="bg-gray-50">
                 <tr>

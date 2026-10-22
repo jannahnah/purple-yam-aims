@@ -18,7 +18,7 @@ export default async function ItemMasterPage() {
         }}
       />
 
-      <main className="min-w-0 flex-1 overflow-y-auto">
+      <main className="aims-main min-w-0 flex-1 overflow-y-auto">
         <ItemMasterClient />
       </main>
     </div>

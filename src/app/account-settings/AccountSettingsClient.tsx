@@ -284,7 +284,7 @@ async function handleSaveName(
       : user.branch?.name ?? "Not assigned";
 
   return (
-    <main className="aims-page px-[clamp(1rem,2vw,2rem)] py-6">
+    <main className="aims-page account-settings-page px-[clamp(1rem,2vw,2rem)] py-6">
       <div className="mx-auto w-full space-y-6">
 
         {/* Page Header */}
@@ -301,7 +301,7 @@ async function handleSaveName(
         {/* Settings Workspace */}
         <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(280px,0.9fr)_minmax(0,1.35fr)] lg:items-start">
           {/* Account Information */}
-        <section className="aims-card h-full min-w-0 p-6">
+        <section className="aims-card h-full min-w-0 p-4 sm:p-6">
           <h2 className="mb-5 text-sm font-semibold text-gray-900">
             Account Information
           </h2>
@@ -381,7 +381,7 @@ async function handleSaveName(
           <button
             type="button"
             onClick={() => toggleSection("name")}
-            className="flex w-full items-center justify-between rounded-xl p-6 text-left transition-colors hover:bg-gray-50"
+            className="flex w-full min-w-0 items-center justify-between gap-3 rounded-xl p-4 text-left transition-colors hover:bg-gray-50 sm:p-6"
             aria-expanded={openSection === "name"}
           >
             <div>
@@ -406,7 +406,7 @@ async function handleSaveName(
           </button>
 
           {openSection === "name" && (
-            <div className="absolute left-0 right-0 top-[calc(100%-1px)] z-40 rounded-b-xl border-x border-b border-gray-100 bg-white px-6 pb-6 pt-5 shadow-lg">
+            <div className="relative z-40 w-full min-w-0 rounded-b-xl border-t border-gray-100 bg-white p-4 shadow-inner sm:px-6 sm:pb-6 sm:pt-5">
               <form
                 onSubmit={handleSaveName}
                 className="space-y-4"
@@ -467,7 +467,7 @@ async function handleSaveName(
             onClick={() =>
               toggleSection("password")
             }
-            className="flex w-full items-center justify-between rounded-xl p-6 text-left transition-colors hover:bg-gray-50"
+            className="flex w-full min-w-0 items-center justify-between gap-3 rounded-xl p-4 text-left transition-colors hover:bg-gray-50 sm:p-6"
             aria-expanded={
               openSection === "password"
             }

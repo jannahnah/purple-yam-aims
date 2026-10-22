@@ -553,8 +553,8 @@ export default function ItemMasterClient() {
             </p>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="aims-table item-master-table min-w-[620px]">
+          <div className="aims-table-wrap min-w-0 max-w-full overflow-x-auto">
+            <table className="aims-table item-master-table min-w-[680px]">
               <thead className="bg-gray-50">
                 <tr>
                   {["Item", "Size", "Type", "Category", "Unit", "Threshold", "Recipe", "Action"].map((heading) => (
