@@ -34,6 +34,7 @@ export default async function ProductionStaffPage() {
   return (
     <AppShell user={{ username: user.username, name: user.name, role: user.role, branchName: branch?.name ?? null }}>
       <ProductionStaffClient
+        branchId={user.branchId}
         branchName={branch?.name ?? "Assigned branch"}
         products={products.map((item) => ({ id: item.id, name: item.name, size: item.size, unit: item.unit, hasRecipe: item.recipeAsFinished.length > 0 }))}
         recent={recent.map((tx) => ({ id: tx.id, itemName: tx.item.name, size: tx.item.size, unit: tx.item.unit, quantity: tx.quantityDelta, username: tx.user.name || tx.user.username, createdAt: tx.createdAt.toISOString() }))}
