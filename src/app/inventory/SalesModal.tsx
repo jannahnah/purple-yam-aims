@@ -183,7 +183,7 @@ export default function SalesModal({
                   onClick={closeModal}
                   disabled={loading}
                   aria-label="Close sales modal"
-                  className="rounded-lg p-1.5 text-xl leading-none text-gray-400 transition hover:bg-gray-100 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-2xl leading-none text-gray-500 transition hover:bg-gray-100 hover:text-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   ×
                 </button>
@@ -299,10 +299,10 @@ export default function SalesModal({
                   </div>
 
                   {hasInsufficientStock && (
-                    <p className="mt-2 text-xs font-medium text-red-600">
-                      Insufficient stock. You can sell up to{" "}
-                      {availableStock}{" "}
-                      {selectedProduct?.unit || "units"}.
+                    <p role="alert" className="mt-2 text-sm font-medium text-red-600">
+                      {availableStock <= 0
+                        ? "No stock available to sell."
+                        : `Insufficient stock. Only ${availableStock} ${selectedProduct?.unit || "units"} available. Please enter a quantity of ${availableStock} or less.`}
                     </p>
                   )}
                 </div>
