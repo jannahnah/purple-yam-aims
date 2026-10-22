@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { logSpoilage } from "@/app/actions/spoilage";
+import { useToast } from "@/components/ToastProvider";
 
 type Item = {
   id: string;
@@ -32,6 +33,7 @@ export default function SpoilageQuickForm({
   items: Item[];
 }) {
   const router = useRouter();
+  const { notify } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [branchId, setBranchId] = useState(initialBranchId);
   const [itemId, setItemId] = useState("");
@@ -48,13 +50,18 @@ export default function SpoilageQuickForm({
     startTransition(async () => {
       try {
         await logSpoilage({ branchId, itemId, quantity: Number(quantity), reason });
-        setMessage("Spoilage recorded and stock updated.");
+        const successMessage = "Spoilage recorded and stock updated.";
+        setMessage(successMessage);
+        notify({ message: successMessage, type: "success" });
         setItemId("");
         setQuantity("1");
         setReason("");
+        setIsOpen(false);
         router.refresh();
       } catch (cause) {
-        setError(cause instanceof Error ? cause.message : "Could not record spoilage.");
+        const errorMessage = cause instanceof Error ? cause.message : "Could not record spoilage.";
+        setError(errorMessage);
+        notify({ message: errorMessage, type: "error" });
       }
     });
   }
@@ -73,10 +80,6 @@ export default function SpoilageQuickForm({
         + Log Spoilage
       </button>
 
-      {message && !isOpen && (
-        <p role="status" className="mt-2 text-sm text-emerald-700">{message}</p>
-      )}
-
       {isOpen && (
         <div
           role="dialog"
@@ -93,114 +96,42 @@ export default function SpoilageQuickForm({
           >
             <div className="flex items-start justify-between gap-4 border-b border-gray-200 px-5 py-4 sm:px-6">
               <div>
-                <h2 id="spoilage-modal-title" className="text-xl font-bold text-gray-900">
-                  Log Spoilage
-                </h2>
-                <p className="mt-1 text-sm text-gray-500">
-                  Record spoiled stock and update inventory.
-                </p>
+                <h2 id="spoilage-modal-title" className="text-xl font-bold text-gray-900">Log Spoilage</h2>
+                <p className="mt-1 text-sm text-gray-500">Record spoiled stock and update inventory.</p>
               </div>
-              <button
-                type="button"
-                onClick={closeModal}
-                disabled={pending}
-                aria-label="Close spoilage form"
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-2xl leading-none text-gray-500 transition hover:bg-gray-100 hover:text-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                ×
-              </button>
+              <button type="button" onClick={closeModal} disabled={pending} aria-label="Close spoilage form" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-2xl leading-none text-gray-500 transition hover:bg-gray-100 hover:text-gray-800 disabled:cursor-not-allowed disabled:opacity-50">×</button>
             </div>
 
             <div className="max-h-[60vh] space-y-4 overflow-y-auto px-5 py-5 sm:px-6">
               {userRole === "OWNER" && (
-                <label className="block text-sm font-semibold text-gray-800">
-                  Branch
-                  <select
-                    value={branchId}
-                    onChange={(event) => setBranchId(event.target.value)}
-                    required
-                    disabled={pending}
-                    className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-sm text-gray-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-gray-100"
-                  >
+                <label className="block text-sm font-semibold text-gray-800">Branch
+                  <select value={branchId} onChange={(event) => setBranchId(event.target.value)} required disabled={pending} className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-sm text-gray-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-gray-100">
                     <option value="">Select branch</option>
-                    {branches.map((branch) => (
-                      <option key={branch.id} value={branch.id}>{branch.name}</option>
-                    ))}
+                    {branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}
                   </select>
                 </label>
               )}
 
-              <label className="block text-sm font-semibold text-gray-800">
-                Item
-                <select
-                  value={itemId}
-                  onChange={(event) => setItemId(event.target.value)}
-                  required
-                  disabled={pending}
-                  className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-sm text-gray-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-gray-100"
-                >
+              <label className="block text-sm font-semibold text-gray-800">Item
+                <select value={itemId} onChange={(event) => setItemId(event.target.value)} required disabled={pending} className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-sm text-gray-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-gray-100">
                   <option value="">Select ingredient or finished product</option>
-                  {items.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {itemLabel(item)} · {item.sourceType === "FINISHED_PRODUCT" ? "Finished product" : item.category === "PACKAGING" ? "Packaging" : "Ingredient"} ({item.unit})
-                    </option>
-                  ))}
+                  {items.map((item) => <option key={item.id} value={item.id}>{itemLabel(item)} · {item.sourceType === "FINISHED_PRODUCT" ? "Finished product" : item.category === "PACKAGING" ? "Packaging" : "Ingredient"} ({item.unit})</option>)}
                 </select>
               </label>
 
-              <label className="block text-sm font-semibold text-gray-800">
-                Spoiled quantity ({selectedItem?.unit ?? "unit"})
-                <input
-                  type="number"
-                  min="0.01"
-                  step="any"
-                  value={quantity}
-                  onChange={(event) => setQuantity(event.target.value)}
-                  required
-                  disabled={pending}
-                  className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-3 text-sm text-gray-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-gray-100"
-                />
+              <label className="block text-sm font-semibold text-gray-800">Spoiled quantity ({selectedItem?.unit ?? "unit"})
+                <input type="number" min="0.01" step="any" value={quantity} onChange={(event) => setQuantity(event.target.value)} required disabled={pending} className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-3 text-sm text-gray-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-gray-100" />
               </label>
 
-              <label className="block text-sm font-semibold text-gray-800">
-                Reason / notes
-                <textarea
-                  value={reason}
-                  onChange={(event) => setReason(event.target.value)}
-                  maxLength={500}
-                  rows={3}
-                  required
-                  disabled={pending}
-                  placeholder="e.g. expired milk, cracked eggs, cake damaged"
-                  className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-3 text-sm font-normal text-gray-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-gray-100"
-                />
+              <label className="block text-sm font-semibold text-gray-800">Reason / notes
+                <textarea value={reason} onChange={(event) => setReason(event.target.value)} maxLength={500} rows={3} required disabled={pending} placeholder="e.g. expired milk, cracked eggs, cake damaged" className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-3 text-sm font-normal text-gray-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-gray-100" />
               </label>
-
-              {error && (
-                <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>
-              )}
-              {message && (
-                <p role="status" className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800">{message}</p>
-              )}
+              {error && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
             </div>
 
             <div className="flex flex-col-reverse gap-2 border-t border-gray-200 bg-white px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
-              <button
-                type="button"
-                onClick={closeModal}
-                disabled={pending}
-                className="min-h-11 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={pending || !branchId || !itemId || !reason.trim() || !(Number(quantity) > 0)}
-                onClick={submit}
-                className="aims-primary min-h-11 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {pending ? "Saving…" : "Confirm Spoilage"}
-              </button>
+              <button type="button" onClick={closeModal} disabled={pending} className="min-h-11 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:opacity-50">Cancel</button>
+              <button type="button" disabled={pending || !branchId || !itemId || !reason.trim() || !(Number(quantity) > 0)} onClick={submit} className="aims-primary min-h-11 disabled:cursor-not-allowed disabled:opacity-50">{pending ? "Saving…" : "Confirm Spoilage"}</button>
             </div>
           </div>
         </div>
