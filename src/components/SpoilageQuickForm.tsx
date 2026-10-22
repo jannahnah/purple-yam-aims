@@ -60,24 +60,18 @@ export default function SpoilageQuickForm({
   }
 
   return (
-    <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-base font-bold text-gray-900">Spoiled Stock</h2>
-          <p className="mt-1 text-sm text-gray-500">Record unusable ingredients or finished products directly from Inventory.</p>
-        </div>
-        <button
-          type="button"
-          onClick={() => { setIsOpen((current) => !current); setError(""); setMessage(""); }}
-          aria-expanded={isOpen}
-          className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl bg-purple-800 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-purple-900"
-        >
-          {isOpen ? "Close form" : "＋ Record spoiled stock"}
-        </button>
-      </div>
-      {message && <p role="status" className="mt-4 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800">{message}</p>}
+    <div className="contents">
+      <button
+        type="button"
+        onClick={() => { setIsOpen((current) => !current); setError(""); setMessage(""); }}
+        aria-expanded={isOpen}
+        className="inline-flex min-h-10 items-center justify-center rounded-xl bg-purple-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-purple-800"
+      >
+        {isOpen ? "Close form" : "＋ Record Spoiled Stock"}
+      </button>
+      {message && <p role="status" className="basis-full rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800">{message}</p>}
       {isOpen && (
-        <div className="mt-5 border-t border-gray-100 pt-5">
+        <div className="basis-full mt-2 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
           <p className="mb-4 text-sm text-gray-500">Available stock will be reduced immediately. The reason and quantity are saved in transaction history.</p>
           <div className="grid gap-4 sm:grid-cols-2">
             {userRole === "OWNER" && (
@@ -112,6 +106,6 @@ export default function SpoilageQuickForm({
           </div>
         </div>
       )}
-    </section>
+    </div>
   );
 }
