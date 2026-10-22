@@ -122,6 +122,7 @@ model StockTransaction {
   userId           String
   transferId       String?
   transferBranchId String?
+  reason           String?
   createdAt        DateTime        @default(now())
 
   branch Branch @relation(fields: [branchId], references: [id])
@@ -203,6 +204,7 @@ enum TransactionType {
   PRODUCTION
   STOCK_RECEIPT
   ADJUSTMENT
+  SPOILAGE
   TRANSFER_IN
   TRANSFER_OUT
 }
