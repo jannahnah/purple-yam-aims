@@ -733,27 +733,35 @@ export default function ManagerDashboard({
           </div>
 
           <div className="overflow-x-auto">
-            <table className="aims-table text-sm">
+            <table className="aims-table manager-inventory-table text-sm">
+
+              <colgroup>
+                <col className="manager-inventory-item-col" />
+                <col className="manager-inventory-category-col" />
+                <col className="manager-inventory-stock-col" />
+                <col className="manager-inventory-threshold-col" />
+                <col className="manager-inventory-status-col" />
+              </colgroup>
 
               <thead>
                 <tr className="border-b border-gray-100">
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  <th className="text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
                     Item
                   </th>
 
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  <th className="text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
                     Category
                   </th>
 
-                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  <th className="text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
                     Stock
                   </th>
 
-                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  <th className="text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
                     Threshold
                   </th>
 
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  <th className="text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
                     Status
                   </th>
                 </tr>
@@ -771,21 +779,21 @@ export default function ManagerDashboard({
                       key={item.itemId}
                       className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50"
                     >
-                      <td className="px-4 py-3 font-medium text-gray-900">
+                      <td className="font-medium text-gray-900">
                         {formatItemLabel({
                           name: item.itemName,
                           size: item.itemSize,
                         })}
                       </td>
 
-                      <td className="px-4 py-3 text-xs text-gray-500">
+                      <td className="text-xs text-gray-500">
                         {item.sourceType.replaceAll(
                           "_",
                           " "
                         )}
                       </td>
 
-                      <td className="px-4 py-3 text-right font-mono font-semibold text-gray-800">
+                      <td className="text-right font-mono font-semibold text-gray-800 whitespace-nowrap">
                         {formatQuantity(
                           item.quantity
                         )}{" "}
@@ -794,15 +802,15 @@ export default function ManagerDashboard({
                         </span>
                       </td>
 
-                      <td className="px-4 py-3 text-right font-mono text-gray-500">
+                      <td className="text-right font-mono text-gray-500 whitespace-nowrap">
                         {formatQuantity(
                           item.minThreshold
                         )}
                       </td>
 
-                      <td className="px-4 py-3">
+                      <td>
                         <span
-                          className={`inline-block rounded border px-2 py-0.5 text-[10px] font-semibold ${getStatusClass(
+                          className={`inline-block rounded border px-1.5 py-0.5 text-[10px] font-semibold ${getStatusClass(
                             status
                           )}`}
                         >
@@ -827,15 +835,15 @@ export default function ManagerDashboard({
           </div>
 
           <div className="overflow-x-auto">
-            <table className="aims-table text-sm">
+            <table className="aims-table manager-finished-products-table w-full table-fixed text-sm">
 
               <thead>
                 <tr className="border-b border-gray-100">
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  <th className="text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
                     Product
                   </th>
 
-                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  <th className="text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
                     Available
                   </th>
                 </tr>
@@ -850,14 +858,14 @@ export default function ManagerDashboard({
                       key={product.itemId}
                       className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50"
                     >
-                      <td className="px-4 py-3 font-medium text-gray-900">
+                      <td className="font-medium text-gray-900">
                         {formatItemLabel({
                           name: product.itemName,
                           size: product.itemSize,
                         })}
                       </td>
 
-                      <td className="px-4 py-3 text-right">
+                      <td className="text-right whitespace-nowrap">
                         <span
                           className={`font-mono font-semibold ${
                             quantity === 0
