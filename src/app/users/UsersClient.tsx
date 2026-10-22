@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-type Role = "OWNER" | "BRANCH_MANAGER" | "INVENTORY_MANAGER" | "CASHIER";
+type Role = "OWNER" | "BRANCH_MANAGER" | "INVENTORY_MANAGER" | "PRODUCTION_STAFF" | "CASHIER";
 type UserStatus = "ACTIVE" | "INACTIVE";
 
 type Branch = {
@@ -28,7 +28,7 @@ type User = {
 const ROLE_LABELS: Record<Role, string> = {
   OWNER: "Owner",
   BRANCH_MANAGER: "Branch Manager",
-  INVENTORY_MANAGER: "Inventory Manager",
+  INVENTORY_MANAGER: "Inventory Manager",\n  PRODUCTION_STAFF: "Production Staff",
   CASHIER: "Cashier",
 };
 
@@ -88,7 +88,7 @@ export default function UsersClient() {
   const [email, setEmail] = useState("");
 
   const [role, setRole] =
-    useState<"BRANCH_MANAGER" | "INVENTORY_MANAGER" | "CASHIER">(
+    useState<"BRANCH_MANAGER" | "INVENTORY_MANAGER" | "PRODUCTION_STAFF" | "CASHIER">(
       "CASHIER"
     );
 
@@ -313,7 +313,7 @@ export default function UsersClient() {
       return;
     }
 
-    if ((role === "BRANCH_MANAGER" || role === "CASHIER") && !branchName.trim()) {
+    if ((role === "BRANCH_MANAGER" || role === "CASHIER" || role === "PRODUCTION_STAFF") && !branchName.trim()) {
       setError("Please enter a branch.");
       return;
     }
