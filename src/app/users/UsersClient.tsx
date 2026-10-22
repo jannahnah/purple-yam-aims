@@ -49,6 +49,9 @@ function roleBadgeClass(role: Role) {
     case "INVENTORY_MANAGER":
       return "bg-emerald-100 text-emerald-700";
 
+    case "PRODUCTION_STAFF":
+      return "bg-amber-100 text-amber-800";
+
     case "CASHIER":
       return "bg-blue-100 text-blue-700";
 
