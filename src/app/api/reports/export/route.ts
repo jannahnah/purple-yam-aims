@@ -156,6 +156,34 @@ export async function GET(request: Request) {
             branchId: currentUser.branchId ?? "__NO_BRANCH__",
           };
 
+    // Get the last recorded inventory level before the selected period.
+    // This keeps Beginning Inventory independent from today's on-hand quantity.
+    const beginningTransactions = exportDateRange
+      ? await prisma.stockTransaction.findMany({
+          where: {
+            ...branchWhere,
+            createdAt: { lt: exportDateRange.startAt },
+          },
+          select: {
+            branchId: true,
+            itemId: true,
+            previousQuantity: true,
+            newQuantity: true,
+            createdAt: true,
+          },
+          orderBy: { createdAt: "desc" },
+        })
+      : [];
+
+    const beginningInventoryByKey = new Map<string, number>();
+    for (const transaction of beginningTransactions) {
+      const key = `${transaction.branchId}:${transaction.itemId}`;
+      if (!beginningInventoryByKey.has(key)) {
+        const quantity = transaction.newQuantity ?? transaction.previousQuantity;
+        if (quantity !== null) beginningInventoryByKey.set(key, quantity);
+      }
+    }
+
     const [inventory, transactions, branches] = await Promise.all([
       prisma.branchStock.findMany({
         where: {
@@ -492,7 +520,7 @@ export async function GET(request: Request) {
           }
 
           rows.push([formatTransactionType(transactionType)]);
-          rows.push(["Item", "Unit", ...dates, "Total Change"]);
+          rows.push(["Item", "Unit", "Beginning Inventory", ...dates, "Total Change"]);
 
           const itemGroups = new Map<
             string,
@@ -522,12 +550,24 @@ export async function GET(request: Request) {
             }
           }
 
-          for (const item of [...itemGroups.values()].sort((a, b) =>
-            a.item.localeCompare(b.item)
+          for (const [itemId, item] of [...itemGroups.entries()].sort((a, b) =>
+            a[1].item.localeCompare(b[1].item)
           )) {
+            const itemPeriodTransactions = branch.transactions
+              .filter((transaction) => transaction.itemId === itemId)
+              .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+            const firstPeriodTransaction = itemPeriodTransactions[0];
+            const branchId = firstPeriodTransaction?.branchId ?? branch.id;
+            const beginningKey = `${branchId}:${itemId}`;
+            const beginningQuantity =
+              firstPeriodTransaction?.previousQuantity ??
+              beginningInventoryByKey.get(beginningKey) ??
+              0;
+
             const row: Array<string | number> = [
               item.item,
               item.unit,
+              beginningQuantity,
             ];
             let total = 0;
 
@@ -593,6 +633,7 @@ export async function GET(request: Request) {
         worksheet["!cols"] = [
           { wch: 28 },
           { wch: 12 },
+          { wch: 22 },
           ...transactionDateKeys.map(() => ({ wch: 14 })),
           { wch: 16 },
         ];
