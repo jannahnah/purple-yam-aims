@@ -4,7 +4,7 @@ import Link from "next/link";
 import { formatItemLabel } from "@/lib/item-label";
 import { useEffect, useRef, useState } from "react";
 
-type Role = "OWNER" | "BRANCH_MANAGER" | "CASHIER" | "INVENTORY_MANAGER";
+type Role = "OWNER" | "BRANCH_MANAGER" | "CASHIER" | "INVENTORY_MANAGER" | "PRODUCTION_STAFF";
 
 type DashboardUser = {
   id: string;
